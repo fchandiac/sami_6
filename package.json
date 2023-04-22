@@ -1,0 +1,68 @@
+{
+  "name": "sami6",
+  "version": "6.0.1",
+  "description": "Sami 6",
+  "main": "main.js",
+  "scripts": {
+    "dev": "NODE_ENV=development electron .",
+    "build": "next build",
+    "start": "NODE_ENV=production electron .",
+    "out": "next export",
+    "test": "NODE_ENV=build electron .",
+    "pack-mac": "electron-builder --mac",
+    "pack-win": "electron-builder --win"
+  },
+  "author": "felipe Chandía Castillo",
+  "license": "ISC",
+  "dependencies": {
+    "@emotion/react": "^11.9.3",
+    "@emotion/styled": "^11.9.3",
+    "@mui/icons-material": "^5.8.4",
+    "@mui/material": "^5.8.4",
+    "@mui/x-data-grid": "^5.12.2",
+    "cors": "^2.8.5",
+    "exceljs": "^4.3.0",
+    "express": "^4.18.1",
+    "file-saver": "^2.0.5",
+    "fs": "0.0.1-security",
+    "moment": "^2.29.4",
+    "next": "^12.1.6",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
+  },
+  "devDependencies": {
+    "electron": "^19.0.4",
+    "electron-builder": "^23.0.3"
+  },
+  "build": {
+    "appId": "com.karmika.cl.app",
+    "files": [
+      "**/*",
+      "!images{,/**/*}",
+      "!pages{,/**/*}",
+      "!components{,/**/*}",
+      "!styles{,/**/*}",
+      "!**/node_modules",
+      "!build{,/**/*}",
+      "!dist{,/**/*}",
+      "!**/*.{iml,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,suo,xproj,cc,d.ts,pdb}",
+      "**/electron-builder.{yaml,yml,json,json5,toml}",
+      "!**/{.git,.hg,.svn,CVS,RCS,SCCS,__pycache__,.DS_Store,thumbs.db,.gitignore,.gitkeep,.gitattributes,.npmignore,.idea,.vs,.flowconfig,.jshintrc,.eslintrc,.circleci,.yarn-integrity,.yarn-metadata.json,yarn-error.log,yarn.lock,package-lock.json,npm-debug.log,appveyor.yml,.travis.yml,circle.yml,.nyc_output}"
+    ],
+    "asarUnpack": [
+      "config.json"
+    ],
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "uninstallDisplayName": "App Uninstall"
+    }
+  }
+}

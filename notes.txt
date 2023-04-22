@@ -1,0 +1,49 @@
+PENDIENTE: ADD SUCCESS SNACK ON UPDATEPAYMENTMETHODS FROM CONFIG PAGE
+
+
+
+
+npm i --save electron next react react-dom
+npm i @mui/material @emotion/react @emotion/styled --save
+npm i @mui/x-data-grid --save
+npm i express --save
+npm i cors --save
+npm i electron-builder --save
+npm i @mui/icons-material --save
+npm i exceljs --save
+npm i file-saver --save
+
+
+--- CERADO PARA TRABAJAR CON APPS DE UNA PAGINA EN ERITORIO
+--- El Componente Layout es el componente padre
+--- Incluye Material UI
+--- Se incoporo Locale a Material UI
+--- Se utiliza en build-main.js express para servir la app
+
+--- PROCESO FINAL ELECTRON-BUILD 
+    --> npm run build 
+    --> npm run out 
+    --> copy /images on /out
+    --> comment const env = process.env.NODE_ENV main.js
+    --> uncomment const env = 'build' on main.js
+    --> npm run pack-mac/pack-win
+
+
+---- PENDIENTES ----
+-MODALS
+-FORMS
+-CONECT ESCPOS PRINTER POR IPC
+-TEST EXRPRESS SECOND WEB APP INSIDE
+-BOTON SALIR EN APPBAR
+
+
+
+"pack-mac": "electron-builder -c.extraMetadata.main=build_main.js --mac"
+
+
+
+--- estudiar next link replace, para que no pueda regresar al site anterior
+
+
+
+

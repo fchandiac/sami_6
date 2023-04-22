@@ -1,0 +1,7 @@
+{
+    "db_name":"sami_5",
+    "db_user":"root",
+    "db_host":"localhost",
+    "db_password":"Fenasantma",
+    "port_app":3001
+}
