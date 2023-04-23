@@ -102,17 +102,6 @@ export default function NewProducForm(props) {
                         </Grid>
                         <Grid item>
                             <TextField
-                                label="Código"
-                                value={productData.code}
-                                onChange={(e) => { setProductData({ ...productData, code: e.target.value }) }}
-                                variant="outlined"
-                                size={'small'}
-                                fullWidth
-                                required
-                            />
-                        </Grid>
-                        <Grid item>
-                            <TextField
                                 label="Precio de venta"
                                 value={utils.renderMoneystr(productData.sale)}
                                 onChange={(e) => { setProductData({ ...productData, sale: e.target.value }) }}
@@ -164,6 +153,27 @@ export default function NewProducForm(props) {
                                 renderInput={(params) => <TextField {...params} label='Impuesto' size={'small'} fullWidth required />}
                             />
                         </Grid>
+                        <Grid item>
+                            <TextField
+                                label="Stock en sala de ventas"
+                                value={productData.salesRoomStock}
+                                onChange={(e) => { setProductData({ ...productData, salesRoomStock: e.target.value }) }}
+                                variant="outlined"
+                                size={'small'}
+                                fullWidth
+                            />
+                        </Grid>
+                        <Grid item>
+                            <TextField
+                                label="Código"
+                                value={productData.code}
+                                onChange={(e) => { setProductData({ ...productData, code: e.target.value }) }}
+                                variant="outlined"
+                                size={'small'}
+                                fullWidth
+                                required
+                            />
+                        </Grid>
                         <Grid item textAlign='right'>
                             <Button variant={'contained'} type='submit'>guardar</Button>
                         </Grid>
@@ -182,6 +192,7 @@ function productDataDefault() {
         code: '',
         purchase: '',
         category: null,
+        salesRoomStock: null,
         tax: null
     }
 }

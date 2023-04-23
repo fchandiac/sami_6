@@ -156,7 +156,7 @@ function CustomPagination(props) {
             </Stack>
         </Box>
 
-    );
+    )
 }
 
 export default function AppDataGrid(props) {

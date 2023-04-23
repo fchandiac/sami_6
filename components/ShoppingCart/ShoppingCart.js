@@ -2,6 +2,15 @@ import {
     Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid, Paper, Typography, TextField,
     FormGroup, FormControlLabel, Checkbox, Autocomplete, RadioGroup, Radio, IconButton, Box
 } from '@mui/material'
+import {
+    DataGrid,
+    esES,
+    GridToolbarQuickFilter,
+    useGridApiContext,
+    useGridSelector,
+    gridPageSelector,
+    gridPageCountSelector,
+} from '@mui/x-data-grid'
 import React, { useState, useEffect, useRef } from 'react'
 import BackspaceIcon from '@mui/icons-material/Backspace'
 import AddCircleIcon from '@mui/icons-material/AddCircle'
@@ -13,7 +22,6 @@ import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOu
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined'
 import EditIcon from '@mui/icons-material/Edit'
 import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart'
-import { DataGrid, esES } from '@mui/x-data-grid'
 import { GridActionsCellItem } from '@mui/x-data-grid'
 import electron from 'electron'
 import { useAppContext } from '../../AppProvider'
@@ -38,8 +46,6 @@ export default function ShoppingCart() {
     const [customerInput, setCustomerInput] = useState('')
     const [customer, setCustomer] = useState(null)
     const [documentType, setDocumentType] = useState('Ticket')
-    const [openErrorSnack, setOpenErrorSnack] = useState(false)
-    const [errorText, setErrorText] = useState('')
     const [openDiscountDialog, setOpenDiscountDialog] = useState(false)
     const [openAuthDialog, setOpenAuthDialog] = useState(false)
     const [adminPass, setAdminPass] = useState('')
@@ -130,8 +136,7 @@ export default function ShoppingCart() {
 
     const proccessPayment = () => {
         if (cart.length === 0) {
-            setErrorText('No hay productos en el carrito')
-            setOpenErrorSnack(true)
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
         } else {
             setOpenPayDialog(true)
         }
@@ -145,15 +150,13 @@ export default function ShoppingCart() {
             })
             .catch(err => {
                 console.log(err)
-                setErrorText('Error de conexión con la impresora')
-                setOpenErrorSnack(true)
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
             })
     }
 
     const openDiscountUI = () => {
         if (cart.length === 0) {
-            setErrorText('No hay productos en el carrito')
-            setOpenErrorSnack(true)
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
         } else {
             setOpenDiscountDialog(true)
         }
@@ -173,8 +176,7 @@ export default function ShoppingCart() {
                 setOpenAuthDialog(false)
                 setCheckPass('')
             } else {
-                setErrorText('Contraseña incorrecta')
-                setOpenErrorSnack(true)
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Contraseña incorrecta' } })
                 setCheckPass('')
             }
         } else {
@@ -183,8 +185,7 @@ export default function ShoppingCart() {
                 setOpenAuthDialog(false)
                 setCheckPass('')
             } else {
-                setErrorText('Contraseña incorrecta')
-                setOpenErrorSnack(true)
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Contraseña incorrecta' } })
                 setCheckPass('')
             }
         }
@@ -218,6 +219,7 @@ export default function ShoppingCart() {
             field: 'actions',
             headerName: '',
             flex: 1,
+            headerClassName: 'data-grid-last-column-header',
             type: 'actions', getActions: (params) => [
                 <GridActionsCellItem
                     sx={{ paddingLeft: 0, paddingRight: 0 }}
@@ -284,23 +286,9 @@ export default function ShoppingCart() {
         }
     }
 
-
-
-
     return (
         <>
-            <Paper elevation={0} variant="outlined" sx={{ height: '80vh' }}>
-                <Grid>
-                    <Grid item sx={{ height: '5vh' }} alignContent={'center'} alignItems={'center'} textAlign={'center'}>
-
-                        <Typography marginTop={1} fontSize={26}>
-                            Total: {utils.renderMoneystr(total)}
-                        </Typography>
-
-
-                    </Grid>
-                    <Divider />
-                    <Grid item sx={{ height: '60vh' }}>
+            <Paper elevation={0} variant="outlined" sx={{ height: '69.3vh' }}>
                         <DataGrid
                             localeText={esESGrid}
                             sx={{ border: 'none' }}
@@ -309,30 +297,25 @@ export default function ShoppingCart() {
                             density='compact'
                             getRowHeight={() => 'auto'}
                             columns={columns}
-                            hideFooter={true}
+                            components={{ Toolbar: CustomToolbar, Pagination: CustomFooter }}
+                            componentsProps={{
+                                toolbar: {
+                                    total: utils.renderMoneystr(total)
+
+                                },
+                                pagination: {
+                                    lock: lock,
+                                    proccessPayment: proccessPayment, 
+                                    openDiscountUI: openDiscountUI, 
+                                    clearCart: clearCart,
+                                    setOpenAuthDialog: setOpenAuthDialog
+
+                                }
+
+                            }}
+
                         />
-                    </Grid>
-                    <Divider />
-                    <Grid item textAlign={'right'}>
-                        <Grid container spacing={1} direction={'row'} justifyContent={'flex-end'} alignItems={'center'}>
-                            <Grid item>
-                                <Button variant="contained" sx={{ marginTop: 1, marginBottom: 1 }} onClick={() => { proccessPayment() }}>Procesar Pago</Button>
-                            </Grid>
-                            <Grid item>
-                                <Button variant={'outlined'} sx={{ marginTop: 1, marginBottom: 1, display: lock ? 'none' : 'block' }} onClick={() => { openDiscountUI() }}>Descuento</Button>
-                            </Grid>
-                            <Grid item>
-                                <IconButton sx={{ marginRight: 2 }} onClick={() => { clearCart() }}><RemoveShoppingCartIcon /></IconButton>
-                            </Grid>
-                            <Grid item>
-                                <IconButton sx={{ marginRight: 2 }} onClick={() => { setOpenAuthDialog(true) }}>
-                                    <LockOpenTwoToneIcon sx={{ display: lock ? 'none' : 'block' }} />
-                                    <LockTwoToneIcon sx={{ display: lock ? 'block' : 'none' }} />
-                                </IconButton>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </Grid>
+       
             </Paper>
             <Dialog open={openPayDialog} maxWidth={'xs'} fullWidth>
                 <DialogTitle sx={{ p: 2 }}>
@@ -620,14 +603,45 @@ export default function ShoppingCart() {
                     <Button variant={'outlined'} onClick={() => { setOpenChangeDialog(false); dispatch({ type: 'CLEAR_CART' }) }}>cerrar</Button>
                 </DialogActions>
             </Dialog>
-            <AppErrorSnack openSnack={openErrorSnack} setOpenSnack={setOpenErrorSnack} errorText={errorText} />
         </>
     )
 }
 
 
+function CustomToolbar(props) {
+    const { total } = props
 
+    return (
+        <Box sx={{ p: 2, m: 1 }}>
+            <Typography variant="h5" gutterBottom component="div">{'Total: ' + total}</Typography>
+        </Box>
+    )
+}
 
+function CustomFooter(props) {
+    const { lock, proccessPayment, openDiscountUI, clearCart, setOpenAuthDialog } = props
+
+    return (
+        <Grid container spacing={1} direction={'row'} justifyContent={'flex-end'} alignItems={'center'} paddingRight={1}>
+            <Grid item>
+                <Button variant="contained" onClick={() => { proccessPayment() }}>Procesar Pago</Button>
+            </Grid>
+            <Grid item>
+                <Button variant={'outlined'} sx={{ display: lock ? 'none' : 'block' }} onClick={() => { openDiscountUI() }}>Descuento</Button>
+            </Grid>
+            <Grid item>
+                <IconButton  onClick={() => { clearCart() }}><RemoveShoppingCartIcon /></IconButton>
+            </Grid>
+            <Grid item>
+                <IconButton onClick={() => { setOpenAuthDialog(true) }}>
+                    <LockOpenTwoToneIcon sx={{ display: lock ? 'none' : 'block' }} />
+                    <LockTwoToneIcon sx={{ display: lock ? 'block' : 'none' }} />
+                </IconButton>
+            </Grid>
+        </Grid>
+
+    )
+}
 
 const esESGrid = {
     // Root

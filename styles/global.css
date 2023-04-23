@@ -6,5 +6,7 @@ body {
   margin: 0 auto;
 }
 
-
+.data-grid-last-column-header .MuiDataGrid-columnSeparator {
+  display: none;
+}
 

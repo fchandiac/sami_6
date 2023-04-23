@@ -1,6 +1,6 @@
 import { React, useState, useEffect } from 'react'
 import Layout from '../components/Layout'
-import { Button, Grid, TextField, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Switch } from '@mui/material'
+import { Button, Grid, TextField, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Switch, FormControlLabel } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddCircleIcon from '@mui/icons-material/AddCircle'
 import SaveIcon from '@mui/icons-material/Save'
@@ -13,11 +13,12 @@ export default function Home() {
     const [config, setConfig] = useState(configDataDefault())
     const [openNewPaymentMethod, setOpenNewPaymentMethod] = useState(false)
     const [paymentMethods, setPaymentMethods] = useState([])
-    const [customerCredit, setCustomerCredit] = useState({'name': '', 'state': true})
+    const [customerCredit, setCustomerCredit] = useState({ 'name': '', 'state': true })
     const [newPaymentMethod, setNewPaymentMethod] = useState('')
     const [openSuccessSnack, setOpenSuccessSnack] = useState(false)
     const [successText, setSuccessText] = useState('')
     const [adminPass, setAdminPass] = useState('')
+    const [stockControl, setStockControl] = useState(false)
 
     useEffect(() => {
         const readConfig = ipcRenderer.sendSync('read-config', 'sync');
@@ -26,6 +27,7 @@ export default function Home() {
         setPaymentMethods(readConfig.payment_methods)
         setCustomerCredit(readConfig.customer_credit)
         setAdminPass(readConfig.admin_pass)
+        setStockControl(readConfig.stock_control)
     }, [])
 
 
@@ -83,8 +85,8 @@ export default function Home() {
                     <Grid item>
                         <AppPaper title='Medios de pago alternativos'>
                             <Grid container spacing={1} direction={'column'} p={1}>
-                                <Grid item>
-                                    <Table aria-label="simple table">
+                                <Grid item xs>
+                                    <Table>
                                         <TableBody>
                                             {paymentMethods.map((method, index) => (
                                                 <TableRow key={index}>
@@ -115,53 +117,80 @@ export default function Home() {
                     <Grid item>
                         <AppPaper title='Credito clientes'>
                             <form onSubmit={(e) => { e.preventDefault(); updateCustomerCredit() }}>
-                            <Grid container spacing={1} direction={'column'} p={1}>
-                                <Grid item>
-                                    <TextField
-                                        label='Nombre'
-                                        value={customerCredit.name}
-                                        onChange={(e) => { setCustomerCredit({...customerCredit, name: e.target.value}) }}
-                                        variant="outlined"
-                                        size={'small'}
-                                        fullWidth
-                                        required
-                                    />
+                                <Grid container spacing={1} direction={'column'} p={1}>
+                                    <Grid item>
+                                        <TextField
+                                            label='Nombre'
+                                            value={customerCredit.name}
+                                            onChange={(e) => { setCustomerCredit({ ...customerCredit, name: e.target.value }) }}
+                                            variant="outlined"
+                                            size={'small'}
+                                            fullWidth
+                                            required
+                                        />
+                                    </Grid>
+                                    <Grid item textAlign={'right'}>
+                                        <Switch
+                                            checked={customerCredit.state}
+                                            onChange={(e) => { setCustomerCredit({ ...customerCredit, state: e.target.checked }) }}
+                                        />
+                                        <IconButton color='primary' type='submit'>
+                                            <SaveIcon />
+                                        </IconButton>
+                                    </Grid>
                                 </Grid>
-                                <Grid item textAlign={'right'}>
-                                    <Switch 
-                                        checked={customerCredit.state}  
-                                        onChange={(e) => { setCustomerCredit({...customerCredit, state: e.target.checked}) }}
-                                    />
-                                    <IconButton color='primary' type='submit'>
-                                        <SaveIcon />
-                                    </IconButton>
-                                </Grid>
-                            </Grid>
                             </form>
                         </AppPaper>
                     </Grid>
                     <Grid item>
                         <AppPaper title='Contraseña Administrador'>
-                        <form onSubmit={(e) => { e.preventDefault(); updateCustomerCredit() }}>
-                            <Grid container spacing={1} direction={'column'} p={1}>
-                                <Grid item>
-                                    <TextField
-                                        label='Contraseña'
-                                        value={adminPass}
-                                        onChange={(e) => { setAdminPass(e.target.value) }}
-                                        variant="outlined"
-                                        type='password'
-                                        size={'small'}
-                                        fullWidth
-                                        required
-                                    />
+                            <form onSubmit={(e) => { e.preventDefault(); updateCustomerCredit() }}>
+                                <Grid container spacing={1} direction={'column'} p={1}>
+                                    <Grid item>
+                                        <TextField
+                                            label='Contraseña'
+                                            value={adminPass}
+                                            onChange={(e) => { setAdminPass(e.target.value) }}
+                                            variant="outlined"
+                                            type='password'
+                                            size={'small'}
+                                            fullWidth
+                                            required
+                                        />
+                                    </Grid>
+                                    <Grid item textAlign={'right'}>
+                                        <IconButton color='primary' type='submit'>
+                                            <SaveIcon />
+                                        </IconButton>
+                                    </Grid>
                                 </Grid>
-                                <Grid item textAlign={'right'}>
-                                    <IconButton color='primary' type='submit'>
-                                        <SaveIcon />
-                                    </IconButton>
+                            </form>
+                        </AppPaper>
+                    </Grid>
+                    <Grid item>
+                        <AppPaper title='Caja UI'>
+                            <form onSubmit={(e) => { e.preventDefault(); updateCustomerCredit() }}>
+                                <Grid container spacing={1} direction={'column'} p={1}>
+                                    <Grid item>
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={customerCredit.state}
+                                                    onChange={(e) => { setCustomerCredit({ ...customerCredit, state: e.target.checked }) }}
+                                                />
+                                            }
+                                            label="Control de Stock"
+                                        />
+
+
+
+                                    </Grid>
+                                    <Grid item textAlign={'right'}>
+                                        <IconButton color='primary' type='submit'>
+                                            <SaveIcon />
+                                        </IconButton>
+                                    </Grid>
                                 </Grid>
-                            </Grid>
                             </form>
                         </AppPaper>
                     </Grid>

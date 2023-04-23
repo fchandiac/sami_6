@@ -171,6 +171,12 @@ ipcMain.on('update-payment-methods', (e, arg) => {
 	fs.writeFileSync(filePathConfig, data)
 })
 
+ipcMain.on('get-admin-pass', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	e.returnValue = config.admin_pass
+})
+
 ipcMain.on('update-admin-pass', (e, arg) => {
 	let rawDataConfig = fs.readFileSync(filePathConfig)
 	let config = JSON.parse(rawDataConfig)
@@ -179,11 +185,20 @@ ipcMain.on('update-admin-pass', (e, arg) => {
 	fs.writeFileSync(filePathConfig, data)
 })
 
-ipcMain.on('get-admin-pass', (e, arg) => {
+ipcMain.on('get-stock-control', (e, arg) => {
 	let rawDataConfig = fs.readFileSync(filePathConfig)
 	let config = JSON.parse(rawDataConfig)
-	e.returnValue = config.admin_pass
+	e.returnValue = config.stock_control
 })
+
+ipcMain.on('update-stock-control', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	config.stock_control = arg
+	data = JSON.stringify(config)
+	fs.writeFileSync(filePathConfig, data)
+})
+
 
 
 

@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import AppDataGrid from '../AppDataGrid/AppDataGrid'
+import {
+    DataGrid,
+    esES,
+    GridToolbarQuickFilter,
+    useGridApiContext,
+    useGridSelector,
+    gridPageSelector,
+    gridPageCountSelector,
+} from '@mui/x-data-grid'
+import Pagination from '@mui/material/Pagination'
 import { GridActionsCellItem } from '@mui/x-data-grid'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import { useAppContext } from '../../AppProvider'
+import { ThemeProvider } from '@mui/material/styles'
+import { Box, Stack, Typography } from '@mui/material'
 
 const products = require('../../promises/products')
 const utils = require('../../utils')
@@ -30,13 +41,14 @@ export default function ProductFinder() {
     }
 
     const columns = [
-        { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
+        { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
+        { field: 'code', headerName: 'Código', flex: .6 },
         { field: 'name', headerName: 'Nombre', flex: 1 },
-        { field: 'code', headerName: 'Código', flex: 1 },
         { field: 'sale', headerName: 'Precio Venta', flex: .5, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
             headerName: '',
+            headerClassName: 'data-grid-last-column-header',
             type: 'actions', flex: .5, getActions: (params) => [
                 <GridActionsCellItem
                     label='addToCart'
@@ -59,7 +71,31 @@ export default function ProductFinder() {
 
     return (
         <>
-            <AppDataGrid title='Productos' rows={productsList} columns={columns} height='70.7vh' setGridApiRef={setGridApiRef} />
+            <Box sx={{ width: '100%', height: '60vh' }}>
+                <ThemeProvider>
+                <DataGrid
+                    localeText={esESGrid}
+                    rows={productsList}
+                    columns={columns}
+                    pagination
+                    components={{ Toolbar: CustomToolbar, Pagination: CustomPagination }}
+                    getRowHeight={() => 'auto'}
+                    componentsProps={{
+                        toolbar: {
+                            showQuickFilter: true,
+                            gridHeader: 'Productos',
+                        },
+                        pagination: {
+                            setGridApiRef: setGridApiRef
+                        }
+
+                    }}
+                />
+
+                </ThemeProvider>
+
+            </Box>
+
         </>
     )
 }
@@ -72,4 +108,166 @@ function rowDataDefault() {
         code: '',
         sale: 0,
     }
+}
+
+function CustomToolbar(props) {
+    const { gridHeader } = props
+
+    return (
+        <Box sx={{ p: 2 , m:1}}>
+            <Stack
+                direction="row-reverse"
+                justifyContent="space-between"
+                alignItems="center"
+                spacing={2}
+            >
+                <GridToolbarQuickFilter />
+                <Typography variant="h5" gutterBottom component="div">{gridHeader}</Typography>
+            </Stack>
+        </Box>
+    )
+}
+
+function CustomPagination(props) {
+    const { excelFileName, setGridApiRef } = props
+    const apiRef = useGridApiContext()
+    const page = useGridSelector(apiRef, gridPageSelector)
+    const pageCount = useGridSelector(apiRef, gridPageCountSelector)
+
+
+
+    return (
+        <Box sx={{ p: 1 }}>
+            <Stack
+                direction="row-reverse"
+                justifyContent="space-between"
+                alignItems="center"
+                spacing={2}
+            >
+                <Pagination
+                    color="primary"
+                    count={pageCount}
+                    page={page + 1}
+
+                    onChange={(event, value) => apiRef.current.setPage(value - 1)}
+                />
+                {/* <Typography>{'khgkjg'}</Typography> */}
+            </Stack>
+        </Box>
+
+    )
+}
+
+const esESGrid = {
+    // Root
+    noRowsLabel: 'Sin pdoductos',
+    noResultsOverlayLabel: 'Ningún resultado encontrado.',
+    errorOverlayDefaultLabel: 'Ha ocurrido un error.',
+    // Density selector toolbar button text
+    toolbarDensity: 'Densidad',
+    toolbarDensityLabel: 'Densidad',
+    toolbarDensityCompact: 'Compacta',
+    toolbarDensityStandard: 'Standard',
+    toolbarDensityComfortable: 'Comoda',
+    // Columns selector toolbar button text
+    toolbarColumns: 'Columnas',
+    toolbarColumnsLabel: 'Seleccionar columnas',
+    // Filters toolbar button text
+    toolbarFilters: 'Filtros',
+    toolbarFiltersLabel: 'Mostrar filtros',
+    toolbarFiltersTooltipHide: 'Ocultar filtros',
+    toolbarFiltersTooltipShow: 'Mostrar filtros',
+    toolbarFiltersTooltipActive: count => count > 1 ? `${count} filtros activos` : `${count} filtro activo`,
+    // Quick filter toolbar field
+    toolbarQuickFilterPlaceholder: 'Buscar...',
+    toolbarQuickFilterLabel: 'Buscar',
+    // toolbarQuickFilterDeleteIconLabel: 'Clear',
+    // Export selector toolbar button text
+    toolbarExport: 'Exportar',
+    toolbarExportLabel: 'Exportar',
+    toolbarExportCSV: 'Descargar como CSV',
+    // toolbarExportPrint: 'Print',
+    // toolbarExportExcel: 'Download as Excel',
+    // Columns panel text
+    columnsPanelTextFieldLabel: 'Columna de búsqueda',
+    columnsPanelTextFieldPlaceholder: 'Título de columna',
+    columnsPanelDragIconLabel: 'Reorder columna',
+    columnsPanelShowAllButton: 'Mostrar todo',
+    columnsPanelHideAllButton: 'Ocultar todo',
+    // Filter panel text
+    filterPanelAddFilter: 'Agregar filtro',
+    filterPanelDeleteIconLabel: 'Borrar',
+    // filterPanelLinkOperator: 'Logic operator',
+    filterPanelOperators: 'Operadores',
+    // TODO v6: rename to filterPanelOperator
+    filterPanelOperatorAnd: 'Y',
+    filterPanelOperatorOr: 'O',
+    filterPanelColumns: 'Columnas',
+    filterPanelInputLabel: 'Valor',
+    filterPanelInputPlaceholder: 'Valor de filtro',
+    // Filter operators text
+    filterOperatorContains: 'contiene',
+    filterOperatorEquals: 'es igual',
+    filterOperatorStartsWith: 'comienza con',
+    filterOperatorEndsWith: 'termina con',
+    filterOperatorIs: 'es',
+    filterOperatorNot: 'no es',
+    filterOperatorAfter: 'es posterior',
+    filterOperatorOnOrAfter: 'es en o posterior',
+    filterOperatorBefore: 'es anterior',
+    filterOperatorOnOrBefore: 'es en o anterior',
+    filterOperatorIsEmpty: 'está vacío',
+    filterOperatorIsNotEmpty: 'no esta vacío',
+    filterOperatorIsAnyOf: 'es cualquiera de',
+    // Filter values text
+    filterValueAny: 'cualquiera',
+    filterValueTrue: 'verdadero',
+    filterValueFalse: 'falso',
+    // Column menu text
+    columnMenuLabel: 'Menú',
+    columnMenuShowColumns: 'Mostrar columnas',
+    columnMenuFilter: 'Filtro',
+    columnMenuHideColumn: 'Ocultar',
+    columnMenuUnsort: 'Desordenar',
+    columnMenuSortAsc: 'Ordenar asc',
+    columnMenuSortDesc: 'Ordenar desc',
+    // Column header text
+    columnHeaderFiltersTooltipActive: count => count > 1 ? `${count} filtros activos` : `${count} filtro activo`,
+    columnHeaderFiltersLabel: 'Mostrar filtros',
+    columnHeaderSortIconLabel: 'Ordenar',
+    // Rows selected footer text
+    //footerRowSelected: count => count > 1 ? `${count.toLocaleString()} filas seleccionadas` : `${count.toLocaleString()} fila seleccionada`,
+    footerRowSelected: count => count > 1 ? '': '',
+    footerTotalRows: 'Filas Totales:',
+    // Total visible row amount footer text
+    footerTotalVisibleRows: (visibleCount, totalCount) => `${visibleCount.toLocaleString()} de ${totalCount.toLocaleString()}`,
+    // Checkbox selection text
+    // checkboxSelectionHeaderName: 'Checkbox selection',
+    // checkboxSelectionSelectAllRows: 'Select all rows',
+    // checkboxSelectionUnselectAllRows: 'Unselect all rows',
+    // checkboxSelectionSelectRow: 'Select row',
+    // checkboxSelectionUnselectRow: 'Unselect row',
+    // Boolean cell text
+    booleanCellTrueLabel: 'Si',
+    booleanCellFalseLabel: 'No',
+    // Actions cell more text
+    actionsCellMore: 'más', // Column pinning text
+    // pinToLeft: 'Pin to left',
+    // pinToRight: 'Pin to right',
+    // unpin: 'Unpin',
+    // Tree Data
+    // treeDataGroupingHeaderName: 'Group',
+    // treeDataExpand: 'see children',
+    // treeDataCollapse: 'hide children',
+    // Grouping columns
+    // groupingColumnHeaderName: 'Group',
+    // groupColumn: name => `Group by ${name}`,
+    // unGroupColumn: name => `Stop grouping by ${name}`,
+    // Master/detail
+    // detailPanelToggle: 'Detail panel toggle',
+    // expandDetailPanel: 'Expand',
+    // collapseDetailPanel: 'Collapse',
+    // Row reordering text
+    // rowReorderingHeaderName: 'Row reordering',
+
 }

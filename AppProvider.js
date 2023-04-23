@@ -7,6 +7,9 @@ const initialState = {
     cart: [],
     total: 0,
     lock: true,
+    snackState: false,
+    snackType: 'error',
+    snackMessage: '',
 }
 
 const reducer = (state, action) => {
@@ -101,6 +104,10 @@ const reducer = (state, action) => {
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
             return { ...state, cart: state.cart, total: state.total }
+        case 'OPEN_SNACK':
+            return { ...state, snackState: true, snackType: action.value.type, snackMessage: action.value.message }
+        case 'CLOSE_SNACK':
+            return { ...state, snackState: false }
         default:
             return state
     }
@@ -109,7 +116,15 @@ const reducer = (state, action) => {
 const AppProvider = ({ children }) => {
     const [state, dispatch] = useReducer(reducer, initialState)
     return (
-        <AppContext.Provider value={{ cart: state.cart, total: state.total, lock: state.lock, dispatch }}>
+        <AppContext.Provider value={{
+            cart: state.cart,
+            total: state.total,
+            lock: state.lock,
+            snackState: state.snackState,
+            snackType: state.snackType,
+            snackMessage: state.snackMessage,
+            dispatch
+        }}>
             {children}
         </AppContext.Provider>
     )

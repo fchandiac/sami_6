@@ -7,13 +7,24 @@ import AccountCircle from '@mui/icons-material/AccountCircle'
 import ChevronLeft from '@mui/icons-material/ChevronLeft'
 import { React, useState } from 'react'
 import Link from 'next/link'
+import { useAppContext } from '../../AppProvider'
+
 
 // can use on component className={styles.exampleClass}
 import styles from './Layout.module.css'
+import AppSnack from '../AppSnack/AppSnack'
+
+const health = require('../../promises/health')
 
 export default function Layout(props) {
   const { children, pageTitle } = props
+  const { dispatch } = useAppContext()
   const [drawerState, setDrawerState] = useState(false)
+
+  health.default()
+  .catch(() =>{
+    dispatch({type: 'OPEN_SNACK', value: {type: 'error', message: 'No se pudo conectar con el servidor'}})
+  })
   return (
     <>
       <AppBar >
@@ -84,6 +95,7 @@ export default function Layout(props) {
       <Box>
         {children}
       </Box>
+      <AppSnack />
     </>
 
   )

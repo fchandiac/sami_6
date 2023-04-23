@@ -1,15 +1,22 @@
-import React, { useReducer } from 'react'
+import React, { } from 'react'
 import '../styles/global.css'
 
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import { esES } from '@mui/material/locale'
-import { AppProvider } from '../AppProvider'
+import { AppProvider, useAppContext  } from '../AppProvider'
+import AppSnack from '../components/AppSnack/AppSnack'
+
+
+
 const theme = createTheme(
   {
     palette: {
-      primary: { main: '#1976d2' }
+      primary: { main: '#1976d2' },
+      error: { main: '#f44336' },
     },
   }, esES)
+  //#f44336
+  //#ff5722
 
 // { palette: { primary: { main: '#1976d2' }, }, }
 
