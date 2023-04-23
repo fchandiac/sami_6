@@ -185,16 +185,16 @@ ipcMain.on('update-admin-pass', (e, arg) => {
 	fs.writeFileSync(filePathConfig, data)
 })
 
-ipcMain.on('get-stock-control', (e, arg) => {
+ipcMain.on('get-cash-register-UI', (e, arg) => {
 	let rawDataConfig = fs.readFileSync(filePathConfig)
 	let config = JSON.parse(rawDataConfig)
-	e.returnValue = config.stock_control
+	e.returnValue = config.cash_register_UI
 })
 
-ipcMain.on('update-stock-control', (e, arg) => {
+ipcMain.on('update-cash-register-UI', (e, arg) => {
 	let rawDataConfig = fs.readFileSync(filePathConfig)
 	let config = JSON.parse(rawDataConfig)
-	config.stock_control = arg
+	config.cash_register_UI = arg
 	data = JSON.stringify(config)
 	fs.writeFileSync(filePathConfig, data)
 })

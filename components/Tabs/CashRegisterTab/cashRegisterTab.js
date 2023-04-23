@@ -52,19 +52,19 @@ export default function BasicTabs() {
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
           <Tab label="Caja Registradora" {...a11yProps(0)} />
-          <Tab label="Movimientos" {...a11yProps(1)} />
-          <Tab label="Pedidos" {...a11yProps(1)} />
+          {/* <Tab label="Movimientos" {...a11yProps(1)} />
+          <Tab label="Pedidos" {...a11yProps(1)} /> */}
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
         <CashRegister></CashRegister>
       </TabPanel>
-      <TabPanel value={value} index={1}>
+      {/* <TabPanel value={value} index={1}>
         <Movements></Movements>
       </TabPanel>
       <TabPanel value={value} index={2}>
         Pedidos
-      </TabPanel>
+      </TabPanel> */}
     </Box>
   )
 }

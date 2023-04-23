@@ -13,12 +13,13 @@ import { GridActionsCellItem } from '@mui/x-data-grid'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import { useAppContext } from '../../AppProvider'
 import { ThemeProvider } from '@mui/material/styles'
-import { Box, Stack, Typography } from '@mui/material'
+import { Box, Paper, Stack, Typography } from '@mui/material'
 
 const products = require('../../promises/products')
 const utils = require('../../utils')
 
-export default function ProductFinder() {
+export default function ProductFinder(props) {
+    const { stockControl } = props
     const { dispatch } = useAppContext()
     const [gridApiRef, setGridApiRef] = useState(null)
     const [rowData, setRowData] = useState(rowDataDefault())
@@ -31,6 +32,7 @@ export default function ProductFinder() {
                 name: item.name,
                 code: item.code,
                 sale: item.Price.sale,
+                salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)).stock,
             }))
             setProductsList(data)
         })
@@ -44,12 +46,13 @@ export default function ProductFinder() {
         { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
         { field: 'code', headerName: 'Código', flex: .6 },
         { field: 'name', headerName: 'Nombre', flex: 1 },
-        { field: 'sale', headerName: 'Precio Venta', flex: .5, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'salesRoomStock', headerName: 'Stock sala', flex: .5, hide: !stockControl },
+        { field: 'sale', headerName: 'Precio Venta', flex: .7, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
             headerName: '',
             headerClassName: 'data-grid-last-column-header',
-            type: 'actions', flex: .5, getActions: (params) => [
+            type: 'actions', flex: .3, getActions: (params) => [
                 <GridActionsCellItem
                     label='addToCart'
                     icon={<ShoppingCartIcon />}
@@ -60,7 +63,8 @@ export default function ProductFinder() {
                             quanty: 1,
                             sale: params.row.sale,
                             subTotal: params.row.sale,
-                            discount: 0
+                            discount: 0,
+                            salesRoomStock: params.row.salesRoomStock,
                         })
                     }}
                 />
@@ -71,9 +75,9 @@ export default function ProductFinder() {
 
     return (
         <>
-            <Box sx={{ width: '100%', height: '60vh' }}>
-                <ThemeProvider>
+            <Paper elevation={0} variant="outlined" sx={{ height: '60vh' }}>
                 <DataGrid
+                    sx={{ border: 'none' }}
                     localeText={esESGrid}
                     rows={productsList}
                     columns={columns}
@@ -91,11 +95,7 @@ export default function ProductFinder() {
 
                     }}
                 />
-
-                </ThemeProvider>
-
-            </Box>
-
+            </Paper>
         </>
     )
 }
@@ -114,7 +114,7 @@ function CustomToolbar(props) {
     const { gridHeader } = props
 
     return (
-        <Box sx={{ p: 2 , m:1}}>
+        <Box sx={{ p: 2, m: 1 }}>
             <Stack
                 direction="row-reverse"
                 justifyContent="space-between"
@@ -237,7 +237,7 @@ const esESGrid = {
     columnHeaderSortIconLabel: 'Ordenar',
     // Rows selected footer text
     //footerRowSelected: count => count > 1 ? `${count.toLocaleString()} filas seleccionadas` : `${count.toLocaleString()} fila seleccionada`,
-    footerRowSelected: count => count > 1 ? '': '',
+    footerRowSelected: count => count > 1 ? '' : '',
     footerTotalRows: 'Filas Totales:',
     // Total visible row amount footer text
     footerTotalVisibleRows: (visibleCount, totalCount) => `${visibleCount.toLocaleString()} de ${totalCount.toLocaleString()}`,

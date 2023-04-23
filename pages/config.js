@@ -8,17 +8,17 @@ import electron from 'electron'
 import AppPaper from '../components/AppPaper/AppPaper'
 import AppSuccessSnack from '../components/AppSuccessSnack/AppSuccessSnack'
 const ipcRenderer = electron.ipcRenderer || false
+import { useAppContext } from '../AppProvider'
 
 export default function Home() {
+    const {dispatch} = useAppContext()
     const [config, setConfig] = useState(configDataDefault())
     const [openNewPaymentMethod, setOpenNewPaymentMethod] = useState(false)
     const [paymentMethods, setPaymentMethods] = useState([])
     const [customerCredit, setCustomerCredit] = useState({ 'name': '', 'state': true })
     const [newPaymentMethod, setNewPaymentMethod] = useState('')
-    const [openSuccessSnack, setOpenSuccessSnack] = useState(false)
-    const [successText, setSuccessText] = useState('')
     const [adminPass, setAdminPass] = useState('')
-    const [stockControl, setStockControl] = useState(false)
+    const [cashRegisterUI, setCashRegisterUI] = useState({ 'stock_control': true })
 
     useEffect(() => {
         const readConfig = ipcRenderer.sendSync('read-config', 'sync');
@@ -27,14 +27,9 @@ export default function Home() {
         setPaymentMethods(readConfig.payment_methods)
         setCustomerCredit(readConfig.customer_credit)
         setAdminPass(readConfig.admin_pass)
-        setStockControl(readConfig.stock_control)
+        setCashRegisterUI(readConfig.cash_register_UI)
     }, [])
 
-
-
-    const saveConfig = () => {
-        ipcRenderer.send('write-config', config)
-    }
 
     const DeletePaymentMethod = (index) => {
         const newMethods = [...paymentMethods]
@@ -52,20 +47,22 @@ export default function Home() {
 
     const updatePaymentMethods = () => {
         ipcRenderer.send('update-payment-methods', paymentMethods)
-        setSuccessText('Medios de pago actualizados')
-        setOpenSuccessSnack(true)
+        dispatch({type: 'OPEN_SNACK', value: {type: 'success', message: 'Medios de pago actualizados'}})
     }
 
     const updateCustomerCredit = () => {
         ipcRenderer.send('update-customer-credit', customerCredit)
-        setSuccessText('Crédito de cliente actualizado')
-        setOpenSuccessSnack(true)
+        dispatch({type: 'OPEN_SNACK', value: {type: 'success', message: 'Crédito de cliente actualizado'}})
     }
 
     const updateAdminPass = () => {
-        ipcRenderer.send('update-admin-pass', config.admin_pass)
-        setSuccessText('Contraseña de administrador actualizada')
-        setOpenSuccessSnack(true)
+        ipcRenderer.send('update-admin-pass', adminPass)
+        dispatch({type: 'OPEN_SNACK', value: {type: 'success', message: 'Contraseña de administrador actualizada'}})
+    }
+
+    const updateCashRegisterUI = () => {
+        ipcRenderer.send('update-cash-register-UI', cashRegisterUI)
+        dispatch({type: 'OPEN_SNACK', value: {type: 'success', message: 'Configuración de caja actualizada'}})
     }
 
     return (
@@ -144,7 +141,7 @@ export default function Home() {
                     </Grid>
                     <Grid item>
                         <AppPaper title='Contraseña Administrador'>
-                            <form onSubmit={(e) => { e.preventDefault(); updateCustomerCredit() }}>
+                            <form onSubmit={(e) => { e.preventDefault(); updateAdminPass() }}>
                                 <Grid container spacing={1} direction={'column'} p={1}>
                                     <Grid item>
                                         <TextField
@@ -169,21 +166,18 @@ export default function Home() {
                     </Grid>
                     <Grid item>
                         <AppPaper title='Caja UI'>
-                            <form onSubmit={(e) => { e.preventDefault(); updateCustomerCredit() }}>
+                            <form onSubmit={(e) => { e.preventDefault(); updateCashRegisterUI() }}>
                                 <Grid container spacing={1} direction={'column'} p={1}>
                                     <Grid item>
                                         <FormControlLabel
                                             control={
                                                 <Switch
-                                                    checked={customerCredit.state}
-                                                    onChange={(e) => { setCustomerCredit({ ...customerCredit, state: e.target.checked }) }}
+                                                    checked={cashRegisterUI.stock_control}
+                                                    onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, stock_control: e.target.checked }) }}
                                                 />
                                             }
                                             label="Control de Stock"
                                         />
-
-
-
                                     </Grid>
                                     <Grid item textAlign={'right'}>
                                         <IconButton color='primary' type='submit'>
@@ -222,7 +216,6 @@ export default function Home() {
                     </DialogActions>
                 </form>
             </Dialog>
-            <AppSuccessSnack openSnack={openSuccessSnack} setOpenSnack={setOpenSuccessSnack} text={successText} />
         </>
     )
 }

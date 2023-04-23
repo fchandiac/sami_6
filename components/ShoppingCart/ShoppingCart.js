@@ -11,6 +11,7 @@ import {
     gridPageSelector,
     gridPageCountSelector,
 } from '@mui/x-data-grid'
+import { ThemeProvider } from '@mui/material/styles'
 import React, { useState, useEffect, useRef } from 'react'
 import BackspaceIcon from '@mui/icons-material/Backspace'
 import AddCircleIcon from '@mui/icons-material/AddCircle'
@@ -288,34 +289,34 @@ export default function ShoppingCart() {
 
     return (
         <>
-            <Paper elevation={0} variant="outlined" sx={{ height: '69.3vh' }}>
-                        <DataGrid
-                            localeText={esESGrid}
-                            sx={{ border: 'none' }}
-                            disableColumnMenu
-                            rows={cart}
-                            density='compact'
-                            getRowHeight={() => 'auto'}
-                            columns={columns}
-                            components={{ Toolbar: CustomToolbar, Pagination: CustomFooter }}
-                            componentsProps={{
-                                toolbar: {
-                                    total: utils.renderMoneystr(total)
+            <Paper elevation={0} variant="outlined" sx={{ height: '100%' }}>
+                <DataGrid
+                    localeText={esESGrid}
+                    sx={{ border: 'none' }}
+                    disableColumnMenu
+                    rows={cart}
+                    density='compact'
+                    getRowHeight={() => 'auto'}
+                    columns={columns}
+                    components={{ Toolbar: CustomToolbar, Pagination: CustomFooter }}
+                    componentsProps={{
+                        toolbar: {
+                            total: utils.renderMoneystr(total)
 
-                                },
-                                pagination: {
-                                    lock: lock,
-                                    proccessPayment: proccessPayment, 
-                                    openDiscountUI: openDiscountUI, 
-                                    clearCart: clearCart,
-                                    setOpenAuthDialog: setOpenAuthDialog
+                        },
+                        pagination: {
+                            lock: lock,
+                            proccessPayment: proccessPayment,
+                            openDiscountUI: openDiscountUI,
+                            clearCart: clearCart,
+                            setOpenAuthDialog: setOpenAuthDialog
 
-                                }
+                        }
 
-                            }}
+                    }}
 
-                        />
-       
+                />
+
             </Paper>
             <Dialog open={openPayDialog} maxWidth={'xs'} fullWidth>
                 <DialogTitle sx={{ p: 2 }}>
@@ -630,7 +631,7 @@ function CustomFooter(props) {
                 <Button variant={'outlined'} sx={{ display: lock ? 'none' : 'block' }} onClick={() => { openDiscountUI() }}>Descuento</Button>
             </Grid>
             <Grid item>
-                <IconButton  onClick={() => { clearCart() }}><RemoveShoppingCartIcon /></IconButton>
+                <IconButton onClick={() => { clearCart() }}><RemoveShoppingCartIcon /></IconButton>
             </Grid>
             <Grid item>
                 <IconButton onClick={() => { setOpenAuthDialog(true) }}>

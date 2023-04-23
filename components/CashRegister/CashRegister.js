@@ -1,13 +1,21 @@
 import { Grid, IconButton, TextField } from '@mui/material'
-import React, { useState, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import ShoppingCart from '../ShoppingCart'
 import ProductFinder from '../ProductFinder/ProductFinder'
 import Favorites from '../Favorites/Favorites'
+import electron from 'electron'
+const ipcRenderer = electron.ipcRenderer || false
 
 import ProductCodeFinder from '../ProductCodeFinder/ProductCodeFinder'
 
 
 export default function CashRegister() {
+  const [cashRegisterUI, setCashRegisterUI] = useState({})
+
+  useEffect(() => {
+    let cashRegisterUI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
+    setCashRegisterUI(cashRegisterUI)
+}, [])
   
   return (
     <>
@@ -15,10 +23,10 @@ export default function CashRegister() {
         <Grid item xs={5}>
           <Grid container spacing={1} direction={'column'}>
             <Grid item>
-              <ProductCodeFinder />
+              <ProductCodeFinder stockControl={cashRegisterUI.stock_control}/>
             </Grid>
             <Grid item>
-              <ProductFinder />
+              <ProductFinder stockControl={cashRegisterUI.stock_control}/>
             </Grid>
           </Grid>
         </Grid>
