@@ -104,27 +104,36 @@ export default function ShoppingCart() {
         }
     }, [paymentMethod])
 
-    const removeProduct = (id) => {
-        dispatch({ type: 'REMOVE_FROM_CART', value: id })
+    const removeProduct = (id, salesRoomStock) => {
+        dispatch({ type: 'REMOVE_FROM_CART', value: { id, salesRoomStock } })
     }
 
-    const substractProduct = (id) => {
-        dispatch({ type: 'SUBSTRACT_QUANTY', value: id })
+    const substractProduct = (id, salesRoomStock) => {
+        dispatch({ type: 'SUBSTRACT_QUANTY', value: { id, salesRoomStock } })
     }
 
-    const addProduct = (id) => {
+    const addProduct = (id, salesRoomStock) => {
         let product = cart.find((product) => product.id === id)
-        if(product.salesRoomStock <= 0) {
+        if (product.virtualStock <= 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
         } else {
-            dispatch({ type: 'ADD_QUANTY', value: id })
+            dispatch({ type: 'ADD_QUANTY', value: { id, salesRoomStock } })
         }
-        
+
     }
 
-    const editQuanty = (id, quanty) => {
-        dispatch({ type: 'EDIT_QUANTY', value: { id, quanty } })
-        setOpenEditQuantyDialog(false)
+    const editQuanty = () => {
+        if (rowData.quanty == 0) {
+            dispatch({ type: 'REMOVE_FROM_CART', value: { id: rowData.id, salesRoomStock: rowData.salesRoomStock } })
+            setOpenEditQuantyDialog(false)
+        } else {
+            if (rowData.quanty > rowData.salesRoomStock) {
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock suficiente' } })
+            } else {
+                dispatch({ type: 'EDIT_QUANTY', value: { id: rowData.id, quanty: rowData.quanty } })
+                setOpenEditQuantyDialog(false)
+            }
+        }
     }
 
 
@@ -174,8 +183,6 @@ export default function ShoppingCart() {
     }
 
     const updateLock = () => {
-        console.log('adminPass', adminPass)
-        console.log('lock', lock)
         if (lock === false) {
             if (checkPass == adminPass) {
                 dispatch({ type: 'LOCK' })
@@ -232,7 +239,7 @@ export default function ShoppingCart() {
                     label='delete'
                     icon={<DeleteIcon />}
                     onClick={() => {
-                        removeProduct(params.row.id)
+                        removeProduct(params.row.id, params.row.salesRoomStock)
                     }}
                 />,
                 <GridActionsCellItem
@@ -240,7 +247,7 @@ export default function ShoppingCart() {
                     label='substract'
                     icon={<RemoveCircleIcon />}
                     onClick={() => {
-                        substractProduct(params.row.id)
+                        substractProduct(params.row.id, params.row.salesRoomStock)
                     }}
                 />,
                 <GridActionsCellItem
@@ -251,7 +258,8 @@ export default function ShoppingCart() {
                         setRowData({
                             id: params.row.id,
                             quanty: params.row.quanty,
-                            name: params.row.name,
+                            salesRoomStock: params.row.salesRoomStock,
+                            name: params.row.name
                         })
                         setOpenEditQuantyDialog(true)
                     }}
@@ -503,7 +511,7 @@ export default function ShoppingCart() {
                                     value={rowData.quanty}
                                     onChange={(e) => { setRowData({ ...rowData, quanty: e.target.value }) }}
                                     type="number"
-                                    inputProps={{ step: "0.01", inputProps: { min: 0 } }}
+                                    inputProps={{ step: "0.01", min: 0 }}
                                     variant="outlined"
                                     size={'small'}
                                     fullWidth

@@ -11,7 +11,8 @@ const initialState = {
     snackState: false,
     snackType: 'error',
     snackMessage: '',
-    productRemoved: {}
+    product: 0,
+    actionType: 'NONE_TYPE'
 }
 
 const reducer = (state, action) => {
@@ -20,69 +21,148 @@ const reducer = (state, action) => {
             if (state.cart.find((item) => item.id === action.value.id)) {
                 let productIndex = state.cart.findIndex((item) => item.id === action.value.id)
                 state.cart[productIndex].quanty += 1
-                state.cart[productIndex].salesRoomStock -= 1
+                state.cart[productIndex].virtualStock -= 1
                 state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
-                return { ...state, cart: state.cart, total: state.total, cartChanged: !state.cartChanged  }
+                return {
+                    ...state,
+                    cart: state.cart,
+                    total: state.total,
+                    cartChanged: !state.cartChanged,
+                    product: {
+                        id: action.value.id,
+                        virtualStock: state.cart[productIndex].virtualStock,
+                        salesRoomStock: state.cart[productIndex].salesRoomStock
+                    },
+                    actionType: 'ADD_TO_CART'
+                }
             } else {
                 action.value.subTotal = roundToNearestTenth(action.value.sale)
-                action.value.salesRoomStock -= 1
+                action.value.virtualStock -= 1
                 state.cart = [...state.cart, action.value]
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
-                return { ...state, cart: state.cart, total: state.total, cartChanged: !state.cartChanged }
+                return {
+                    ...state,
+                    cart: state.cart,
+                    total: state.total,
+                    cartChanged: !state.cartChanged,
+                    product: {
+                        id: action.value.id,
+                        virtualStock: action.value.virtualStock,
+                        salesRoomStock: action.value.salesRoomStock
+                    },
+                    actionType: 'NEW_ADD_TO_CART'
+                }
             }
-
+            break
         case 'REMOVE_FROM_CART':
-            state.cart = state.cart.filter((item) => item.id !== action.value)
+            state.cart = state.cart.filter((item) => item.id !== action.value.id)
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
-            return { ...state, cart: state.cart, total: state.total, cartChanged: !state.cartChanged, productRemoved: action.value  }
+            return {
+                ...state,
+                cart: state.cart,
+                total: state.total,
+                cartChanged: !state.cartChanged,
+                product: {
+                    id: action.value.id,
+                    salesRoomStock: action.value.salesRoomStock
+                },
+                actionType: 'REMOVE_FROM_CART'
+            }
         case 'CLEAR_CART':
-            return { ...state, cart: [], total: 0, cartChanged: !state.cartChanged }
+            return { ...state, cart: [], total: 0, cartChanged: !state.cartChanged, actionType: 'CLEAR_CART' }
         case 'SUBSTRACT_QUANTY':
-            let quanty = state.cart.find((item) => item.id === action.value).quanty
+            let quanty = state.cart.find((item) => item.id === action.value.id).quanty
             if (quanty === 1) {
-                state.cart = state.cart.filter((item) => item.id !== action.value)
+                state.cart = state.cart.filter((item) => item.id !== action.value.id)
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
-                return { ...state, cart: state.cart, total: state.total,  cartChanged: !state.cartChanged, productRemoved: action.value }
+                return {
+                    ...state,
+                    cart: state.cart,
+                    total: state.total,
+                    cartChanged: !state.cartChanged,
+                    product: {
+                        id: action.value.id,
+                        salesRoomStock: action.value.salesRoomStock
+                    }, actionType: 'REMOVE_FROM_CART'
+                }
             } else {
-                let productIndex = state.cart.findIndex((item) => item.id === action.value)
+                let productIndex = state.cart.findIndex((item) => item.id === action.value.id)
                 state.cart[productIndex].quanty -= 1
-                state.cart[productIndex].salesRoomStock += 1
+                state.cart[productIndex].virtualStock += 1
                 state.cart[productIndex].subTotal = (state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
                 state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].subTotal)
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
-                return { ...state, cart: state.cart, total: state.total,  cartChanged: !state.cartChanged, productRemoved: action.value }
+                return {
+                    ...state,
+                    cart: state.cart,
+                    total: state.total,
+                    cartChanged: !state.cartChanged,
+                    product: {
+                        id: action.value.id,
+                        virtualStock: state.cart[productIndex].virtualStock,
+                        salesRoomStock: state.cart[productIndex].salesRoomStock
+                    },
+                    actionType: 'SUBSTRACT_QUANTY'
+                }
             }
+            break
         case 'ADD_QUANTY':
-            let productIndex = state.cart.findIndex((item) => item.id === action.value)
+            let productIndex = state.cart.findIndex((item) => item.id === action.value.id)
             state.cart[productIndex].quanty += 1
-            state.cart[productIndex].salesRoomStock -= 1
+            state.cart[productIndex].virtualStock -= 1
             state.cart[productIndex].subTotal = (state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
             state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].subTotal)
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
-            return { ...state, cart: state.cart, total: state.total, cartChanged: !state.cartChanged }
+            return {
+                ...state,
+                cart: state.cart,
+                total: state.total,
+                cartChanged: !state.cartChanged,
+                product: {
+                    id: action.value.id,
+                    virtualStock: state.cart[productIndex].virtualStock,
+                    salesRoomStock: state.cart[productIndex].salesRoomStock
+                }, actionType: 'ADD_QUANTY'
+            }
         case 'EDIT_QUANTY':
             let productIndx = state.cart.findIndex((item) => item.id === action.value.id)
-            state.cart[productIndx].quanty = action.value.quanty
-            state.cart[productIndx].subTotal = (state.cart[productIndx].quanty * state.cart[productIndx].sale) * (1 - state.cart[productIndex].discount / 100)
+            let editQuanty = isNaN(parseFloat(action.value.quanty)) ? action.value.id : parseFloat(action.value.quanty)
+            let vrStock = (state.cart[productIndx].salesRoomStock - editQuanty)
+            let desc = state.cart[productIndx].discount
+            state.cart[productIndx].quanty = editQuanty
+            state.cart[productIndx].virtualStock = vrStock
+            state.cart[productIndx].subTotal = (state.cart[productIndx].quanty * state.cart[productIndx].sale) * (1 - (desc / 100))
             state.cart[productIndx].subTotal = roundToNearestTenth(state.cart[productIndx].subTotal)
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
-            return { ...state, cart: state.cart, total: state.total }
+            return {
+                ...state,
+                cart: state.cart,
+                total: state.total,
+                cartChanged: !state.cartChanged,
+                product: {
+                    id: action.value.id,
+                    virtualStock: vrStock,
+                    salesRoomStock: state.cart[productIndx].salesRoomStock
+                },
+                actionType: 'EDIT_QUANTY'
+            }
         case 'LOCK':
             return { ...state, lock: true }
         case 'UNLOCK':
             return { ...state, lock: false }
         case 'ADD_DISCOUNT':
             let productInd = state.cart.findIndex((item) => item.id === action.value)
-            state.cart[productInd].discount += 1
-            state.cart[productInd].subTotal = Math.round((state.cart[productInd].quanty * state.cart[productInd].sale) * (1 - state.cart[productInd].discount / 100))
+            let disc = parseInt(state.cart[productInd].discount) 
+            state.cart[productInd].discount = disc += 1
+            state.cart[productInd].subTotal = Math.round((state.cart[productInd].quanty * state.cart[productInd].sale) * (1 - (state.cart[productInd].discount / 100)))
             state.cart[productInd].subTotal = roundToNearestTenth(state.cart[productInd].subTotal)
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
@@ -117,7 +197,8 @@ const reducer = (state, action) => {
         case 'CLOSE_SNACK':
             return { ...state, snackState: false }
         default:
-            return state
+            console.log('No action type')
+            break
     }
 }
 
@@ -132,7 +213,8 @@ const AppProvider = ({ children }) => {
             snackType: state.snackType,
             snackMessage: state.snackMessage,
             cartChanged: state.cartChanged,
-            productRemoved: state.productRemoved,
+            product: state.product,
+            actionType: state.actionType,
             dispatch
         }}>
             {children}

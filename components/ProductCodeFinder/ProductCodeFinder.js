@@ -27,20 +27,25 @@ export default function ProductCodeFinder() {
                 } else {
                     let product = cart.find((product) => product.id === res[0].id)
                     if (product === undefined) {
-                        product = {
-                            id: res[0].id,
-                            name: res[0].name,
-                            quanty: 1,
-                            sale: res[0].Price.sale,
-                            subTotal: res[0].Price.sale,
-                            salesRoomStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
-                            discount: 0
+                        if (res[0].Stocks.find(item => (item.storage_id == 1001)).stock == 0) {
+                            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
+                        } else {
+                            product = {
+                                id: res[0].id,
+                                name: res[0].name,
+                                quanty: 1,
+                                sale: res[0].Price.sale,
+                                subTotal: res[0].Price.sale,
+                                salesRoomStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
+                                virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
+                                discount: 0
+                            }
+                            dispatch({ type: 'ADD_TO_CART', value: product })
+                            setCode('')
+                            inputCode.current.focus()
                         }
-                        dispatch({ type: 'ADD_TO_CART', value: product })
-                        setCode('')
-                        inputCode.current.focus()
                     } else {
-                        if (product.salesRoomStock <= 0) {
+                        if (product.virtualStock <= 0) {
                             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
                         } else {
                             dispatch({ type: 'ADD_TO_CART', value: product })
@@ -56,21 +61,27 @@ export default function ProductCodeFinder() {
     }
 
     const addToCart = (product) => {
-        product = {
-            id: product.id,
-            name: product.name,
-            quanty: 1,
-            sale: product.Price.sale,
-            subTotal: product.Price.sale,
-            salesRoomStock: product.SalesRoomStock,
-            discount: 0
-        }
         setOpenSelectionDialog(false)
-        dispatch({ type: 'ADD_TO_CART', value: product })
-        setCode('')
-
+        let productInCart = cart.find((item) => item.id === product.id)
+        if (productInCart === undefined) {
+            if (productInCart.virtualStock == 0) {
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
+            } else {
+                dispatch({ type: 'ADD_TO_CART', value: product })
+                setCode('')
+            }
+        } else {
+            if (product.virtualStock== 0) {
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
+            } else {
+                dispatch({ type: 'ADD_TO_CART', value: product })
+                setCode('')
+            }
+        }
 
     }
+
+
     return (
         <>
             <form onSubmit={(e) => { e.preventDefault(); addProduct(code) }}>
@@ -107,13 +118,26 @@ export default function ProductCodeFinder() {
                                             <Typography fontSize={20}> {product.name}</Typography>
                                             <Typography variant={'caption'}> {product.Category.name}</Typography>
                                         </Stack>
-                                        <IconButton onClick={() => { addToCart(product) }}>
+                                        <IconButton onClick={() => {
+                                            addToCart({
+                                                id: product.id,
+                                                id: product.id,
+                                                name: product.name,
+                                                quanty: 1,
+                                                sale: product.Price.sale,
+                                                subTotal: product.Price.sale,
+                                                salesRoomStock: product.Stocks.find(item => (item.storage_id == 1001)).stock,
+                                                virtualStock: product.Stocks.find(item => (item.storage_id == 1001)).stock,
+                                                discount: 0
+
+                                            })
+                                        }}>
                                             <ShoppingCartIcon />
                                         </IconButton>
                                     </Box>
                                     <Box sx={{ padding: 1 }}>
                                         <Typography> {utils.renderMoneystr(product.Price.sale)}</Typography>
-                                        <Typography>{'Stock en sala: ' + 0}</Typography>
+                                        <Typography>{'Stock en sala: ' + product.Stocks.find(item => (item.storage_id == 1001)).stock}</Typography>
 
                                     </Box>
                                     <Box sx={{ padding: 1 }} textAlign={'center'}>

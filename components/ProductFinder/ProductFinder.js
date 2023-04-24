@@ -21,15 +21,64 @@ const utils = require('../../utils')
 
 export default function ProductFinder(props) {
     const { stockControl } = props
-    const { cart, dispatch, cartChanged, productRemoved } = useAppContext()
+    const { cart, dispatch, cartChanged, product, actionType } = useAppContext()
     const [gridApiRef, setGridApiRef] = useState(null)
-    const [rowData, setRowData] = useState(rowDataDefault())
+    const [rowData, setRowData] = useState({})
     const [productsList, setProductsList] = useState([])
+  
 
 
     useEffect(() => {
-        if ([...cart].length == 0) {
-            products.findAll().then(res => {
+        // console.log('actionType', actionType)
+        switch (actionType) {
+            case 'NONE_TYPE':
+                console.log('NONE_TYPE')
+                break
+            case 'NEW_ADD_TO_CART':
+                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl? product.virtualStock: product.salesRoomStock }])
+                break
+            case 'ADD_TO_CART':
+                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl? product.virtualStock: product.salesRoomStock }])
+                break
+            case 'REMOVE_FROM_CART':
+                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: product.salesRoomStock }])
+                break
+            case 'SUBSTRACT_QUANTY':
+                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl? product.virtualStock: product.salesRoomStock  }])
+                break
+            case 'ADD_QUANTY':
+                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl? product.virtualStock: product.salesRoomStock  }])
+                break
+            case 'EDIT_QUANTY':
+                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl? product.virtualStock: product.salesRoomStock  }])
+                break
+            case 'CLEAR_CART':
+                products.findAll()
+                    .then(res => {
+                        let data = res.map((item) => ({
+                            id: item.id,
+                            name: item.name,
+                            code: item.code,
+                            sale: item.Price.sale,
+                            salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                        }))
+                        setProductsList(data)
+                    })
+                    .catch(err => { console.log(err) })
+                break
+            default:
+                console.log('DEFAULT')
+                break
+        }
+    }, [cartChanged])
+
+
+
+
+
+    useEffect(() => {
+        products.findAll()
+            .then(res => {
                 let data = res.map((item) => ({
                     id: item.id,
                     name: item.name,
@@ -39,40 +88,6 @@ export default function ProductFinder(props) {
                 }))
                 setProductsList(data)
             })
-                .catch(err => { console.log(err) })
-        } else {
-            if (gridApiRef != undefined) {
-                if (cart.find(product => product.id == productRemoved) == undefined) {
-                    products.findOneById(productRemoved)
-                        .then(res => {
-                            let product = {
-                                id: res.id,
-                                salesRoomStock: res.Stocks.find(item => (item.storage_id == 1001)).stock,
-                            }
-                            gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: product.salesRoomStock }])
-                        })
-                        .catch(err => { console.log(err) })
-                } else {
-                    cart.map(product => {
-                        gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: product.salesRoomStock }])
-                    })
-                }
-            }
-        }
-    }, [cartChanged])
-
-
-    useEffect(() => {
-        products.findAll().then(res => {
-            let data = res.map((item) => ({
-                id: item.id,
-                name: item.name,
-                code: item.code,
-                sale: item.Price.sale,
-                salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)).stock,
-            }))
-            setProductsList(data)
-        })
             .catch(err => { console.log(err) })
     }, [])
 
@@ -90,7 +105,8 @@ export default function ProductFinder(props) {
         { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
         { field: 'code', headerName: 'Código', flex: .6 },
         { field: 'name', headerName: 'Nombre', flex: 1 },
-        { field: 'salesRoomStock', headerName: 'Stock sala', flex: .5, hide: !stockControl },
+        //hide: !stockControl
+        { field: 'salesRoomStock', headerName: 'Stock sala', flex: .5,  },
         { field: 'sale', headerName: 'Precio Venta', flex: .7, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
@@ -108,7 +124,8 @@ export default function ProductFinder(props) {
                             sale: params.row.sale,
                             subTotal: params.row.sale,
                             discount: 0,
-                            salesRoomStock: params.row.salesRoomStock
+                            salesRoomStock: params.row.salesRoomStock,
+                            virtualStock: params.row.salesRoomStock
                         })
                     }}
                 />
@@ -144,15 +161,6 @@ export default function ProductFinder(props) {
     )
 }
 
-
-function rowDataDefault() {
-    return {
-        id: 0,
-        name: '',
-        code: '',
-        sale: 0,
-    }
-}
 
 function CustomToolbar(props) {
     const { gridHeader } = props
