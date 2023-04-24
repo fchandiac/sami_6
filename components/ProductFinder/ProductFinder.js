@@ -4,6 +4,7 @@ import {
     esES,
     GridToolbarQuickFilter,
     useGridApiContext,
+    useGridApiRef,
     useGridSelector,
     gridPageSelector,
     gridPageCountSelector,
@@ -20,10 +21,46 @@ const utils = require('../../utils')
 
 export default function ProductFinder(props) {
     const { stockControl } = props
-    const { dispatch } = useAppContext()
+    const { cart, dispatch, cartChanged, productRemoved } = useAppContext()
     const [gridApiRef, setGridApiRef] = useState(null)
     const [rowData, setRowData] = useState(rowDataDefault())
     const [productsList, setProductsList] = useState([])
+
+
+    useEffect(() => {
+        if ([...cart].length == 0) {
+            products.findAll().then(res => {
+                let data = res.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    code: item.code,
+                    sale: item.Price.sale,
+                    salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                }))
+                setProductsList(data)
+            })
+                .catch(err => { console.log(err) })
+        } else {
+            if (gridApiRef != undefined) {
+                if (cart.find(product => product.id == productRemoved) == undefined) {
+                    products.findOneById(productRemoved)
+                        .then(res => {
+                            let product = {
+                                id: res.id,
+                                salesRoomStock: res.Stocks.find(item => (item.storage_id == 1001)).stock,
+                            }
+                            gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: product.salesRoomStock }])
+                        })
+                        .catch(err => { console.log(err) })
+                } else {
+                    cart.map(product => {
+                        gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: product.salesRoomStock }])
+                    })
+                }
+            }
+        }
+    }, [cartChanged])
+
 
     useEffect(() => {
         products.findAll().then(res => {
@@ -36,10 +73,17 @@ export default function ProductFinder(props) {
             }))
             setProductsList(data)
         })
+            .catch(err => { console.log(err) })
     }, [])
 
     const addToCart = (product) => {
-        dispatch({ type: 'ADD_TO_CART', value: product })
+        if (product.salesRoomStock <= 0) {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
+        } else {
+            dispatch({ type: 'ADD_TO_CART', value: product })
+
+        }
+
     }
 
     const columns = [
@@ -64,7 +108,7 @@ export default function ProductFinder(props) {
                             sale: params.row.sale,
                             subTotal: params.row.sale,
                             discount: 0,
-                            salesRoomStock: params.row.salesRoomStock,
+                            salesRoomStock: params.row.salesRoomStock
                         })
                     }}
                 />
@@ -90,7 +134,7 @@ export default function ProductFinder(props) {
                             gridHeader: 'Productos',
                         },
                         pagination: {
-                            setGridApiRef: setGridApiRef
+                            setGridApiRef: setGridApiRef,
                         }
 
                     }}
@@ -134,6 +178,10 @@ function CustomPagination(props) {
     const page = useGridSelector(apiRef, gridPageSelector)
     const pageCount = useGridSelector(apiRef, gridPageCountSelector)
 
+    useEffect(() => {
+        setGridApiRef(apiRef)
+    }, [])
+
 
 
     return (
@@ -151,7 +199,6 @@ function CustomPagination(props) {
 
                     onChange={(event, value) => apiRef.current.setPage(value - 1)}
                 />
-                {/* <Typography>{'khgkjg'}</Typography> */}
             </Stack>
         </Box>
 

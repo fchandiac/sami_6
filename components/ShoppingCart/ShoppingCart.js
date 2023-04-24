@@ -27,7 +27,6 @@ import { GridActionsCellItem } from '@mui/x-data-grid'
 import electron from 'electron'
 import { useAppContext } from '../../AppProvider'
 import AppPaper from '../AppPaper/AppPaper'
-import AppErrorSnack from '../AppErrorSnack'
 const ipcRenderer = electron.ipcRenderer || false
 const utils = require('../../utils')
 const print = require('../../promises/print')
@@ -114,7 +113,13 @@ export default function ShoppingCart() {
     }
 
     const addProduct = (id) => {
-        dispatch({ type: 'ADD_QUANTY', value: id })
+        let product = cart.find((product) => product.id === id)
+        if(product.salesRoomStock <= 0) {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
+        } else {
+            dispatch({ type: 'ADD_QUANTY', value: id })
+        }
+        
     }
 
     const editQuanty = (id, quanty) => {

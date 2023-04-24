@@ -11,6 +11,7 @@ import ProductCodeFinder from '../ProductCodeFinder/ProductCodeFinder'
 
 export default function CashRegister() {
   const [cashRegisterUI, setCashRegisterUI] = useState({})
+  // const [ cartChanged, setCartChanged ] = useState(false)
 
   useEffect(() => {
     let cashRegisterUI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
@@ -23,7 +24,7 @@ export default function CashRegister() {
         <Grid item xs={5}>
           <Grid container spacing={1} direction={'column'}>
             <Grid item>
-              <ProductCodeFinder stockControl={cashRegisterUI.stock_control}/>
+              <ProductCodeFinder stockControl={cashRegisterUI.stock_control} />
             </Grid>
             <Grid item>
               <ProductFinder stockControl={cashRegisterUI.stock_control}/>

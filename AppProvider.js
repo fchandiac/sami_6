@@ -5,11 +5,13 @@ const useAppContext = () => React.useContext(AppContext)
 
 const initialState = {
     cart: [],
+    cartChanged: false,
     total: 0,
     lock: true,
     snackState: false,
     snackType: 'error',
     snackMessage: '',
+    productRemoved: {}
 }
 
 const reducer = (state, action) => {
@@ -18,47 +20,53 @@ const reducer = (state, action) => {
             if (state.cart.find((item) => item.id === action.value.id)) {
                 let productIndex = state.cart.findIndex((item) => item.id === action.value.id)
                 state.cart[productIndex].quanty += 1
+                state.cart[productIndex].salesRoomStock -= 1
                 state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
+                return { ...state, cart: state.cart, total: state.total, cartChanged: !state.cartChanged  }
             } else {
                 action.value.subTotal = roundToNearestTenth(action.value.sale)
+                action.value.salesRoomStock -= 1
                 state.cart = [...state.cart, action.value]
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
+                return { ...state, cart: state.cart, total: state.total, cartChanged: !state.cartChanged }
             }
-            return { ...state, cart: state.cart, total: state.total }
+
         case 'REMOVE_FROM_CART':
             state.cart = state.cart.filter((item) => item.id !== action.value)
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
-            return { ...state, cart: state.cart, total: state.total }
+            return { ...state, cart: state.cart, total: state.total, cartChanged: !state.cartChanged, productRemoved: action.value  }
         case 'CLEAR_CART':
-            return { ...state, cart: [], total: 0 }
+            return { ...state, cart: [], total: 0, cartChanged: !state.cartChanged }
         case 'SUBSTRACT_QUANTY':
             let quanty = state.cart.find((item) => item.id === action.value).quanty
             if (quanty === 1) {
                 state.cart = state.cart.filter((item) => item.id !== action.value)
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
-                return { ...state, cart: state.cart, total: state.total }
+                return { ...state, cart: state.cart, total: state.total,  cartChanged: !state.cartChanged, productRemoved: action.value }
             } else {
                 let productIndex = state.cart.findIndex((item) => item.id === action.value)
-                state.cart[productIndex].quanty += -1
+                state.cart[productIndex].quanty -= 1
+                state.cart[productIndex].salesRoomStock += 1
                 state.cart[productIndex].subTotal = (state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
                 state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].subTotal)
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
-                return { ...state, cart: state.cart, total: state.total }
+                return { ...state, cart: state.cart, total: state.total,  cartChanged: !state.cartChanged, productRemoved: action.value }
             }
         case 'ADD_QUANTY':
             let productIndex = state.cart.findIndex((item) => item.id === action.value)
             state.cart[productIndex].quanty += 1
+            state.cart[productIndex].salesRoomStock -= 1
             state.cart[productIndex].subTotal = (state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
             state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].subTotal)
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
-            return { ...state, cart: state.cart, total: state.total }
+            return { ...state, cart: state.cart, total: state.total, cartChanged: !state.cartChanged }
         case 'EDIT_QUANTY':
             let productIndx = state.cart.findIndex((item) => item.id === action.value.id)
             state.cart[productIndx].quanty = action.value.quanty
@@ -123,6 +131,8 @@ const AppProvider = ({ children }) => {
             snackState: state.snackState,
             snackType: state.snackType,
             snackMessage: state.snackMessage,
+            cartChanged: state.cartChanged,
+            productRemoved: state.productRemoved,
             dispatch
         }}>
             {children}
