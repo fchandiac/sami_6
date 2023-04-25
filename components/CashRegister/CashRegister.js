@@ -32,7 +32,7 @@ export default function CashRegister() {
           </Grid>
         </Grid>
         <Grid item xs={7}>
-          <ShoppingCart></ShoppingCart>
+          <ShoppingCart stockControl={cashRegisterUI.stock_control} />
         </Grid>
       </Grid>
     </>

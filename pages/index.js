@@ -5,8 +5,6 @@ import CashRegisterTab from '../components/Tabs/CashRegisterTab'
 
 export default function Home() {
   return (
-    <Layout pageTitle='Caja'>
       <CashRegisterTab></CashRegisterTab>
-    </Layout>
   )
 }

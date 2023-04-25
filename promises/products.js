@@ -124,6 +124,7 @@ function findOneByCode(code) {
     })
     return product
 }
+
 function findOneById(id) {
     let data = {id}
     const product = new Promise((resolve, reject) => {
@@ -144,5 +145,25 @@ function findOneById(id) {
     return product
 }
 
+function destroy(id) {
+    let data = {id}
+    const product = new Promise((resolve, reject) => {
+        fetch(url + 'products/destroy', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return product
+}
 
-export {findAll, create, findOneByName, updateFavorite, updateFull, findOneByCode, findOneById}
+
+export {findAll, create, findOneByName, updateFavorite, updateFull, findOneByCode, findOneById, destroy}

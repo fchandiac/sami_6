@@ -8,6 +8,7 @@ import ChevronLeft from '@mui/icons-material/ChevronLeft'
 import { React, useState } from 'react'
 import Link from 'next/link'
 import { useAppContext } from '../../AppProvider'
+import { useRouter } from 'next/router'
 
 
 // can use on component className={styles.exampleClass}
@@ -20,11 +21,13 @@ export default function Layout(props) {
   const { children, pageTitle } = props
   const { dispatch } = useAppContext()
   const [drawerState, setDrawerState] = useState(false)
+  const router = useRouter()
 
   health.default()
-  .catch(() =>{
-    dispatch({type: 'OPEN_SNACK', value: {type: 'error', message: 'No se pudo conectar con el servidor'}})
-  })
+    .catch(() => {
+      dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No se pudo conectar con el servidor' } })
+    })
+
   return (
     <>
       <AppBar >
@@ -71,23 +74,50 @@ export default function Layout(props) {
         <List>
           <ListItem disablePadding>
             <ListItemButton>
-              <Link href="/">
-                <ListItemText primary="Caja" />
-              </Link>
+              <ListItemText primary='Caja'
+                onClick={() => {
+                  router.push({
+                    pathname: '/',
+                  })
+                  setDrawerState(false)
+                }}
+              />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton>
-              <Link href="/products">
-                <ListItemText primary="Productos" />
-              </Link>
+            <ListItemText primary='Productos'
+                onClick={() => {
+                  router.push({
+                    pathname: '/products',
+                  })
+                  setDrawerState(false)
+                }}
+              />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton>
-              <Link href="/config">
-                <ListItemText primary="Configuración" />
-              </Link>
+            <ListItemText primary='Stocks'
+                onClick={() => {
+                  router.push({
+                    pathname: '/stocks',
+                  })
+                  setDrawerState(false)
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton>
+            <ListItemText primary='Configuración'
+                onClick={() => {
+                  router.push({
+                    pathname: '/config',
+                  })
+                  setDrawerState(false)
+                }}
+              />
             </ListItemButton>
           </ListItem>
         </List>

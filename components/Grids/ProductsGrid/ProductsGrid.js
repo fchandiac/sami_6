@@ -24,6 +24,7 @@ export default function ProductsGrid(props) {
     const [categoriesInput, setCategoriesInput] = useState('')
     const [taxesOptions, setTaxesOptions] = useState([])
     const [taxesInput, settaxesInput] = useState('')
+    const [openDestroyDialog, setOpenDestroyDialog] = useState(false)
 
     useEffect(() => {
         products.findAll().then(res => {
@@ -100,6 +101,15 @@ export default function ProductsGrid(props) {
         }
     }
 
+    const destroy  = () => {
+        products.destroy(rowData.id)
+            .then(() => {
+                gridApiRef.current.updateRows([{ id: rowData.rowId, _action: 'delete' }])
+                setOpenDestroyDialog(false)
+            })
+            .catch(err => { console.error(err) })
+    }
+
 
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
@@ -116,14 +126,22 @@ export default function ProductsGrid(props) {
                     label='delete'
                     icon={<DeleteIcon />}
                     onClick={() => {
-                        // setRowData({
-                        //     rowId: params.id,
-                        //     id: params.row.id,
-                        //     name: params.row.name,
-                        //     weight: params.row.weight,
-                        //     stock: params.row.stock
-                        // })
-                        // setOpenDeleteDialog(true)
+                        setRowData({
+                            rowId: params.id,
+                            id: params.row.id,
+                            name: params.row.name,
+                            code: params.row.code,
+                            sale: params.row.sale,
+                            oldSale: params.row.sale,
+                            purchase: params.row.purchase,
+                            oldPurchase: params.row.purchase,
+                            price_id: params.row.price_id,
+                            tax: params.row.tax,
+                            tax_id: params.row.tax_id,
+                            category: params.row.category,
+                            category_id: params.row.category_id
+                        })
+                        setOpenDestroyDialog(true)
                     }}
                 />,
                 <GridActionsCellItem
@@ -237,6 +255,43 @@ export default function ProductsGrid(props) {
                     <DialogActions sx={{ p: 2 }}>
                         <Button variant={'contained'} type={'submit'}>Actualizar</Button>
                         <Button variant={'outlined'} onClick={() => setOpenInfoDialog(false)}>Cerrar</Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
+
+            <Dialog open={openDestroyDialog} maxWidth={'xs'} fullWidth>
+                <DialogTitle sx={{ p: 2 }}>
+                    Eliminar producto
+                </DialogTitle>
+                <form onSubmit={(e) => { e.preventDefault(); destroy() }}>
+                    <DialogContent sx={{ p: 2 }}>
+                        <Grid container spacing={1} direction={'column'}>
+                            <Grid item marginTop={1}>
+                                <TextField
+                                    label="Id"
+                                    value={rowData.id}
+                                    inputProps={{ readOnly: true }}
+                                    variant="outlined"
+                                    size={'small'}
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid item>
+                                <TextField
+                                    label="Nombre"
+                                    value={rowData.name}
+                                    inputProps={{ readOnly: true }}
+                                    variant="outlined"
+                                    size={'small'}
+                                    fullWidth
+                                />
+                            </Grid>
+                        
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button variant={'contained'} type={'submit'}>Eliminar</Button>
+                        <Button variant={'outlined'} onClick={() => setOpenDestroyDialog(false)}>Cerrar</Button>
                     </DialogActions>
                 </form>
             </Dialog>

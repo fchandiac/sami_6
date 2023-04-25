@@ -8,7 +8,8 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 const products = require('../../promises/products')
 const utils = require('../../utils')
 
-export default function ProductCodeFinder() {
+export default function ProductCodeFinder(props) {
+    const { stockControl } = props
     const { cart, dispatch } = useAppContext()
     const [code, setCode] = useState('')
     const [openSelectionDialog, setOpenSelectionDialog] = useState(false)
@@ -20,6 +21,8 @@ export default function ProductCodeFinder() {
         products.findOneByCode(code)
             .then(res => {
                 if (res.length === 0) {
+                    setCode('')
+                    inputCode.current.focus()
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Producto no encontrado' } })
                 } else if (res.length > 1) {
                     setProductsList(res)
@@ -27,7 +30,9 @@ export default function ProductCodeFinder() {
                 } else {
                     let product = cart.find((product) => product.id === res[0].id)
                     if (product === undefined) {
-                        if (res[0].Stocks.find(item => (item.storage_id == 1001)).stock == 0) {
+                        if (stockControl == true && res[0].Stocks.find(item => (item.storage_id == 1001)).stock <= 0) {
+                            setCode('')
+                            inputCode.current.focus()
                             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
                         } else {
                             product = {
@@ -40,17 +45,21 @@ export default function ProductCodeFinder() {
                                 virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 discount: 0
                             }
-                            dispatch({ type: 'ADD_TO_CART', value: product })
                             setCode('')
                             inputCode.current.focus()
+                            dispatch({ type: 'ADD_TO_CART', value: product })
+                            
                         }
                     } else {
-                        if (product.virtualStock <= 0) {
-                            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
-                        } else {
-                            dispatch({ type: 'ADD_TO_CART', value: product })
+                        if (stockControl == true && product.virtualStock <= 0) {
                             setCode('')
                             inputCode.current.focus()
+                            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
+                        } else {
+                            setCode('')
+                            inputCode.current.focus()
+                            dispatch({ type: 'ADD_TO_CART', value: product })
+                            
                         }
 
                     }
@@ -64,14 +73,14 @@ export default function ProductCodeFinder() {
         setOpenSelectionDialog(false)
         let productInCart = cart.find((item) => item.id === product.id)
         if (productInCart === undefined) {
-            if (productInCart.virtualStock == 0) {
+            if (stockControl == true && product.salesRoomStock <= 0) {
                 dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
             } else {
                 dispatch({ type: 'ADD_TO_CART', value: product })
                 setCode('')
             }
         } else {
-            if (product.virtualStock== 0) {
+            if (stockControl == true && productInCart.virtualStock <= 0) {
                 dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
             } else {
                 dispatch({ type: 'ADD_TO_CART', value: product })

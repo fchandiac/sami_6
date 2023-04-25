@@ -4,8 +4,6 @@ import ProductsTab from '../components/Tabs/ProductsTab'
 
 export default function products() {
   return (
-    <Layout pageTitle='Productos'>
-        <ProductsTab></ProductsTab>
-    </Layout>
+        <ProductsTab/>
   )
 }

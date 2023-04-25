@@ -31,7 +31,8 @@ const ipcRenderer = electron.ipcRenderer || false
 const utils = require('../../utils')
 const print = require('../../promises/print')
 
-export default function ShoppingCart() {
+export default function ShoppingCart(props) {
+    const {stockControl} = props
     const payAmountRef = useRef(null)
     const { cart, total, lock, dispatch } = useAppContext()
     const [rowData, setRowData] = useState([])
@@ -127,7 +128,7 @@ export default function ShoppingCart() {
             dispatch({ type: 'REMOVE_FROM_CART', value: { id: rowData.id, salesRoomStock: rowData.salesRoomStock } })
             setOpenEditQuantyDialog(false)
         } else {
-            if (rowData.quanty > rowData.salesRoomStock) {
+            if (stockControl == true && rowData.quanty > rowData.salesRoomStock) {
                 dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock suficiente' } })
             } else {
                 dispatch({ type: 'EDIT_QUANTY', value: { id: rowData.id, quanty: rowData.quanty } })
