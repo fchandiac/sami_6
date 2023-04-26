@@ -8,8 +8,8 @@ const port = 3001
 
 
 ///// --------> NODE ENV <-------/////////
-const env = process.env.NODE_ENV
-//const env = 'build'
+//const env = process.env.NODE_ENV
+const env = 'build'
 ///// --------------------------/////////
 
 
@@ -23,6 +23,9 @@ exp.use(express.json())
 exp.use(express.urlencoded({ extended: false }))
 exp.use(cors({ origin: '*' })) // permite acceso de otros clientes dentro de la red
 exp.use(express.static(path.join(__dirname, './out')))
+
+///// --------> EXPRESS PRINTER <-------/////////
+exp.use(require('./printerRoute'))
 
 exp.get('/', (req, res) => {
 	res.send('Server Work')
@@ -133,11 +136,11 @@ function ejecuteNext(win, splash) {
 }
 
 
+
 /////// --------> IPC COMMUNICATION <-------/////////
 const filePathConfig = path.join(__dirname, './config.json')
 
 ipcMain.on('read-config', (e, arg) => {
-
 	let rawDataConfig = fs.readFileSync(filePathConfig)
 	let config = JSON.parse(rawDataConfig)
 	e.returnValue = config
@@ -199,7 +202,33 @@ ipcMain.on('update-cash-register-UI', (e, arg) => {
 	fs.writeFileSync(filePathConfig, data)
 })
 
+ipcMain.on('get-printer', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	e.returnValue = config.printer
+})
 
+ipcMain.on('update-printer', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	config.printer = arg
+	data = JSON.stringify(config)
+	fs.writeFileSync(filePathConfig, data)
+})
+
+ipcMain.on('get-ticket-info', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	e.returnValue = config.ticket_info
+})
+
+ipcMain.on('update-ticket-info', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	config.ticket_info = arg
+	data = JSON.stringify(config)
+	fs.writeFileSync(filePathConfig, data)
+})
 
 
 

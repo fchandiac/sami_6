@@ -12,7 +12,8 @@ const initialState = {
     snackType: 'error',
     snackMessage: '',
     product: 0,
-    actionType: 'NONE_TYPE'
+    actionType: 'NONE_TYPE',
+    pageTitle: 'Caja'
 }
 
 const reducer = (state, action) => {
@@ -196,6 +197,8 @@ const reducer = (state, action) => {
             return { ...state, snackState: true, snackType: action.value.type, snackMessage: action.value.message }
         case 'CLOSE_SNACK':
             return { ...state, snackState: false }
+        case 'SET_PAGE_TITLE':
+            return { ...state, pageTitle: action.value }
         default:
             console.log('No action type')
             break
@@ -215,6 +218,7 @@ const AppProvider = ({ children }) => {
             cartChanged: state.cartChanged,
             product: state.product,
             actionType: state.actionType,
+            pageTitle: state.pageTitle,
             dispatch
         }}>
             {children}

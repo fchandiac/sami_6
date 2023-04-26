@@ -12,7 +12,6 @@ const prices = require('../../../promises/prices')
 const stocks = require('../../../promises/stocks')
 
 
-
 export default function NewProducForm(props) {
     const { updateGrid } = props
     const { dispatch } = useAppContext()

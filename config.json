@@ -1,1 +1,41 @@
-{"db":{"name":"sami_5","user":"root","host":"localhost","password":"Fenasantma","port":3306},"api":{"url":"http://localhost:3002/"},"payment_methods":[{"name":"Débito"},{"name":"Transferencia"}],"customer_credit":{"name":"SAMI credit","state":false},"admin_pass":"1234","cash_register_UI":{"stock_control":true}}
+{
+    "db": {
+        "name": "sami_5",
+        "user": "root",
+        "host": "localhost",
+        "password": "Fenasantma",
+        "port": 3306
+    },
+    "api": {
+        "url": "http://localhost:3002/"
+    },
+    "payment_methods": [
+        {
+            "name": "Débito"
+        },
+        {
+            "name": "Transferencia"
+        },
+        {
+            "name": "credito"
+        }
+    ],
+    "customer_credit": {
+        "name": "SAMI credit",
+        "state": false
+    },
+    "admin_pass": "1234",
+    "cash_register_UI": {
+        "stock_control": true
+    },
+    "printer": {
+        "idVendor": "1155",
+        "idProduct": "22339"
+    },
+    "ticket_info": {
+        "name": "SAMI 6 test",
+        "address": "Calle 1 # 1-11",
+        "phone": "1234567899",
+        "rut": "12345678-99"
+    }
+}

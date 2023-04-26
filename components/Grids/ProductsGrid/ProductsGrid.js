@@ -28,6 +28,7 @@ export default function ProductsGrid(props) {
 
     useEffect(() => {
         products.findAll().then(res => {
+            console.log(res)
             let data = res.map((item) => ({
                 id: item.id,
                 name: item.name,

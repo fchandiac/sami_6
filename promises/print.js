@@ -1,8 +1,8 @@
 const config = require('../config.json')
-const url = config.api.url
+const url = "http://localhost:3001/"
 
-function ticket(total, cart) {
-    let data = { total, cart }
+function ticket(total, cart, ticketInfo, printerInfo) {
+    let data = { total, cart, ticketInfo, printerInfo }
     const print = new Promise((resolve, reject) => {
         fetch(url + 'print/ticket', {
             method: 'POST',

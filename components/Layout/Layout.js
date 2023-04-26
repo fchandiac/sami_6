@@ -18,8 +18,8 @@ import AppSnack from '../AppSnack/AppSnack'
 const health = require('../../promises/health')
 
 export default function Layout(props) {
-  const { children, pageTitle } = props
-  const { dispatch } = useAppContext()
+  const { children } = props
+  const { dispatch, pageTitle } = useAppContext()
   const [drawerState, setDrawerState] = useState(false)
   const router = useRouter()
 
@@ -79,6 +79,7 @@ export default function Layout(props) {
                   router.push({
                     pathname: '/',
                   })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Caja' })
                   setDrawerState(false)
                 }}
               />
@@ -91,6 +92,7 @@ export default function Layout(props) {
                   router.push({
                     pathname: '/products',
                   })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Productos' })
                   setDrawerState(false)
                 }}
               />
@@ -103,6 +105,7 @@ export default function Layout(props) {
                   router.push({
                     pathname: '/stocks',
                   })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Stocks' })
                   setDrawerState(false)
                 }}
               />
@@ -115,6 +118,7 @@ export default function Layout(props) {
                   router.push({
                     pathname: '/config',
                   })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Configuración' })
                   setDrawerState(false)
                 }}
               />

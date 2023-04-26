@@ -12,7 +12,7 @@ import {
     gridPageCountSelector,
 } from '@mui/x-data-grid'
 import { ThemeProvider } from '@mui/material/styles'
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, forwardRef } from 'react'
 import BackspaceIcon from '@mui/icons-material/Backspace'
 import AddCircleIcon from '@mui/icons-material/AddCircle'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -27,13 +27,17 @@ import { GridActionsCellItem } from '@mui/x-data-grid'
 import electron from 'electron'
 import { useAppContext } from '../../AppProvider'
 import AppPaper from '../AppPaper/AppPaper'
+
 const ipcRenderer = electron.ipcRenderer || false
 const utils = require('../../utils')
 const print = require('../../promises/print')
+const stok = require('../../promises/stocks')
+
+
 
 export default function ShoppingCart(props) {
-    const {stockControl} = props
-    const payAmountRef = useRef(null)
+    const { stockControl } = props
+    const inputPayAmountRef = useRef(null)
     const { cart, total, lock, dispatch } = useAppContext()
     const [rowData, setRowData] = useState([])
     const [payAmount, setPayAmount] = useState(0)
@@ -55,6 +59,8 @@ export default function ShoppingCart(props) {
     const [disablePay, setDisablePay] = useState(true)
     const [change, setChange] = useState(0)
     const [openChangeDialog, setOpenChangeDialog] = useState(false)
+    const [printerInfo, setPrinterInfo] = useState({ idProduct: 0, idVendor: 0 })
+    const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
 
 
     const documentTypesList = [
@@ -63,17 +69,23 @@ export default function ShoppingCart(props) {
         { name: 'Sin impresora', label: 'Sin impresora' }
     ]
 
+
+
     useEffect(() => {
         let paymentMethods = ipcRenderer.sendSync('get-payment-methods', 'sync')
         let customerCredit = ipcRenderer.sendSync('get-customer-credit', 'sync')
         let adminPass = ipcRenderer.sendSync('get-admin-pass', 'sync')
+        let print_info = ipcRenderer.sendSync('get-printer', 'sync')
+        let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
         paymentMethods = paymentMethods.map((method) => {
             return { name: method.name, label: method.name }
         })
-        paymentMethods.unshift({ name: 'customerCredit', label: customerCredit.name })
+        customerCredit.state === true ? paymentMethods.unshift({ name: 'customerCredit', label: customerCredit.name }) : null
         paymentMethods.unshift({ name: 'Efectivo', label: 'Efectivo' })
         setPaymentMethodsList(paymentMethods)
         setAdminPass(adminPass)
+        setPrinterInfo(print_info)
+        setTicketInfo(ticket_info)
     }, [])
 
     useEffect(() => {
@@ -97,7 +109,6 @@ export default function ShoppingCart(props) {
             setShowCustomerFinder(false)
         } else if (paymentMethod == 'customerCredit') {
             setPayAmount(total)
-            payAmountRef.current.disabled = true
             setShowCustomerFinder(true)
         } else {
             setPayAmount(total)
@@ -137,7 +148,6 @@ export default function ShoppingCart(props) {
         }
     }
 
-
     const clearCart = () => {
         dispatch({ type: 'CLEAR_CART' })
     }
@@ -154,20 +164,65 @@ export default function ShoppingCart(props) {
         if (cart.length === 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
         } else {
+
+            console.log('ref', inputPayAmountRef.current)
             setOpenPayDialog(true)
+            // payAmountRef.current
         }
     }
 
     const payment = () => {
-        print.ticket(total, cart)
-            .then(() => {
-                setOpenPayDialog(false)
-                setOpenChangeDialog(true)
-            })
-            .catch(err => {
-                console.log(err)
-                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-            })
+        switch (documentType) {
+            case 'Ticket':
+                if (stockControl == true) {
+                    updateStocks(cart)
+                        .then(res => {
+                            console.log(res)
+                            setOpenPayDialog(false)
+                            setOpenChangeDialog(true)
+                            console.log('sin impresora - con stock')
+                            print.ticket(total, cart, ticketInfo, printerInfo)
+                                .then(() => {
+                                    setOpenPayDialog(false)
+                                    setOpenChangeDialog(true)
+                                })
+                                .catch(err => {
+                                    console.log(err)
+                                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                                })
+                        })
+                        .catch(err => { console.log(err) })
+                } else {
+                    setOpenPayDialog(false)
+                    setOpenChangeDialog(true)
+                    console.log('sin impresora - sin stock')
+                }
+                break
+            case 'Boleta':
+                console.log('boleta')
+                break
+            case 'Sin impresora':
+                if (stockControl == true) {
+                    updateStocks(cart)
+                        .then(res => {
+                            console.log(res)
+                            setOpenPayDialog(false)
+                            setOpenChangeDialog(true)
+                            console.log('sin impresora - con stock')
+                        })
+                        .catch(err => { console.log(err) })
+                } else {
+                    setOpenPayDialog(false)
+                    setOpenChangeDialog(true)
+                    console.log('sin impresora - sin stock')
+                }
+                break
+
+            default:
+                console.log('default')
+                break
+        }
+
     }
 
     const openDiscountUI = () => {
@@ -205,7 +260,6 @@ export default function ShoppingCart(props) {
         }
 
     }
-
 
     const columns = [
         { field: 'quanty', headerName: '#', flex: .5 },
@@ -277,7 +331,6 @@ export default function ShoppingCart(props) {
             ]
         }
     ]
-
 
     const addDigit = digit => {
         let amount = payAmount.toString()
@@ -351,17 +404,10 @@ export default function ShoppingCart(props) {
                             />
                         </Grid>
                         <Grid item marginTop={1}>
-                            <TextField
-                                inputRef={payAmountRef}
+                            <InputAmount
                                 label="Paga con:"
                                 value={utils.renderMoneystr(payAmount)}
-                                onChange={(e) => {
-                                    if (e.target.value === '$' || e.target.value === '0' || e.target.value === '') {
-                                        setPayAmount(0)
-                                    } else {
-                                        setPayAmount(e.target.value)
-                                    }
-                                }}
+                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setPayAmount(0) : setPayAmount(utils.moneyToInt(e.target.value)) }}
                                 variant="outlined"
                                 size={'small'}
                                 fullWidth
@@ -581,7 +627,6 @@ export default function ShoppingCart(props) {
                 </form>
             </Dialog>
 
-
             <Dialog open={openChangeDialog} fullWidth maxWidth={'xs'}>
                 <DialogTitle sx={{ p: 2 }}>Resumen venta</DialogTitle>
                 <DialogContent sx={{ p: 2 }}>
@@ -622,6 +667,13 @@ export default function ShoppingCart(props) {
     )
 }
 
+
+
+const InputAmount = ((props) => {
+    return (
+        <TextField {...props} />
+    )
+})
 
 function CustomToolbar(props) {
     const { total } = props
@@ -770,4 +822,14 @@ const esESGrid = {
     // Row reordering text
     // rowReorderingHeaderName: 'Row reordering',
 
+}
+
+
+const updateStocks = (cart) => {
+    let newStocks = []
+    cart.map(product => {
+        newStocks.push(stok.updateByProductAndStorage(product.id, 1001, product.virtualStock))
+    })
+
+    return Promise.all(newStocks)
 }

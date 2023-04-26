@@ -19,6 +19,8 @@ export default function Home() {
     const [newPaymentMethod, setNewPaymentMethod] = useState('')
     const [adminPass, setAdminPass] = useState('')
     const [cashRegisterUI, setCashRegisterUI] = useState({ 'stock_control': true })
+    const [printer, setPrinter] = useState({ idProduct: 0, idVendor: 0 })
+    const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
 
     useEffect(() => {
         const readConfig = ipcRenderer.sendSync('read-config', 'sync');
@@ -28,6 +30,8 @@ export default function Home() {
         setCustomerCredit(readConfig.customer_credit)
         setAdminPass(readConfig.admin_pass)
         setCashRegisterUI(readConfig.cash_register_UI)
+        setPrinter(readConfig.printer)
+        setTicketInfo(readConfig.ticket_info)
     }, [])
 
 
@@ -65,51 +69,20 @@ export default function Home() {
         dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Configuración de caja actualizada' } })
     }
 
+    const updatePrinter = () => {
+        ipcRenderer.send('update-printer', printer)
+        dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Impresora actualizada' } })
+    }
+
+    const updateTicketInfo = () => {
+        ipcRenderer.send('update-ticket-info', ticketInfo)
+        dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Información de ticket actualizada' } })
+    }
+
     return (
         <>
             <Grid container spacing={1}>
-                <Grid item>
-                    <AppPaper title='Base de Datos'>
-                        <Grid container spacing={1} direction={'column'} p={1}>
-                            <Grid item>
 
-                            </Grid>
-
-                        </Grid>
-                    </AppPaper>
-                </Grid>
-                <Grid item>
-                    <AppPaper title='Medios de pago alternativos'>
-                        <Grid container spacing={1} direction={'column'} p={1}>
-                            <Grid item xs>
-                                <Table>
-                                    <TableBody>
-                                        {paymentMethods.map((method, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell component="th" scope="row" sx={{ fontSize: '14px', py: 0 }}>
-                                                    {method.name}
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    <IconButton sx={{ p: 0 }} onClick={() => DeletePaymentMethod(index)}>
-                                                        <DeleteIcon sx={{ fontSize: '16px' }} />
-                                                    </IconButton>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </Grid>
-                            <Grid item textAlign={'right'}>
-                                <IconButton color='primary' onClick={() => { setOpenNewPaymentMethod(true) }}>
-                                    <AddCircleIcon />
-                                </IconButton>
-                                <IconButton color='primary' onClick={() => { updatePaymentMethods() }}>
-                                    <SaveIcon />
-                                </IconButton>
-                            </Grid>
-                        </Grid>
-                    </AppPaper>
-                </Grid>
                 <Grid item>
                     <AppPaper title='Credito clientes'>
                         <form onSubmit={(e) => { e.preventDefault(); updateCustomerCredit() }}>
@@ -187,6 +160,136 @@ export default function Home() {
                         </form>
                     </AppPaper>
                 </Grid>
+                <Grid item>
+                    <AppPaper title='Impresora'>
+                        <form onSubmit={(e) => { e.preventDefault(); updatePrinter() }}>
+                            <Grid container spacing={1} direction={'column'} p={1}>
+                                <Grid item>
+                                    <TextField
+                                        label='id vendor'
+                                        value={printer.idVendor}
+                                        onChange={(e) => { setPrinter({ ...printer, idVendor: e.target.value }) }}
+                                        variant="outlined"
+                                        size={'small'}
+                                        fullWidth
+                                        required
+                                    />
+
+                                </Grid>
+                                <Grid item>
+                                    <TextField
+                                        label='id profuct'
+                                        value={printer.idProduct}
+                                        onChange={(e) => { setPrinter({ ...printer, idProduct: e.target.value }) }}
+                                        variant="outlined"
+                                        size={'small'}
+                                        fullWidth
+                                        required
+                                    />
+                                </Grid>
+                                <Grid item textAlign={'right'}>
+                                    <IconButton color='primary' type='submit'>
+                                        <SaveIcon />
+                                    </IconButton>
+                                </Grid>
+                            </Grid>
+                        </form>
+                    </AppPaper>
+                </Grid>
+                <Grid item>
+                    <AppPaper title='Información Ticket'>
+                        <form onSubmit={(e) => { e.preventDefault(); updateTicketInfo() }}>
+                            <Grid container spacing={1} direction={'column'} p={1}>
+                                <Grid item>
+                                    <TextField
+                                        label='Nombre'
+                                        value={ticketInfo.name}
+                                        onChange={(e) => { setTicketInfo({ ...ticketInfo, name: e.target.value }) }}
+                                        variant="outlined"
+                                        size={'small'}
+                                        fullWidth
+                                        required
+                                    />
+
+                                </Grid>
+                                <Grid item>
+                                    <TextField
+                                        label='Rut'
+                                        value={ticketInfo.rut}
+                                        onChange={(e) => { setTicketInfo({ ...ticketInfo, rut: e.target.value }) }}
+                                        variant="outlined"
+                                        size={'small'}
+                                        fullWidth
+                                        required
+                                    />
+
+                                </Grid>
+                                <Grid item>
+                                    <TextField
+                                        label='Dirección'
+                                        value={ticketInfo.address}
+                                        onChange={(e) => { setTicketInfo({ ...ticketInfo, address: e.target.value }) }}
+                                        variant="outlined"
+                                        size={'small'}
+                                        fullWidth
+                                        required
+                                    />
+
+                                </Grid>
+                                <Grid item>
+                                    <TextField
+                                        label='Teléfono'
+                                        value={ticketInfo.phone}
+                                        onChange={(e) => { setTicketInfo({ ...ticketInfo, phone: e.target.value }) }}
+                                        variant="outlined"
+                                        size={'small'}
+                                        fullWidth
+                                        required
+                                    />
+
+                                </Grid>
+                                <Grid item textAlign={'right'}>
+                                    <IconButton color='primary' type='submit'>
+                                        <SaveIcon />
+                                    </IconButton>
+                                </Grid>
+                            </Grid>
+                        </form>
+                    </AppPaper>
+                </Grid>
+                <Grid item>
+                    <AppPaper title='Medios de pago'>
+                        <Grid container spacing={1} direction={'column'} p={1}>
+                            <Grid item xs>
+                                <Table>
+                                    <TableBody>
+                                        {paymentMethods.map((method, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell component="th" scope="row" sx={{ fontSize: '14px', py: 0 }}>
+                                                    {method.name}
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <IconButton sx={{ p: 0 }} onClick={() => DeletePaymentMethod(index)}>
+                                                        <DeleteIcon sx={{ fontSize: '16px' }} />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </Grid>
+                            <Grid item textAlign={'right'}>
+                                <IconButton color='primary' onClick={() => { setOpenNewPaymentMethod(true) }}>
+                                    <AddCircleIcon />
+                                </IconButton>
+                                <IconButton color='primary' onClick={() => { updatePaymentMethods() }}>
+                                    <SaveIcon />
+                                </IconButton>
+                            </Grid>
+                        </Grid>
+                    </AppPaper>
+                </Grid>
+
             </Grid>
             <Dialog open={openNewPaymentMethod} maxWidth={'xs'} fullWidth>
                 <form onSubmit={(e) => { e.preventDefault(); AddPaymentMethod() }}>
