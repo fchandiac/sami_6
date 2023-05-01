@@ -1,11 +1,4 @@
 {
-    "db": {
-        "name": "sami_5",
-        "user": "root",
-        "host": "localhost",
-        "password": "Fenasantma",
-        "port": 3306
-    },
     "api": {
         "url": "http://localhost:3002/"
     },
@@ -29,13 +22,13 @@
         "stock_control": true
     },
     "printer": {
-        "idVendor": "1155",
-        "idProduct": "22339"
+        "idVendor": 1155,
+        "idProduct": 22339
     },
     "ticket_info": {
         "name": "SAMI 6 test",
         "address": "Calle 1 # 1-11",
-        "phone": "1234567899",
+        "phone": "",
         "rut": "12345678-99"
     }
 }

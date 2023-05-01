@@ -8,8 +8,8 @@ const port = 3001
 
 
 ///// --------> NODE ENV <-------/////////
-//const env = process.env.NODE_ENV
-const env = 'build'
+const env = process.env.NODE_ENV
+//const env = 'build'
 ///// --------------------------/////////
 
 
@@ -230,6 +230,19 @@ ipcMain.on('update-ticket-info', (e, arg) => {
 	fs.writeFileSync(filePathConfig, data)
 })
 
+ipcMain.on('get-api-url', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	e.returnValue = config.api.url
+})
+
+ipcMain.on('update-api-url', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	config.api.url = arg
+	data = JSON.stringify(config)
+	fs.writeFileSync(filePathConfig, data)
+})
 
 
 

@@ -163,7 +163,6 @@ export default function AppDataGrid(props) {
     const { rows, columns, title, height, setGridApiRef } = props
     return (
         <Box sx={{ width: '100%', height: height }}>
-            <ThemeProvider theme={theme}>
                 <DataGrid
                     localeText={esESGrid}
                     rows={rows}
@@ -183,7 +182,6 @@ export default function AppDataGrid(props) {
 
                     }}
                 />
-            </ThemeProvider>
         </Box>
     )
 }

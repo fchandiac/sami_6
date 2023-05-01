@@ -6,12 +6,18 @@ escpos.USB = require('escpos-usb')
 
 
 
-router.get('/print/test', (req, res) => {
-    res.send('PrintServer Work')
+router.post('/print/test', (req, res) => {
+    test(req.body.printerInfo)
+        .then(() => {
+            res.json({ status: 'success' })
+        })
+        .catch(err => {
+            console.log(err)
+            res.json(err)
+        })
 })
 
 router.post('/print/ticket', (req, res) => {
-    console.log(req.body.ticketInfo, req.body.printerInfo)
     ticket(req.body.total, req.body.cart, req.body.ticketInfo, req.body.printerInfo)
         .then(() => {
             res.json({ status: 'success' })
@@ -28,12 +34,14 @@ function ticket(total, cart, ticketInfo, printerInfo) {
             const options = { encoding: "GB18030" /* default */ }
             const printer = new escpos.Printer(device, options)
             device.open(function (error) {
-                printer.font('b').align('ct').size(0, 0).style('NORMAL')
+                printer.font('b').align('ct').style('NORMAL')
+                printer.size(1, 1)
                 printer.text('TICKET')
                 printer.text(ticketInfo.name)
                 printer.text(ticketInfo.rut)
                 printer.text(ticketInfo.address)
                 printer.text(ticketInfo.phone)
+                printer.size(0, 0)
                 printer.text('_________________________________________')
                 printer.tableCustom([
                     { text: '#', align: "LEFT", width: 0.1 },
@@ -59,9 +67,28 @@ function ticket(total, cart, ticketInfo, printerInfo) {
                 printer.text('')
                 printer.cut()
                 printer.cashdraw(2)
+                printer.size(1, 0)
                 printer.close()
             })
             resolve({ 'code': 1, 'data': 'success' })
+
+        } catch (err) {
+            reject({ 'code': 0, 'data': err })
+        }
+    })
+    return print
+}
+
+function test(printerInfo) {
+    const print = new Promise((resolve, reject) => {
+        try {
+            const device = new escpos.USB(parseInt(printerInfo.idVendor), parseInt(printerInfo.idProduct))
+            const options = { encoding: "GB18030" /* default */ }
+            const printer = new escpos.Printer(device, options)
+            device.open(function (error) {
+                resolve({ 'code': 1, 'data': 'success' })
+            })
+            
 
         } catch (err) {
             reject({ 'code': 0, 'data': err })

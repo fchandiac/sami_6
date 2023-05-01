@@ -1,8 +1,13 @@
-const config = require('../config.json')
-const url = config.api.url
+
+// const config = require('../config.json')
+// const url = config.api.url
+
+import electron from 'electron'
+const ipcRenderer = electron.ipcRenderer || false
 
 function create(tax_id, sale, purchase) {
     let data = { tax_id, sale, purchase }
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const price = new Promise((resolve, reject) => {
         fetch(url + 'prices/create', {
             method: 'POST',

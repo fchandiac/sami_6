@@ -1,36 +1,49 @@
-import React from 'react'
+import React, { useState } from 'react'
 import AppPaper from '../../AppPaper'
+import { useAppContext } from '../../../AppProvider'
 import { Button, Grid, TextField } from '@mui/material'
 
-export default function NewCategoryForm() {
+const categories = require('../../../promises/categories')
+
+export default function NewCategoryForm(props) {
+    const { updateGrid, setUpdateGrid } = props
+    const { dispatch } = useAppContext()
+    const [categoryName, setCategoryName] = useState('')
+
     const submit = (e) => {
         e.preventDefault()
-        alert('juanito')
+        categories.create(categoryName)
+            .then(() => { 
+                setUpdateGrid(!updateGrid)
+            })
+            .catch((err) => {
+                console.log(err)
+                if (err.errors[0].message === 'name must be unique') {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'El nombre de la categoría ya existe' } })
+                }
+             })
+
     }
-  return (
-    <AppPaper title='Nueva Categoría'>
-    <form onSubmit={submit}>
-        <Grid container sx={{ p: 1 }}>
-            <Grid item xs={12} sm={12} md={12}>
-                <TextField label="Nombre"
-                    name="name"
-                    //error ={teenData.name.length === 0 ? true : false }
-                    //error={validation.name.err}
-                    //value={teenData.name}
-                    //onChange={handleOnChange}
-                    variant="outlined"
-                    size={'small'}
-                    //onFocus={handleFocus}
-                    //helperText={validation.name.text}
-                    fullWidth
-                    required
-                />
-            </Grid>
-            <Grid item xs={12} sm={12} md={12} paddingTop={1} textAlign='right'>
-                <Button variant={'contained'} type='submit'>guardar</Button>
-            </Grid>
-        </Grid>
-    </form>
-</AppPaper>
-  )
+    return (
+        <AppPaper title='Nueva Categoría'>
+            <form onSubmit={submit}>
+                <Grid container sx={{ p: 1 }}>
+                    <Grid item xs={12} sm={12} md={12}>
+                        <TextField label="Nombre"
+                            name="name"
+                            value={categoryName}
+                            onChange={(e) => setCategoryName(e.target.value)}
+                            variant="outlined"
+                            size={'small'}
+                            fullWidth
+                            required
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={12} md={12} paddingTop={1} textAlign='right'>
+                        <Button variant={'contained'} type='submit'>guardar</Button>
+                    </Grid>
+                </Grid>
+            </form>
+        </AppPaper>
+    )
 }

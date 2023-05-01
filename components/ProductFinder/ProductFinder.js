@@ -103,7 +103,7 @@ export default function ProductFinder(props) {
         { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
         { field: 'code', headerName: 'Código', flex: .6 },
         { field: 'name', headerName: 'Nombre', flex: 1 },
-        { field: 'salesRoomStock', headerName: 'Stock sala', flex: .5, hide: !stockControl},
+        { field: 'salesRoomStock', headerName: 'Stock sala', flex: .5, hide: !stockControl, type: 'float'},
         { field: 'sale', headerName: 'Precio Venta', flex: .7, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',

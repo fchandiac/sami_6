@@ -12,6 +12,8 @@ const prices = require('../../../promises/prices')
 const stocks = require('../../../promises/stocks')
 
 
+
+
 export default function NewProducForm(props) {
     const { updateGrid } = props
     const { dispatch } = useAppContext()
@@ -23,7 +25,10 @@ export default function NewProducForm(props) {
     const [errorText, setErrorText] = useState('')
     const [productData, setProductData] = useState(productDataDefault())
 
+   
+
     useEffect(() => {
+        
         categories.findAll()
             .then(res => {
                 let data = res.map(item => ({
@@ -53,16 +58,16 @@ export default function NewProducForm(props) {
 
 
     const saveProduct = () => {
-        products.findOneByName(productData.name)
+        products.findOneByName(url, productData.name)
             .then(res => {
                 if (res !== null) {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'El nombre del producto ya existe' } })
                 } else {
                     let purchase = productData.purchase === '' ? 0 : utils.moneyToInt(productData.purchase)
-                    prices.create(productData.tax.id, utils.moneyToInt(productData.sale), purchase)
+                    prices.create(url, productData.tax.id, utils.moneyToInt(productData.sale), purchase)
                         .then(res => {
                             let price_id = res.id
-                            products.create(productData.name, productData.code, productData.category.id, price_id)
+                            products.create(url, productData.name, productData.code, productData.category.id, price_id)
                                 .then(res => {
                                     stocks.create(res.id, 1001, productData.salesRoomStock, productData.criticalSalesRoomStock)
                                         .then(() => {

@@ -10,6 +10,7 @@ import AppSuccessSnack from '../components/AppSuccessSnack/AppSuccessSnack'
 const ipcRenderer = electron.ipcRenderer || false
 import { useAppContext } from '../AppProvider'
 
+
 export default function Home() {
     const { dispatch } = useAppContext()
     const [config, setConfig] = useState(configDataDefault())
@@ -21,6 +22,7 @@ export default function Home() {
     const [cashRegisterUI, setCashRegisterUI] = useState({ 'stock_control': true })
     const [printer, setPrinter] = useState({ idProduct: 0, idVendor: 0 })
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
+    const [apiUrl, setApiUrl] = useState('')
 
     useEffect(() => {
         const readConfig = ipcRenderer.sendSync('read-config', 'sync');
@@ -32,6 +34,8 @@ export default function Home() {
         setCashRegisterUI(readConfig.cash_register_UI)
         setPrinter(readConfig.printer)
         setTicketInfo(readConfig.ticket_info)
+        setApiUrl(readConfig.api.url)
+        console.log(readConfig.api.url)
     }, [])
 
 
@@ -79,9 +83,38 @@ export default function Home() {
         dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Información de ticket actualizada' } })
     }
 
+    const updateApiUrl = () => {
+        ipcRenderer.send('update-api-url', apiUrl)
+        dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'URL de API actualizada' } })
+    }
+
     return (
         <>
             <Grid container spacing={1}>
+                <Grid item>
+                    <AppPaper title='Api'>
+                        <form onSubmit={(e) => { e.preventDefault(); updateApiUrl() }}>
+                            <Grid container spacing={1} direction={'column'} p={1}>
+                                <Grid item>
+                                    <TextField
+                                        label='url'
+                                        value={apiUrl}
+                                        onChange={(e) => { setApiUrl(e.target.value) }}
+                                        variant="outlined"
+                                        size={'small'}
+                                        fullWidth
+                                        required
+                                    />
+                                </Grid>
+                                <Grid item textAlign={'right'}>
+                                    <IconButton color='primary' type='submit'>
+                                        <SaveIcon />
+                                    </IconButton>
+                                </Grid>
+                            </Grid>
+                        </form>
+                    </AppPaper>
+                </Grid>
 
                 <Grid item>
                     <AppPaper title='Credito clientes'>
@@ -244,7 +277,7 @@ export default function Home() {
                                         variant="outlined"
                                         size={'small'}
                                         fullWidth
-                                        required
+
                                     />
 
                                 </Grid>

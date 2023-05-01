@@ -1,8 +1,13 @@
-const config = require('../config.json')
-const url = config.api.url
+
+// const config = require('../config.json')
+// const url = config.api.url
+
+import electron from 'electron'
+const ipcRenderer = electron.ipcRenderer || false
 
 function create(name) {
     let data = { name }
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const category = new Promise((resolve, reject) => {
         fetch(url + 'categories/create', {
             method: 'POST',
@@ -21,6 +26,7 @@ function create(name) {
     return category
 }
 function findAll() {
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'categories/findAll', {
             method: 'GET',

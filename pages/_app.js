@@ -12,8 +12,16 @@ import Layout from '../components/Layout/Layout'
 const theme = createTheme(
   {
     palette: {
-      primary: { main: '#607d8b' },
-      error: { main: '#f44336' },
+      primary: {
+        main: '#1a9358',
+      },
+      secondary: {
+        main: '#e32b65',
+      },
+      info: {
+        main: '#1a9358',
+      },
+  
     },
   }, esES)
 //#f44336

@@ -1,9 +1,12 @@
-const config = require('../config.json')
-const url = config.api.url
+// const config = require('../config.json')
+// const url = config.api.url
 
+import electron from 'electron'
+const ipcRenderer = electron.ipcRenderer || false
 
 function create(name, code, category_id, price_id) {
     let data = { name, code, category_id, price_id }
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/create', {
             method: 'POST',
@@ -22,7 +25,9 @@ function create(name, code, category_id, price_id) {
     return product
 }
 
+
 function findAll() {
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/findAll', {
             method: 'GET',
@@ -44,6 +49,7 @@ function findAll() {
 
 function findOneByName(name) {
     let data = { name }
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/findOneByName', {
             method: 'POST',
@@ -66,6 +72,7 @@ function findOneByName(name) {
 
 function updateFavorite(id, favorite) {
     let data = { id, favorite }
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/updateFavorite', {
             method: 'POST',
@@ -87,6 +94,7 @@ function updateFavorite(id, favorite) {
 
 function updateFull(id, name, code, category_id, price_id) {
     let data = { id, name, code, category_id, price_id }
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/updateFull', {
             method: 'POST',
@@ -107,6 +115,7 @@ function updateFull(id, name, code, category_id, price_id) {
 
 function findOneByCode(code) {
     let data = {code}
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/findOneByCode', {
             method: 'POST',
@@ -127,6 +136,7 @@ function findOneByCode(code) {
 
 function findOneById(id) {
     let data = {id}
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/findOneById', {
             method: 'POST',
@@ -147,6 +157,7 @@ function findOneById(id) {
 
 function destroy(id) {
     let data = {id}
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/destroy', {
             method: 'POST',

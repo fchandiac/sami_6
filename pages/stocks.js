@@ -1,4 +1,5 @@
-import { Grid, Autocomplete, TextField, Button } from '@mui/material'
+import { Grid, Autocomplete, TextField, Button, IconButton, Stack } from '@mui/material'
+import AddCircleIcon from '@mui/icons-material/AddCircle'
 import React, { useState, useEffect } from 'react'
 import StocksGrid from '../components/Grids/StocksGrid/StocksGrid'
 import AppPaper from '../components/AppPaper/AppPaper'
@@ -60,9 +61,6 @@ export default function stocks() {
 
             })
             .catch(err => { console.error(err) })
-
-
-
     }
 
 
@@ -74,20 +72,28 @@ export default function stocks() {
                         <form onSubmit={(e) => { e.preventDefault(); updateStock() }}>
                             <Grid container spacing={1} direction={'column'} padding={1}>
                                 <Grid item >
-                                    <Autocomplete
-                                        inputValue={storagesInput}
-                                        onInputChange={(e, newInputValue) => {
-                                            setStoragesInput(newInputValue)
-                                        }}
-                                        isOptionEqualToValue={(option, value) => null || option.id === value.id}
-                                        value={(storage == null ? '' : storage.label)}
-                                        onChange={(e, newValue) => {
-                                            setStorage(newValue)
-                                        }}
-                                        disablePortal
-                                        options={storagesOptions}
-                                        renderInput={(params) => <TextField {...params} label='Almacén' size={'small'} fullWidth required />}
-                                    />
+                                    <Stack direction={'row'} spacing={1}>
+                                        <IconButton onClick={() => { console.log('add storage') }}>
+                                            <AddCircleIcon />
+                                        </IconButton>
+                                        <Autocomplete
+                                            sx={{ width: '100%' }}
+                                            inputValue={storagesInput}
+                                            onInputChange={(e, newInputValue) => {
+                                                setStoragesInput(newInputValue)
+                                            }}
+                                            isOptionEqualToValue={(option, value) => null || option.id === value.id}
+                                            value={(storage == null ? '' : storage.label)}
+                                            onChange={(e, newValue) => {
+                                                setStorage(newValue)
+                                            }}
+                                            disablePortal
+                                            options={storagesOptions}
+                                            renderInput={(params) => <TextField {...params} label='Almacén' size={'small'} fullWidth required />}
+                                        />
+
+                                    </Stack>
+
                                 </Grid>
 
                                 <Grid item >
@@ -129,7 +135,7 @@ export default function stocks() {
                     </AppPaper>
                 </Grid>
                 <Grid item xs={8}>
-                    <StocksGrid updateGrid={updateGrid}/>
+                    <StocksGrid updateGrid={updateGrid} />
                 </Grid>
             </Grid>
         </>

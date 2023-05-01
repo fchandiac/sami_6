@@ -5,6 +5,7 @@ import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import Products from '../../Products';
 import Categories from '../../Categories';
+import Stocks from '../../Stocks/Stocks';
 
 
 
@@ -21,7 +22,7 @@ function TabPanel(props) {
     >
       {value === index && (
         <Box sx={{ paddingTop: 1 }}>
-         {children}
+          {children}
         </Box>
       )}
     </div>
@@ -53,17 +54,21 @@ export default function BasicTabs() {
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange}>
           <Tab label="Productos" {...a11yProps(0)} />
-          <Tab label="Categorías" {...a11yProps(1)} />
-          <Tab label="Impuestos" {...a11yProps(2)} />
+          <Tab label="Stocks" {...a11yProps(1)} />
+          <Tab label="Categorías" {...a11yProps(2)} />
+          <Tab label="Impuestos" {...a11yProps(3)} />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
-        <Products></Products>
+        <Products />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <Categories></Categories>
+        <Stocks />
       </TabPanel>
       <TabPanel value={value} index={2}>
+        <Categories />
+      </TabPanel>
+      <TabPanel value={value} index={3}>
         Impuestos
       </TabPanel>
     </Box>

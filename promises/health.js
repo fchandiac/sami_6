@@ -1,7 +1,8 @@
-const config = require('../config.json')
-const url = config.api.url
+import electron from 'electron'
+const ipcRenderer = electron.ipcRenderer || false
 
-export default function health() {
+function test() {
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const health = new Promise((resolve, reject) => {
         fetch(url + 'health', {
             method: 'GET',
@@ -18,3 +19,5 @@ export default function health() {
     })
     return health
 }
+
+export { test }

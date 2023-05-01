@@ -1,6 +1,5 @@
 const config = require('../config.json')
 const url = config.api.url
-
 function findAll() {
     const tax = new Promise((resolve, reject) => {
         fetch(url + 'taxes/findAll', {

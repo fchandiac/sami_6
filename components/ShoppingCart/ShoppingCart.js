@@ -13,7 +13,7 @@ import {
 } from '@mui/x-data-grid'
 import { ThemeProvider } from '@mui/material/styles'
 import React, { useState, useEffect, useRef, forwardRef } from 'react'
-import BackspaceIcon from '@mui/icons-material/Backspace'
+
 import AddCircleIcon from '@mui/icons-material/AddCircle'
 import DeleteIcon from '@mui/icons-material/Delete'
 import LockOpenTwoToneIcon from '@mui/icons-material/LockOpenTwoTone'
@@ -24,10 +24,13 @@ import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOut
 import EditIcon from '@mui/icons-material/Edit'
 import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart'
 import { GridActionsCellItem } from '@mui/x-data-grid'
-import electron from 'electron'
 import { useAppContext } from '../../AppProvider'
 import AppPaper from '../AppPaper/AppPaper'
+import PayDialog from './PayDialog/PayDialog'
 
+
+
+import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 const utils = require('../../utils')
 const print = require('../../promises/print')
@@ -37,84 +40,23 @@ const stok = require('../../promises/stocks')
 
 export default function ShoppingCart(props) {
     const { stockControl } = props
-    const inputPayAmountRef = useRef(null)
     const { cart, total, lock, dispatch } = useAppContext()
     const [rowData, setRowData] = useState([])
-    const [payAmount, setPayAmount] = useState(0)
     const [openPayDialog, setOpenPayDialog] = useState(false)
     const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
     const [openEditQuantyDialog, setOpenEditQuantyDialog] = useState(false)
-    const [paymentMethod, setPaymentMethod] = useState('Efectivo') // sera una props ?
-    const [paymentMethodsList, setPaymentMethodsList] = useState([])
-    const [showCustomerFinder, setShowCustomerFinder] = useState(false)
-    const [customersOptions, setCustomersOptions] = useState([])
-    const [customerInput, setCustomerInput] = useState('')
-    const [customer, setCustomer] = useState(null)
-    const [documentType, setDocumentType] = useState('Ticket')
     const [openDiscountDialog, setOpenDiscountDialog] = useState(false)
     const [openAuthDialog, setOpenAuthDialog] = useState(false)
     const [adminPass, setAdminPass] = useState('')
     const [checkPass, setCheckPass] = useState('')
     const [discount, setDiscount] = useState(0)
-    const [disablePay, setDisablePay] = useState(true)
-    const [change, setChange] = useState(0)
-    const [openChangeDialog, setOpenChangeDialog] = useState(false)
-    const [printerInfo, setPrinterInfo] = useState({ idProduct: 0, idVendor: 0 })
-    const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
-
-
-    const documentTypesList = [
-        { name: 'Ticket', label: 'Ticket' },
-        { name: 'Boleta', label: 'Boleta' },
-        { name: 'Sin impresora', label: 'Sin impresora' }
-    ]
-
-
+    
 
     useEffect(() => {
-        let paymentMethods = ipcRenderer.sendSync('get-payment-methods', 'sync')
-        let customerCredit = ipcRenderer.sendSync('get-customer-credit', 'sync')
         let adminPass = ipcRenderer.sendSync('get-admin-pass', 'sync')
-        let print_info = ipcRenderer.sendSync('get-printer', 'sync')
-        let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
-        paymentMethods = paymentMethods.map((method) => {
-            return { name: method.name, label: method.name }
-        })
-        customerCredit.state === true ? paymentMethods.unshift({ name: 'customerCredit', label: customerCredit.name }) : null
-        paymentMethods.unshift({ name: 'Efectivo', label: 'Efectivo' })
-        setPaymentMethodsList(paymentMethods)
         setAdminPass(adminPass)
-        setPrinterInfo(print_info)
-        setTicketInfo(ticket_info)
     }, [])
 
-    useEffect(() => {
-        if (payAmount < total) {
-            setDisablePay(true)
-        } else {
-            setDisablePay(false)
-            setChange(payAmount - total)
-        }
-    }, [payAmount])
-
-    useEffect(() => {
-        if (openPayDialog === false) {
-            setPayAmount(0)
-        }
-    }, [openPayDialog])
-
-    useEffect(() => {
-        if (paymentMethod == 'Efectivo') {
-            setPayAmount(0)
-            setShowCustomerFinder(false)
-        } else if (paymentMethod == 'customerCredit') {
-            setPayAmount(total)
-            setShowCustomerFinder(true)
-        } else {
-            setPayAmount(total)
-            setShowCustomerFinder(false)
-        }
-    }, [paymentMethod])
 
     const removeProduct = (id, salesRoomStock) => {
         dispatch({ type: 'REMOVE_FROM_CART', value: { id, salesRoomStock } })
@@ -164,66 +106,10 @@ export default function ShoppingCart(props) {
         if (cart.length === 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
         } else {
-
-            console.log('ref', inputPayAmountRef.current)
             setOpenPayDialog(true)
-            // payAmountRef.current
         }
     }
 
-    const payment = () => {
-        switch (documentType) {
-            case 'Ticket':
-                if (stockControl == true) {
-                    updateStocks(cart)
-                        .then(res => {
-                            console.log(res)
-                            setOpenPayDialog(false)
-                            setOpenChangeDialog(true)
-                            console.log('sin impresora - con stock')
-                            print.ticket(total, cart, ticketInfo, printerInfo)
-                                .then(() => {
-                                    setOpenPayDialog(false)
-                                    setOpenChangeDialog(true)
-                                })
-                                .catch(err => {
-                                    console.log(err)
-                                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                                })
-                        })
-                        .catch(err => { console.log(err) })
-                } else {
-                    setOpenPayDialog(false)
-                    setOpenChangeDialog(true)
-                    console.log('sin impresora - sin stock')
-                }
-                break
-            case 'Boleta':
-                console.log('boleta')
-                break
-            case 'Sin impresora':
-                if (stockControl == true) {
-                    updateStocks(cart)
-                        .then(res => {
-                            console.log(res)
-                            setOpenPayDialog(false)
-                            setOpenChangeDialog(true)
-                            console.log('sin impresora - con stock')
-                        })
-                        .catch(err => { console.log(err) })
-                } else {
-                    setOpenPayDialog(false)
-                    setOpenChangeDialog(true)
-                    console.log('sin impresora - sin stock')
-                }
-                break
-
-            default:
-                console.log('default')
-                break
-        }
-
-    }
 
     const openDiscountUI = () => {
         if (cart.length === 0) {
@@ -332,28 +218,7 @@ export default function ShoppingCart(props) {
         }
     ]
 
-    const addDigit = digit => {
-        let amount = payAmount.toString()
-        if (amount === '0' && digit === 0) {
-            setPayAmount(0);
-        } else if (amount.length >= 7) {
-            setPayAmount(parseInt(amount))
-        } else {
-            amount += digit.toString();
-            setPayAmount(parseInt(amount))
-        }
-    }
-
-    const removeDigit = () => {
-        let amount = payAmount.toString();
-        if (amount.length === 1) {
-            setPayAmount(0);
-        } else {
-            amount = amount.slice(0, -1);
-            setPayAmount(parseInt(amount))
-        }
-    }
-
+   
     return (
         <>
             <Paper elevation={0} variant="outlined" sx={{ height: '100%' }}>
@@ -385,7 +250,8 @@ export default function ShoppingCart(props) {
                 />
 
             </Paper>
-            <Dialog open={openPayDialog} maxWidth={'xs'} fullWidth>
+            <PayDialog open={openPayDialog} setOpen={setOpenPayDialog} total={total} stockControl={stockControl} />
+            {/* <Dialog open={openPayDialog} maxWidth={'xs'} fullWidth>
                 <DialogTitle sx={{ p: 2 }}>
                     Proceso de pago
                 </DialogTitle>
@@ -411,6 +277,7 @@ export default function ShoppingCart(props) {
                                 variant="outlined"
                                 size={'small'}
                                 fullWidth
+                                ref={inputPayAmountRef}
                             />
                         </Grid>
                         <Grid item textAlign={'right'} sx={{ display: disablePay ? 'blobk' : 'none' }}>
@@ -537,7 +404,7 @@ export default function ShoppingCart(props) {
                     <Button variant={'contained'} disabled={disablePay} onClick={() => payment()}>Pagar</Button>
                     <Button variant={'outlined'} onClick={() => setOpenPayDialog(false)}>Cerrar</Button>
                 </DialogActions>
-            </Dialog>
+            </Dialog> */}
 
             <Dialog open={openNewCustomerDialog} fullWidth maxWidth={'md'}>
                 <DialogTitle>Nuevo cliente</DialogTitle>
@@ -600,6 +467,7 @@ export default function ShoppingCart(props) {
                 </form>
             </Dialog>
 
+           
             <Dialog open={openDiscountDialog} fullWidth maxWidth={'xs'}>
                 <DialogTitle sx={{ p: 2 }}>Aplicar descuento global</DialogTitle>
                 <form onSubmit={(e) => { e.preventDefault(); applyDiscount(discount) }}>
@@ -627,53 +495,11 @@ export default function ShoppingCart(props) {
                 </form>
             </Dialog>
 
-            <Dialog open={openChangeDialog} fullWidth maxWidth={'xs'}>
-                <DialogTitle sx={{ p: 2 }}>Resumen venta</DialogTitle>
-                <DialogContent sx={{ p: 2 }}>
-                    <Grid container spacing={1} direction={'column'}>
-                        <Grid item marginTop={1}>
-                            <TextField
-                                label="Total:"
-                                value={utils.renderMoneystr(total)}
-                                InputProps={{
-                                    readOnly: true,
-                                }}
-                                variant="outlined"
-                                size={'small'}
-                                fullWidth
-
-                            />
-                        </Grid>
-                        <Grid item marginTop={1}>
-                            <TextField
-                                label="Vuelto:"
-                                value={utils.renderMoneystr(change)}
-                                InputProps={{
-                                    readOnly: true,
-                                }}
-                                variant="outlined"
-                                size={'small'}
-                                fullWidth
-
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button variant={'outlined'} onClick={() => { setOpenChangeDialog(false); dispatch({ type: 'CLEAR_CART' }) }}>cerrar</Button>
-                </DialogActions>
-            </Dialog>
+            
         </>
     )
 }
 
-
-
-const InputAmount = ((props) => {
-    return (
-        <TextField {...props} />
-    )
-})
 
 function CustomToolbar(props) {
     const { total } = props
@@ -825,11 +651,3 @@ const esESGrid = {
 }
 
 
-const updateStocks = (cart) => {
-    let newStocks = []
-    cart.map(product => {
-        newStocks.push(stok.updateByProductAndStorage(product.id, 1001, product.virtualStock))
-    })
-
-    return Promise.all(newStocks)
-}

@@ -5,8 +5,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu'
 import AccountCircle from '@mui/icons-material/AccountCircle'
 import ChevronLeft from '@mui/icons-material/ChevronLeft'
-import { React, useState } from 'react'
-import Link from 'next/link'
+import React, { useState, useEffect } from 'react'
 import { useAppContext } from '../../AppProvider'
 import { useRouter } from 'next/router'
 
@@ -14,6 +13,7 @@ import { useRouter } from 'next/router'
 // can use on component className={styles.exampleClass}
 import styles from './Layout.module.css'
 import AppSnack from '../AppSnack/AppSnack'
+
 
 const health = require('../../promises/health')
 
@@ -23,10 +23,15 @@ export default function Layout(props) {
   const [drawerState, setDrawerState] = useState(false)
   const router = useRouter()
 
-  health.default()
+  useEffect(() => {
+    health.test()
+    .then(() => { console.log('conectado') })
     .catch(() => {
       dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No se pudo conectar con el servidor' } })
     })
+  }, [router.pathname])
+
+
 
   return (
     <>
@@ -87,7 +92,7 @@ export default function Layout(props) {
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton>
-            <ListItemText primary='Productos'
+              <ListItemText primary='Productos'
                 onClick={() => {
                   router.push({
                     pathname: '/products',
@@ -100,7 +105,7 @@ export default function Layout(props) {
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton>
-            <ListItemText primary='Stocks'
+              <ListItemText primary='Stocks'
                 onClick={() => {
                   router.push({
                     pathname: '/stocks',
@@ -113,7 +118,7 @@ export default function Layout(props) {
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton>
-            <ListItemText primary='Configuración'
+              <ListItemText primary='Configuración'
                 onClick={() => {
                   router.push({
                     pathname: '/config',
