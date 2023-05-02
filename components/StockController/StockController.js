@@ -6,12 +6,17 @@ import {
 } from '@mui/material'
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined'
 import StockCard from '../Cards/StockCard/StockCard'
+import { useAppContext } from '../../AppProvider'
+import Movement from './Movement/Movement'
 
 const stocks = require('../../promises/stocks')
 
 
+
+
 export default function StockController(props) {
     const { productId } = props
+    const { dispatch } = useAppContext()
     const [productStocks, setProductStocks] = useState([])
     const [stockData, setStockData] = useState(stockDataDefault())
     const [totalStock, setTotalStock] = useState(0)
@@ -19,8 +24,9 @@ export default function StockController(props) {
     const [storagesInput, setStoragesInput] = useState('')
     const [storagesOptions, setStoragesOptions] = useState([])
     const [updateComponent, setUpdateComponent] = useState(false)
-
-
+    const [openNewStorageDialog, setOpenNewStorageDialog] = useState(false)
+    const [newStorageName, setNewStorageName] = useState('')
+   
 
     useEffect(() => {
         stocks.findAllByProductId(productId)
@@ -45,25 +51,6 @@ export default function StockController(props) {
             .catch(err => { console.error(err) })
     }, [updateComponent])
 
-    // useEffect(() => {
-    //     stocks.storagesFindAll()
-    //         .then(res => {
-    //             let data = res.map((storage) => ({
-    //                 key: storage.id,
-    //                 id: storage.id,
-    //                 label: storage.name
-    //             }))
-    //             data = data.filter(storage => {
-    //                 return !productStocks.some(stock => stock.storage_id === storage.id)
-    //             })
-    //             setStoragesOptions(data)
-    //         })
-    //         .catch(err => { console.error(err) })
-
-    // }, [updateComponent])
-
-
-
     const newStock = () => {
         stocks.create(productId, stockData.storage.id, stockData.stock, stockData.critical_stock)
             .then(() => {
@@ -71,9 +58,26 @@ export default function StockController(props) {
                 setOpenNewStockDialog(false)
                 setUpdateComponent(!updateComponent)
             })
-            .catch(err => { console.error(err) })
+            .catch(err => { 
+                console.error(err) 
+            })
     }
 
+    const newStorage = () => {
+        stocks.createStorage(newStorageName)
+            .then(() => {
+                setOpenNewStorageDialog(false)
+                setUpdateComponent(!updateComponent)
+                setNewStorageName('')
+            })
+            .catch(err => { 
+                console.error(err) 
+                if(err.errors[0].message === 'name must be unique') {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Nombre del almacén ya existe' } })
+                    
+                }
+            })
+     }
 
 
     return (
@@ -111,38 +115,41 @@ export default function StockController(props) {
                         </Grid>
                     </Grid>
                     <Grid item xs={12} margin={1}>
-                        <AppPaper title={'Movimiento de stock'}>
-                            <Grid container spacing={1} padding={1}>
-                                <Grid item xs={12}>
-                                    test
-                                </Grid>
-                            </Grid>
-                        </AppPaper>
+                        <Movement />
                     </Grid>
-
                 </Grid>
             </AppPaper>
 
-            <Dialog open={openNewStockDialog} fullWidth maxWidth={'xs'}>
+            <Dialog open={openNewStockDialog} fullWidth maxWidth={'sm'}>
                 <DialogTitle sx={{ p: 2 }}>Nuevo stock</DialogTitle>
                 <form onSubmit={(e) => { e.preventDefault(); newStock() }}>
                     <DialogContent sx={{ p: 2 }}>
                         <Grid container spacing={1} direction={'column'}>
                             <Grid item>
-                                <Autocomplete
-                                    inputValue={storagesInput}
-                                    onInputChange={(e, newInputValue) => {
-                                        setStoragesInput(newInputValue)
-                                    }}
-                                    isOptionEqualToValue={(option, value) => null || option.id === value.id}
-                                    value={stockData.storage}
-                                    onChange={(e, newValue) => {
-                                        setStockData({ ...stockData, storage: newValue })
-                                    }}
-                                    disablePortal
-                                    options={storagesOptions}
-                                    renderInput={(params) => <TextField {...params} label='Almacén' size={'small'} fullWidth required />}
-                                />
+                                <Stack direction={'row-reverse'} spacing={1} >
+                                    <Chip
+                                        label="Nuevo almacén"
+                                        onDelete={() => { setOpenNewStorageDialog(true) }}
+                                        onClick={() => { setOpenNewStorageDialog(true) }}
+                                        color={'primary'}
+                                        deleteIcon={<AddCircleOutlineOutlinedIcon />}
+                                    />
+                                    <Autocomplete
+                                        inputValue={storagesInput}
+                                        onInputChange={(e, newInputValue) => {
+                                            setStoragesInput(newInputValue)
+                                        }}
+                                        isOptionEqualToValue={(option, value) => null || option.id === value.id}
+                                        value={stockData.storage}
+                                        onChange={(e, newValue) => {
+                                            setStockData({ ...stockData, storage: newValue })
+                                        }}
+                                        fullWidth
+                                        disablePortal
+                                        options={storagesOptions}
+                                        renderInput={(params) => <TextField {...params} label='Almacén' size={'small'} fullWidth required />}
+                                    />
+                                </Stack>
                             </Grid>
                             <Grid item>
                                 <TextField
@@ -174,7 +181,32 @@ export default function StockController(props) {
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
                         <Button variant="contained" type='submit'>Guardar</Button>
-                        <Button variant={'outlined'} onClick={() => { setOpenNewStockDialog(false) }}>cerrar</Button>
+                        <Button variant={'outlined'} onClick={() => { setOpenNewStockDialog(false); setNewStorageName('') }}>cerrar</Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
+
+            <Dialog open={openNewStorageDialog} fullWidth maxWidth={'xs'}>
+                <DialogTitle sx={{ p: 2 }}>Nuevo almacén</DialogTitle>
+                <form onSubmit={(e) => { e.preventDefault(); newStorage() }}>
+                    <DialogContent sx={{ p: 2 }}>
+                        <Grid container spacing={1} direction={'column'}>
+                            <Grid item>
+                                <TextField
+                                    label='Nombre'
+                                    value={newStorageName}
+                                    onChange={(e) => { setNewStorageName(e.target.value) }}
+                                    variant="outlined"
+                                    size={'small'}
+                                    fullWidth
+                                    required
+                                />
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button variant="contained" type='submit'>Guardar</Button>
+                        <Button variant={'outlined'} onClick={() => { setOpenNewStorageDialog(false) }}>cerrar</Button>
                     </DialogActions>
                 </form>
             </Dialog>

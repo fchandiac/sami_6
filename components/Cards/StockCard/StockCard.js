@@ -20,10 +20,36 @@ export default function StockCard(props) {
     const [openUpdateAlertDialog, setOpenUpdateAlertDialog] = useState(false)
     const [stockToAdd, setStockToAdd] = useState(0)
     const [stockToRemove, setStockToRemove] = useState(0)
+    const [criticalStockToUpdate, setCriticalStockToUpdate] = useState(0)
 
-    const addStock = () => {}
-    const removeStock = () => {}
-    const updateCriticalStock = () => {}
+    const addStock = () => {
+        stock.updateByProductAndStorage(stock.product_id, stock.storage_id, stock.stock + stockToAdd, stock.critical_stock)
+        .then(() =>{
+            setStockToAdd(0)
+            setUpdateComponent(!updateComponent)
+            setOpenAddDialog(false)
+        })
+        .catch(err => { console.error(err) })
+    }
+    const removeStock = () => {
+        stocks.updateByProductAndStorage(stock.product_id, stock.storage_id, stock.stock - stockToRemove, stock.critical_stock)
+        .then(() =>{
+            setStockToRemove(0)
+            setUpdateComponent(!updateComponent)
+            setOpenRemoveDialog(false)
+        })
+        .catch(err => { console.error(err) })
+    }
+    const updateCriticalStock = () => {
+        stocks.updateByProductAndStorage(stock.product_id, stock.storage_id, stock.stock, criticalStockToUpdate)
+        .then(() =>{
+            setCriticalStockToUpdate(0)
+            setUpdateComponent(!updateComponent)
+            setOpenUpdateAlertDialog(false)
+        })
+        .catch(err => { console.error(err) })
+        
+    }
     const destroyStock = () => {
         stocks.destroy(stock.id)
             .then(() => {
@@ -53,10 +79,10 @@ export default function StockCard(props) {
                         <IconButton onClick={() => setOpenAddDialog(true)} >
                             <AddCircleIcon  fontSize={'small'}/>
                         </IconButton>
-                        <IconButton>
+                        <IconButton onClick={() => setOpenRemoveDialog(true)}>
                             <RemoveCircleIcon fontSize={'small'}/>
                         </IconButton>
-                        <IconButton>
+                        <IconButton onClick={() => setOpenUpdateAlertDialog(true)}>
                             <EditNotificationsIcon fontSize={'small'}/>
                         </IconButton>
                         <IconButton onClick={() => destroyStock(stock.id)}>
@@ -102,9 +128,10 @@ export default function StockCard(props) {
                     </DialogActions>
                 </form>
             </Dialog>
-            {/* <Dialog open={openDestroyDialog} fullWidth maxWidth={'xs'}>
-                <DialogTitle sx={{ p: 2 }}>Eliminar stock {stock.Product.name}</DialogTitle>
-                <form onSubmit={(e) => { e.preventDefault(); addStock() }}>
+
+            <Dialog open={openRemoveDialog} fullWidth maxWidth={'xs'}>
+                <DialogTitle sx={{ p: 2 }}>Reducir stock {stock.Product.name}</DialogTitle>
+                <form onSubmit={(e) => { e.preventDefault(); removeStock() }}>
                     <DialogContent sx={{ p: 2 }}>
                         <Grid container spacing={1} direction={'column'}>
                         <Grid item>
@@ -119,9 +146,9 @@ export default function StockCard(props) {
                             </Grid>
                             <Grid item>
                                 <TextField
-                                    label="Cantidad a agregar"
-                                    value={stockToAdd}
-                                    onChange={(e) => { setStockToAdd(e.target.value) }}
+                                    label="Cantidad a reducir"
+                                    value={stockToRemove}
+                                    onChange={(e) => { setStockToRemove(e.target.value) }}
                                     type="number"
                                     inputProps={{ max: 100, min: 0 }}
                                     variant="outlined"
@@ -134,11 +161,41 @@ export default function StockCard(props) {
                         </Grid>
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
-                        <Button variant="contained" type='submit'>Agregar</Button>
-                        <Button variant={'outlined'} onClick={() => { setOpenAddDialog(false) }}>cerrar</Button>
+                        <Button variant="contained" type='submit'>Reducir</Button>
+                        <Button variant={'outlined'} onClick={() => { setOpenRemoveDialog(false) }}>cerrar</Button>
                     </DialogActions>
                 </form>
-            </Dialog> */}
+            </Dialog>
+
+            <Dialog open={openUpdateAlertDialog} fullWidth maxWidth={'xs'}>
+                <DialogTitle sx={{ p: 2 }}>Actualizar stock crítico {stock.Product.name}</DialogTitle>
+                <form onSubmit={(e) => { e.preventDefault(); updateCriticalStock() }}>
+                    <DialogContent sx={{ p: 2 }}>
+                        <Grid container spacing={1} direction={'column'}>
+                            <Grid item>
+                                <TextField
+                                    label="Stock crítico"
+                                    value={criticalStockToUpdate}
+                                    onChange={(e) => { setCriticalStockToUpdate(e.target.value) }}
+                                    type="number"
+                                    inputProps={{min: 0 }}
+                                    variant="outlined"
+                                    size={'small'}
+                                    autoFocus
+                                    fullWidth
+                                    required
+                                />
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button variant="contained" type='submit'>Actualizar</Button>
+                        <Button variant={'outlined'} onClick={() => { setOpenUpdateAlertDialog(false) }}>cerrar</Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
+
+    
         </>
     )
 }

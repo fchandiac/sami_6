@@ -44,8 +44,29 @@ function  storagesFindAll() {
     return store
 }
 
-function updateByProductAndStorage(product_id, storage_id, stock){
-    let data = { product_id, storage_id, stock }
+function createStorage(name) {
+    let data = { name }
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
+    const stk = new Promise((resolve, reject) => {
+        fetch(url + 'storages/create', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return stk
+}
+
+function updateByProductAndStorage(product_id, storage_id, stock, critical_stock){
+    let data = { product_id, storage_id, stock, critical_stock }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const price = new Promise((resolve, reject) => {
         fetch(url + 'stocks/updateByProductAndStorage', {
@@ -136,6 +157,7 @@ export {
     updateByProductAndStorage, 
     findAllGroupByProduct, 
     findAllByProductId,
-    destroy
+    destroy,
+    createStorage
 
 }
