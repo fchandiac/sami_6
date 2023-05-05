@@ -86,6 +86,7 @@ export default function Layout(props) {
                   })
                   dispatch({ type: 'SET_PAGE_TITLE', value: 'Caja' })
                   setDrawerState(false)
+                  dispatch({type: 'CLEAR_CART'})
                 }}
               />
             </ListItemButton>
@@ -99,22 +100,12 @@ export default function Layout(props) {
                   })
                   dispatch({ type: 'SET_PAGE_TITLE', value: 'Productos' })
                   setDrawerState(false)
+                  dispatch({type: 'CLEAR_CART'})
                 }}
               />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton>
-              <ListItemText primary='Stocks'
-                onClick={() => {
-                  router.push({
-                    pathname: '/stocks',
-                  })
-                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Stocks' })
-                  setDrawerState(false)
-                }}
-              />
-            </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton>
@@ -125,6 +116,7 @@ export default function Layout(props) {
                   })
                   dispatch({ type: 'SET_PAGE_TITLE', value: 'Configuración' })
                   setDrawerState(false)
+                  dispatch({type: 'CLEAR_CART'})
                 }}
               />
             </ListItemButton>

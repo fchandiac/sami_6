@@ -13,10 +13,10 @@ export default function Products() {
   
     return (
         <Grid container spacing={1}> 
-            <Grid item xs={3}> 
+            <Grid item xs={2}> 
            <NewProductForm updateGrid={updateProductsGridState}/>
            </Grid>
-           <Grid item xs={9}>
+           <Grid item xs={10}>
                 <ProductsGrid update={productsGridState}/>
             </Grid>
         </Grid>

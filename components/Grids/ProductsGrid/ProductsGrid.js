@@ -84,20 +84,15 @@ export default function ProductsGrid(props) {
                 .then(res => {
                     products.updateFull(rowData.id, rowData.name, rowData.code, rowData.category_id, res.id)
                         .then(() => {
-                            stocks.updateByProductAndStorage(rowData.id, 1001, rowData.salesRoomStock)
-                                .then(() => {
-                                    gridApiRef.current.updateRows([{
-                                        id: rowData.rowId,
-                                        name: rowData.name,
-                                        code: rowData.code,
-                                        category: rowData.category,
-                                        sale: rowData.sale,
-                                        purchase: rowData.purchase,
-                                        salesRoomStock: rowData.salesRoomStock
-                                    }])
-                                    setOpenInfoDialog(false)
-                                })
-                                .catch(err => { console.error(err) })
+                            gridApiRef.current.updateRows([{
+                                id: rowData.rowId,
+                                name: rowData.name,
+                                code: rowData.code,
+                                category: rowData.category,
+                                sale: rowData.sale,
+                                purchase: rowData.purchase
+                            }])
+                            setOpenInfoDialog(false)
                         })
                         .catch(err => { console.error(err) })
                 })
@@ -113,8 +108,7 @@ export default function ProductsGrid(props) {
                                 code: rowData.code,
                                 category: rowData.category,
                                 sale: rowData.sale,
-                                purchase: rowData.purchase,
-                                salesRoomStock: rowData.salesRoomStock
+                                purchase: rowData.purchase
                             }])
                             setOpenInfoDialog(false)
                         })
@@ -136,9 +130,9 @@ export default function ProductsGrid(props) {
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
         { field: 'name', headerName: 'Nombre', flex: 1 },
-        { field: 'code', headerName: 'Código', flex: .8 },
-        { field: 'category', headerName: 'Categoría', flex: 1 },
-        { field: 'salesRoomStock', headerName: 'Stock sal de ventas', flex: .5 },
+        { field: 'code', headerName: 'Código', flex: .6 },
+        { field: 'category', headerName: 'Categoría', flex: .6 },
+        { field: 'salesRoomStock', headerName: 'Stock sala', flex: .5 },
         { field: 'stock', headerName: 'Stock total', flex: .5 },
         { field: 'sale', headerName: 'Precio Venta', flex: .5, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         { field: 'purchase', headerName: 'Precio Compra', flex: .5, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
@@ -186,7 +180,8 @@ export default function ProductsGrid(props) {
                             tax_id: params.row.tax_id,
                             category: params.row.category,
                             category_id: params.row.category_id,
-                            salesRoomStock: params.row.salesRoomStock
+                            salesRoomStock: params.row.salesRoomStock,
+                            stock: params.row.stock
                         })
                         setOpenInfoDialog(true)
                     }}
@@ -214,10 +209,10 @@ export default function ProductsGrid(props) {
                     Información producto
                 </DialogTitle>
                 <DialogContent sx={{ p: 2 }}>
-                <Grid container spacing={1}>
-                    <Grid item xs={4}>
-                        <AppPaper title={'Actualizar'}>
-                            <form onSubmit={(e) => { e.preventDefault(); updateProduct() }}>
+                    <Grid container spacing={1}>
+                        <Grid item xs={4}>
+                            <AppPaper title={'Actualizar'}>
+                                <form onSubmit={(e) => { e.preventDefault(); updateProduct() }}>
                                     <Grid container spacing={1} direction={'column'} padding={1}>
                                         <Grid item>
                                             <TextField
@@ -270,17 +265,6 @@ export default function ProductsGrid(props) {
                                         </Grid>
                                         <Grid item>
                                             <TextField
-                                                label="Stock en sala"
-                                                value={rowData.salesRoomStock}
-                                                onChange={(e) => { setRowData({ ...rowData, salesRoomStock: e.target.value }) }}
-                                                variant="outlined"
-                                                size={'small'}
-                                                fullWidth
-                                                required
-                                            />
-                                        </Grid>
-                                        <Grid item>
-                                            <TextField
                                                 label="Código"
                                                 value={rowData.code}
                                                 onChange={(e) => { setRowData({ ...rowData, code: e.target.value }) }}
@@ -290,22 +274,20 @@ export default function ProductsGrid(props) {
                                                 required
                                             />
                                         </Grid>
-                                        <Grid item>
+                                        <Grid item textAlign={'right'}>
                                             <Button variant={'contained'} type={'submit'}>Actualizar</Button>
                                         </Grid>
                                     </Grid>
-                              
-                            </form>
-                        </AppPaper>
-                    </Grid>
+                                </form>
+                            </AppPaper>
+                        </Grid>
 
-                    <Grid item xs={8}>
-                        <StockController productId={rowData.id}/>
+                        <Grid item xs={8}>
+                            <StockController productId={rowData.id} gridApiRef={gridApiRef} />
+                        </Grid>
                     </Grid>
-                </Grid>
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
-
                     <Button variant={'outlined'} onClick={() => setOpenInfoDialog(false)}>Cerrar</Button>
                 </DialogActions>
 
@@ -368,6 +350,7 @@ function rowDataDefault() {
         category: '',
         category_id: 0,
         favorite: false,
-        salesRoomStock: 0
+        salesRoomStock: 0,
+        stock: 0
     }
 }

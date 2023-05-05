@@ -4,6 +4,7 @@
 import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 
+
 function create(name, code, category_id, price_id) {
     let data = { name, code, category_id, price_id }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')

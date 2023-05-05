@@ -105,8 +105,6 @@ function  findAllGroupByProduct() {
     return store
 }
 
-
-
 function findAllByProductId(product_id){
     let data = { product_id}
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
@@ -128,6 +126,26 @@ function findAllByProductId(product_id){
     return price
 }
 
+function findOneByProductAndStorage(product_id, storage_id){
+    let data = { product_id, storage_id}
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
+    const price = new Promise((resolve, reject) => {
+        fetch(url + 'stocks/findOneByProductAndStorage', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return price
+}
 
 function destroy(id){
     let data = { id}
@@ -150,6 +168,46 @@ function destroy(id){
     return price
 }
 
+function findAllByStorage(storage_id){
+    let data = { storage_id}
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
+    const price = new Promise((resolve, reject) => {
+        fetch(url + 'stocks/findAllByStorage', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return price
+}
+
+function  findAllGroupByStorage() {
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
+    const store = new Promise((resolve, reject) => {
+        fetch(url + 'stocks/findAllGroupByStorage', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return store
+}
+
 
 export { 
     create, 
@@ -158,6 +216,8 @@ export {
     findAllGroupByProduct, 
     findAllByProductId,
     destroy,
-    createStorage
-
+    createStorage,
+    findOneByProductAndStorage,
+    findAllByStorage,
+    findAllGroupByStorage
 }

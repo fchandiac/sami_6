@@ -23,7 +23,7 @@ export default function StockCard(props) {
     const [criticalStockToUpdate, setCriticalStockToUpdate] = useState(0)
 
     const addStock = () => {
-        stock.updateByProductAndStorage(stock.product_id, stock.storage_id, stock.stock + stockToAdd, stock.critical_stock)
+        stocks.updateByProductAndStorage(stock.product_id, stock.storage_id, (parseInt(stock.stock) + parseInt(stockToAdd)), stock.critical_stock)
         .then(() =>{
             setStockToAdd(0)
             setUpdateComponent(!updateComponent)
@@ -112,7 +112,7 @@ export default function StockCard(props) {
                                     value={stockToAdd}
                                     onChange={(e) => { setStockToAdd(e.target.value) }}
                                     type="number"
-                                    inputProps={{ max: 100, min: 0 }}
+                                    inputProps={{ min: 0 }}
                                     variant="outlined"
                                     size={'small'}
                                     autoFocus
@@ -150,7 +150,7 @@ export default function StockCard(props) {
                                     value={stockToRemove}
                                     onChange={(e) => { setStockToRemove(e.target.value) }}
                                     type="number"
-                                    inputProps={{ max: 100, min: 0 }}
+                                    inputProps={{ min: 0 }}
                                     variant="outlined"
                                     size={'small'}
                                     autoFocus

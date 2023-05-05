@@ -15,7 +15,7 @@ const stocks = require('../../promises/stocks')
 
 
 export default function StockController(props) {
-    const { productId } = props
+    const { productId, gridApiRef } = props
     const { dispatch } = useAppContext()
     const [productStocks, setProductStocks] = useState([])
     const [stockData, setStockData] = useState(stockDataDefault())
@@ -26,14 +26,23 @@ export default function StockController(props) {
     const [updateComponent, setUpdateComponent] = useState(false)
     const [openNewStorageDialog, setOpenNewStorageDialog] = useState(false)
     const [newStorageName, setNewStorageName] = useState('')
-   
+
 
     useEffect(() => {
         stocks.findAllByProductId(productId)
             .then(res => {
                 let stocksData = res
+                let totalStock = res.reduce((accumulator, currentValue) => { return accumulator + currentValue.stock; }, 0)
+                let salesRoomStock = res.filter(item => item.storage_id === 1001).map(item => item.stock)
+                console.log(salesRoomStock)
+                gridApiRef.current.updateRows([{
+                        id: productId,
+                       stock: totalStock,
+                       salesRoomStock: salesRoomStock[0] ? salesRoomStock[0] : 0
+                    }])
+
                 setProductStocks(res)
-                setTotalStock(res.reduce((accumulator, currentValue) => { return accumulator + currentValue.stock; }, 0))
+                setTotalStock(totalStock)
                 stocks.storagesFindAll()
                     .then(res => {
                         let data = res.map((storage) => ({
@@ -58,8 +67,8 @@ export default function StockController(props) {
                 setOpenNewStockDialog(false)
                 setUpdateComponent(!updateComponent)
             })
-            .catch(err => { 
-                console.error(err) 
+            .catch(err => {
+                console.error(err)
             })
     }
 
@@ -70,14 +79,14 @@ export default function StockController(props) {
                 setUpdateComponent(!updateComponent)
                 setNewStorageName('')
             })
-            .catch(err => { 
-                console.error(err) 
-                if(err.errors[0].message === 'name must be unique') {
+            .catch(err => {
+                console.error(err)
+                if (err.errors[0].message === 'name must be unique') {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Nombre del almacén ya existe' } })
-                    
+
                 }
             })
-     }
+    }
 
 
     return (
@@ -115,7 +124,7 @@ export default function StockController(props) {
                         </Grid>
                     </Grid>
                     <Grid item xs={12} margin={1}>
-                        <Movement />
+                        <Movement productId={productId} updateComponent={updateComponent} setUpdateComponent={setUpdateComponent} />
                     </Grid>
                 </Grid>
             </AppPaper>
