@@ -43,7 +43,8 @@ export default function ProductCodeFinder(props) {
                                 subTotal: res[0].Price.sale,
                                 salesRoomStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
-                                discount: 0
+                                discount: 0,
+                                controlStock: res[0].control_stock
                             }
                             setCode('')
                             inputCode.current.focus()
@@ -137,7 +138,8 @@ export default function ProductCodeFinder(props) {
                                                 subTotal: product.Price.sale,
                                                 salesRoomStock: product.Stocks.find(item => (item.storage_id == 1001)).stock,
                                                 virtualStock: product.Stocks.find(item => (item.storage_id == 1001)).stock,
-                                                discount: 0
+                                                discount: 0,
+                                                stockControl: product.stock_control
 
                                             })
                                         }}>

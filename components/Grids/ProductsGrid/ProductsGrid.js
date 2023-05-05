@@ -4,6 +4,8 @@ import { GridActionsCellItem } from '@mui/x-data-grid'
 import DeleteIcon from '@mui/icons-material/Delete'
 import InfoIcon from '@mui/icons-material/Info'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
+import WidgetsIcon from '@mui/icons-material/Widgets'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField, Autocomplete } from '@mui/material'
 import AppPaper from '../../AppPaper/AppPaper'
@@ -49,6 +51,7 @@ export default function ProductsGrid(props) {
                 favorite: item.favorite,
                 stock: item.Stocks.reduce((accumulator, currentValue) => { return accumulator + currentValue.stock; }, 0),
                 salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                stock_control: item.stock_control
             }))
             setProductsList(data)
         })
@@ -72,6 +75,14 @@ export default function ProductsGrid(props) {
         products.updateFavorite(rowId, favorite)
             .then(() => {
                 gridApiRef.current.updateRows([{ id: rowId, favorite: favorite }])
+            })
+            .catch(err => { console.error(err) })
+    }
+
+    const updateStockControl = (rowId, stock_control) => {
+        products.updateStockControl(rowId, stock_control)
+            .then(() => {
+                gridApiRef.current.updateRows([{ id: rowId, stock_control: stock_control }])
             })
             .catch(err => { console.error(err) })
     }
@@ -193,7 +204,16 @@ export default function ProductsGrid(props) {
                     onClick={() => {
                         updateFavorite(params.id, !params.row.favorite)
                     }}
+                />,
+                <GridActionsCellItem
+                    label='stock control'
+                    icon={params.row.stock_control? <WidgetsIcon /> : <WidgetsOutlinedIcon />}
+                    onClick={() => {
+                        updateStockControl(params.id, !params.row.stock_control)
+                    }}
                 />
+
+
             ]
         }
     ]

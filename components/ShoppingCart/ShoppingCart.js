@@ -50,7 +50,7 @@ export default function ShoppingCart(props) {
     const [adminPass, setAdminPass] = useState('')
     const [checkPass, setCheckPass] = useState('')
     const [discount, setDiscount] = useState(0)
-    
+
 
     useEffect(() => {
         let adminPass = ipcRenderer.sendSync('get-admin-pass', 'sync')
@@ -81,12 +81,18 @@ export default function ShoppingCart(props) {
             dispatch({ type: 'REMOVE_FROM_CART', value: { id: rowData.id, salesRoomStock: rowData.salesRoomStock } })
             setOpenEditQuantyDialog(false)
         } else {
-            if (stockControl == true && rowData.quanty > rowData.salesRoomStock) {
-                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock suficiente' } })
+            if (rowData.stockControl === true) {
+                if (stockControl == true && rowData.quanty > rowData.salesRoomStock) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock suficiente' } })
+                } else {
+                    dispatch({ type: 'EDIT_QUANTY', value: { id: rowData.id, quanty: rowData.quanty } })
+                    setOpenEditQuantyDialog(false)
+                }
             } else {
                 dispatch({ type: 'EDIT_QUANTY', value: { id: rowData.id, quanty: rowData.quanty } })
                 setOpenEditQuantyDialog(false)
             }
+
         }
     }
 
@@ -200,7 +206,9 @@ export default function ShoppingCart(props) {
                             id: params.row.id,
                             quanty: params.row.quanty,
                             salesRoomStock: params.row.salesRoomStock,
-                            name: params.row.name
+                            name: params.row.name,
+                            stockControl: params.row.stockControl
+
                         })
                         setOpenEditQuantyDialog(true)
                     }}
@@ -218,7 +226,7 @@ export default function ShoppingCart(props) {
         }
     ]
 
-   
+
     return (
         <>
             <Paper elevation={0} variant="outlined" sx={{ height: '100%' }}>
@@ -467,7 +475,7 @@ export default function ShoppingCart(props) {
                 </form>
             </Dialog>
 
-           
+
             <Dialog open={openDiscountDialog} fullWidth maxWidth={'xs'}>
                 <DialogTitle sx={{ p: 2 }}>Aplicar descuento global</DialogTitle>
                 <form onSubmit={(e) => { e.preventDefault(); applyDiscount(discount) }}>
@@ -495,7 +503,7 @@ export default function ShoppingCart(props) {
                 </form>
             </Dialog>
 
-            
+
         </>
     )
 }

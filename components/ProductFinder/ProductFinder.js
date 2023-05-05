@@ -60,6 +60,7 @@ export default function ProductFinder(props) {
                             code: item.code,
                             sale: item.Price.sale,
                             salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                            stockControl: item.item.stock_control
                         }))
                         setProductsList(data)
                     })
@@ -82,28 +83,36 @@ export default function ProductFinder(props) {
                         code: item.code,
                         sale: item.Price.sale,
                         salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                        stockControl: item.stock_control
                     }))
                     setProductsList(data)
-                
             })
             .catch(err => { console.log(err) })
     }, [])
 
     const addToCart = (product) => {
-        if (stockControl == true && product.salesRoomStock <= 0) {
-            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
-        } else {
-            dispatch({ type: 'ADD_TO_CART', value: product })
-
-        }
-
-    }
+            if (stockControl == true && product.salesRoomStock <= 0) {
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
+            } else {
+                dispatch({ type: 'ADD_TO_CART', value: product })
+    
+            }
+     }
+    
 
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
         { field: 'code', headerName: 'Código', flex: .6 },
         { field: 'name', headerName: 'Nombre', flex: 1 },
-        { field: 'salesRoomStock', headerName: 'Stock sala', flex: .5, hide: !stockControl, type: 'float'},
+        {
+            field: 'salesRoomStock',
+            headerName: 'Stock sala', 
+            flex: .7, 
+            renderCell: (params) => (
+                //params.row.stockControl? params.value : '-'
+                params.value
+            )
+        },
         { field: 'sale', headerName: 'Precio Venta', flex: .7, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
@@ -122,7 +131,8 @@ export default function ProductFinder(props) {
                             subTotal: params.row.sale,
                             discount: 0,
                             salesRoomStock: params.row.salesRoomStock,
-                            virtualStock: params.row.salesRoomStock
+                            virtualStock: params.row.salesRoomStock,
+                            stockControl: params.row.stockControl
                         })
                     }}
                 />
