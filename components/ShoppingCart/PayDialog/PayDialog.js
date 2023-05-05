@@ -12,11 +12,12 @@ const ipcRenderer = electron.ipcRenderer || false
 
 const utils = require('../../../utils')
 const print = require('../../../promises/print')
+const stocks = require('../../../promises/stocks')
 
 
 export default function PayDialog(props) {
     const { open, setOpen, total, stockControl } = props
-    const { dispatch } = useAppContext()
+    const { dispatch, cart } = useAppContext()
     const [payAmount, setPayAmount] = useState(0)
     const [change, setChange] = useState(0)
     const [disablePay, setDisablePay] = useState(true)
@@ -110,12 +111,10 @@ export default function PayDialog(props) {
     const updateStocks = (cart) => {
         let newStocks = []
         cart.map(product => {
-            newStocks.push(stok.updateByProductAndStorage(product.id, 1001, product.virtualStock))
+            newStocks.push(stocks.updateByProductAndStorage(product.id, 1001, product.virtualStock))
         })
-
         return Promise.all(newStocks)
     }
-
 
     const pay = () => {
         switch (documentType) {
@@ -126,12 +125,12 @@ export default function PayDialog(props) {
                             updateStocks(cart)
                                 .then(res => {
                                     console.log(res)
-                                    setOpenPayDialog(false)
+                                    setOpen(false)
                                     setOpenChangeDialog(true)
-                                    console.log('sin impresora - con stock')
+                                    console.log('con impresora - con stock')
                                     print.ticket(total, cart, ticketInfo, printerInfo)
                                         .then(() => {
-                                            setOpenPayDialog(false)
+                                            setOpen(false)
                                             setOpenChangeDialog(true)
                                         })
                                         .catch(err => {
@@ -141,9 +140,10 @@ export default function PayDialog(props) {
                                 })
                                 .catch(err => { console.log(err) })
                         } else {
-                            setOpenPayDialog(false)
+                            setOpen(false)
                             setOpenChangeDialog(true)
-                            console.log('sin impresora - sin stock')
+                            setDocumentType('Ticket')
+                            console.log('con impresora - sin stock')
                         }
 
                     })
@@ -160,15 +160,16 @@ export default function PayDialog(props) {
                 if (stockControl == true) {
                     updateStocks(cart)
                         .then(res => {
-                            console.log(res)
-                            setOpenPayDialog(false)
+                            setOpen(false)
                             setOpenChangeDialog(true)
+                            setDocumentType('Ticket')
                             console.log('sin impresora - con stock')
                         })
                         .catch(err => { console.log(err) })
                 } else {
-                    setOpenPayDialog(false)
+                    setOpen(false)
                     setOpenChangeDialog(true)
+                    setDocumentType('Ticket')
                     console.log('sin impresora - sin stock')
                 }
                 break

@@ -208,6 +208,26 @@ function  findAllGroupByStorage() {
     return store
 }
 
+function  findAllStockAlert() {
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
+    const store = new Promise((resolve, reject) => {
+        fetch(url + 'stocks/findAllStockAlert', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return store
+}
+
+
 
 export { 
     create, 
@@ -219,5 +239,6 @@ export {
     createStorage,
     findOneByProductAndStorage,
     findAllByStorage,
-    findAllGroupByStorage
+    findAllGroupByStorage,
+    findAllStockAlert
 }

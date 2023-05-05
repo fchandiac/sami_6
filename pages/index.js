@@ -1,10 +1,7 @@
 import React from 'react'
-import Layout from '../components/Layout'
 
-import CashRegisterTab from '../components/Tabs/CashRegisterTab'
-
-export default function Home() {
+export default function index() {
   return (
-      <CashRegisterTab></CashRegisterTab>
+    <div>index</div>
   )
 }

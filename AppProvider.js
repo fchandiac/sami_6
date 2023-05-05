@@ -13,7 +13,8 @@ const initialState = {
     snackMessage: '',
     product: 0,
     actionType: 'NONE_TYPE',
-    pageTitle: 'Caja'
+    pageTitle: '',
+    stockAlertList: [],
 }
 
 const reducer = (state, action) => {
@@ -199,6 +200,8 @@ const reducer = (state, action) => {
             return { ...state, snackState: false }
         case 'SET_PAGE_TITLE':
             return { ...state, pageTitle: action.value }
+        case 'SET_STOCK_ALERT_LIST':
+            return { ...state, stockAlertList: action.value }
         default:
             console.log('No action type')
             break
@@ -219,6 +222,7 @@ const AppProvider = ({ children }) => {
             product: state.product,
             actionType: state.actionType,
             pageTitle: state.pageTitle,
+            stockAlertList: state.stockAlertList,
             dispatch
         }}>
             {children}

@@ -16,10 +16,10 @@ export default function Home() {
     const [config, setConfig] = useState(configDataDefault())
     const [openNewPaymentMethod, setOpenNewPaymentMethod] = useState(false)
     const [paymentMethods, setPaymentMethods] = useState([])
-    const [customerCredit, setCustomerCredit] = useState({ 'name': '', 'state': true })
+    const [customerCredit, setCustomerCredit] = useState({ name: '', state: true })
     const [newPaymentMethod, setNewPaymentMethod] = useState('')
     const [adminPass, setAdminPass] = useState('')
-    const [cashRegisterUI, setCashRegisterUI] = useState({ 'stock_control': true })
+    const [cashRegisterUI, setCashRegisterUI] = useState({ stock_control: true,  quote: true})
     const [printer, setPrinter] = useState({ idProduct: 0, idVendor: 0 })
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
     const [apiUrl, setApiUrl] = useState('')
@@ -182,6 +182,17 @@ export default function Home() {
                                             />
                                         }
                                         label="Control de Stock"
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={cashRegisterUI.quote}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, quote: e.target.checked }) }}
+                                            />
+                                        }
+                                        label="Cotización"
                                     />
                                 </Grid>
                                 <Grid item textAlign={'right'}>

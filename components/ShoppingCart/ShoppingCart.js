@@ -34,12 +34,12 @@ import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 const utils = require('../../utils')
 const print = require('../../promises/print')
-const stok = require('../../promises/stocks')
+
 
 
 
 export default function ShoppingCart(props) {
-    const { stockControl } = props
+    const { stockControl, quote } = props
     const { cart, total, lock, dispatch } = useAppContext()
     const [rowData, setRowData] = useState([])
     const [openPayDialog, setOpenPayDialog] = useState(false)
@@ -50,11 +50,17 @@ export default function ShoppingCart(props) {
     const [adminPass, setAdminPass] = useState('')
     const [checkPass, setCheckPass] = useState('')
     const [discount, setDiscount] = useState(0)
+    const [printerInfo, setPrinterInfo] = useState({ idProduct: 0, idVendor: 0 })
+    const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
 
 
     useEffect(() => {
         let adminPass = ipcRenderer.sendSync('get-admin-pass', 'sync')
+        let print_info = ipcRenderer.sendSync('get-printer', 'sync')
+        let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
         setAdminPass(adminPass)
+        setPrinterInfo(print_info)
+        setTicketInfo(ticket_info)
     }, [])
 
 
@@ -153,6 +159,28 @@ export default function ShoppingCart(props) {
 
     }
 
+    const printQuote = () => {
+        if (cart.length === 0) {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
+        } else {
+            print.test()
+            .then(() => {
+                print.quote(total, cart, printerInfo, ticketInfo)
+                .then(() => {
+                    dispatch({type: 'CLEAR_CART'})
+                })
+                .catch((err) => {console.log(err)})
+            })
+            .catch((err) => {
+                console.log(err)
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+            })
+            
+
+        }
+
+    }
+
     const columns = [
         { field: 'quanty', headerName: '#', flex: .5 },
         { field: 'name', headerName: 'Producto', flex: 1.8 },
@@ -246,6 +274,8 @@ export default function ShoppingCart(props) {
                         },
                         pagination: {
                             lock: lock,
+                            quote: quote,
+                            printQuote: printQuote,
                             proccessPayment: proccessPayment,
                             openDiscountUI: openDiscountUI,
                             clearCart: clearCart,
@@ -259,160 +289,6 @@ export default function ShoppingCart(props) {
 
             </Paper>
             <PayDialog open={openPayDialog} setOpen={setOpenPayDialog} total={total} stockControl={stockControl} />
-            {/* <Dialog open={openPayDialog} maxWidth={'xs'} fullWidth>
-                <DialogTitle sx={{ p: 2 }}>
-                    Proceso de pago
-                </DialogTitle>
-                <DialogContent sx={{ p: 2 }}>
-                    <Grid container spacing={1} direction={'column'}>
-                        <Grid item marginTop={1}>
-                            <TextField
-                                label="Total:"
-                                value={utils.renderMoneystr(total)}
-                                InputProps={{
-                                    readOnly: true,
-                                }}
-                                variant="outlined"
-                                size={'small'}
-                                fullWidth
-                            />
-                        </Grid>
-                        <Grid item marginTop={1}>
-                            <InputAmount
-                                label="Paga con:"
-                                value={utils.renderMoneystr(payAmount)}
-                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setPayAmount(0) : setPayAmount(utils.moneyToInt(e.target.value)) }}
-                                variant="outlined"
-                                size={'small'}
-                                fullWidth
-                                ref={inputPayAmountRef}
-                            />
-                        </Grid>
-                        <Grid item textAlign={'right'} sx={{ display: disablePay ? 'blobk' : 'none' }}>
-                            <Typography color={'error'}>{'Monto de pago insuficiente'}</Typography>
-                        </Grid>
-                        <Grid item textAlign={'right'} sx={{ display: disablePay ? 'none' : 'block' }}>
-                            <Typography color={'pimary'}>{'Vuelto: ' + utils.renderMoneystr(change)}</Typography>
-                        </Grid>
-                        <Grid item>
-                            <Grid container spacing={1}>
-                                <Grid item xs={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(1) }}>1</Button>
-                                </Grid>
-                                <Grid item s={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(2) }}>2</Button>
-                                </Grid>
-                                <Grid item s={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(3) }}>3</Button>
-                                </Grid>
-                                <Grid item xs={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(4) }}>4</Button>
-                                </Grid>
-                                <Grid item s={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(5) }}>5</Button>
-                                </Grid>
-                                <Grid item s={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(6) }}>6</Button>
-                                </Grid>
-                                <Grid item xs={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(7) }}>7</Button>
-                                </Grid>
-                                <Grid item s={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(8) }}>8</Button>
-                                </Grid>
-                                <Grid item s={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(9) }}>9</Button>
-                                </Grid>
-                                <Grid item s={8} sm={8} md={8}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(0) }}>0</Button>
-                                </Grid>
-                                <Grid item s={4} sm={4} md={4}>
-                                    <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { removeDigit() }}><BackspaceIcon /></Button>
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                        <Grid item marginTop={1}>
-                            <Grid container spacing={1}>
-                                <Grid item xs={6} sm={6} md={6}>
-                                    <Grid item paddingBottom={2}>
-                                        <AppPaper title={'Medio de pago'} sx={{ height: '100%' }}>
-                                            <FormGroup sx={{ p: 1 }}>
-                                                {paymentMethodsList.map(item => (
-                                                    <FormControlLabel
-                                                        key={item.name}
-                                                        control={
-                                                            <Checkbox
-                                                                checked={paymentMethod === item.name}
-                                                                onChange={(e) => { setPaymentMethod(e.target.name) }}
-                                                                name={item.name}
-                                                                color="primary"
-                                                                size="small"
-                                                            />
-                                                        }
-                                                        label={<span style={{ fontSize: '12px' }}>{item.label}</span>}
-                                                        style={{ marginBottom: '-12px' }}
-                                                    />
-                                                ))}
-                                            </FormGroup>
-                                        </AppPaper>
-                                    </Grid>
-                                </Grid>
-                                <Grid item xs={6} sm={6} md={6} height={'100%'}>
-                                    <AppPaper title={'Documento'} sx={{ height: '100%' }}>
-                                        <FormGroup sx={{ p: 1 }}>
-                                            {documentTypesList.map(item => (
-                                                <FormControlLabel
-                                                    key={item.name}
-                                                    control={
-                                                        <Checkbox
-                                                            checked={documentType === item.name}
-                                                            onChange={(e) => { setDocumentType(e.target.name) }}
-                                                            name={item.name}
-                                                            color="primary"
-                                                            size="small"
-                                                        />
-                                                    }
-                                                    label={<span style={{ fontSize: '12px' }}>{item.label}</span>}
-                                                    style={{ marginBottom: '-12px' }}
-                                                />
-                                            ))}
-
-                                        </FormGroup>
-                                    </AppPaper>
-                                </Grid>
-                            </Grid>
-                            <Grid item sx={{ display: showCustomerFinder ? 'block' : 'none', }} paddingTop={2}>
-                                <Grid container spacing={1} >
-                                    <Grid item xs={10} sm={10} md={10} lg={10}>
-                                        <Autocomplete
-                                            inputValue={customerInput}
-                                            onInputChange={(e, newInputValue) => {
-                                                setCustomerInput(newInputValue)
-                                            }}
-                                            value={customer}
-                                            onChange={(e, newValue) => {
-                                                setCustomer(newValue)
-                                            }}
-                                            isOptionEqualToValue={(option, value) => value === null || option.id === value.id}
-                                            disablePortal
-                                            noOptionsText="Cliente no encontrado"
-                                            options={customersOptions}
-                                            renderInput={(params) => <TextField {...params} label='Cliente' size={'small'} fullWidth required />}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={2} sm={2} md={2} lg={2}>
-                                        <IconButton onClick={() => { setOpenNewCustomerDialog(true) }}><AddCircleIcon /> </IconButton>
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button variant={'contained'} disabled={disablePay} onClick={() => payment()}>Pagar</Button>
-                    <Button variant={'outlined'} onClick={() => setOpenPayDialog(false)}>Cerrar</Button>
-                </DialogActions>
-            </Dialog> */}
 
             <Dialog open={openNewCustomerDialog} fullWidth maxWidth={'md'}>
                 <DialogTitle>Nuevo cliente</DialogTitle>
@@ -475,7 +351,6 @@ export default function ShoppingCart(props) {
                 </form>
             </Dialog>
 
-
             <Dialog open={openDiscountDialog} fullWidth maxWidth={'xs'}>
                 <DialogTitle sx={{ p: 2 }}>Aplicar descuento global</DialogTitle>
                 <form onSubmit={(e) => { e.preventDefault(); applyDiscount(discount) }}>
@@ -520,12 +395,15 @@ function CustomToolbar(props) {
 }
 
 function CustomFooter(props) {
-    const { lock, proccessPayment, openDiscountUI, clearCart, setOpenAuthDialog } = props
+    const { lock, proccessPayment, openDiscountUI, clearCart, setOpenAuthDialog, quote, printQuote } = props
 
     return (
         <Grid container spacing={1} direction={'row'} justifyContent={'flex-end'} alignItems={'center'} paddingRight={1}>
             <Grid item>
                 <Button variant="contained" onClick={() => { proccessPayment() }}>Procesar Pago</Button>
+            </Grid>
+            <Grid item>
+                <Button variant={'outlined'}  sx={{ display: quote ? 'block' : 'none' }} onClick={() => { printQuote() }}>Cotización</Button>
             </Grid>
             <Grid item>
                 <Button variant={'outlined'} sx={{ display: lock ? 'none' : 'block' }} onClick={() => { openDiscountUI() }}>Descuento</Button>
