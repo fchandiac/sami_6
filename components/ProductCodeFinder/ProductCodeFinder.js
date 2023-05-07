@@ -1,20 +1,31 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Grid, IconButton, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Button, Box, Card, Typography, Stack } from '@mui/material'
 import { useAppContext } from '../../AppProvider'
 import Barcode from 'react-barcode'
 import AppPaper from '../AppPaper/AppPaper'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 
+
+
 const products = require('../../promises/products')
 const utils = require('../../utils')
 
 export default function ProductCodeFinder(props) {
-    const { stockControl } = props
+    const { stockControl, inputCodeRef} = props
     const { cart, dispatch } = useAppContext()
     const [code, setCode] = useState('')
     const [openSelectionDialog, setOpenSelectionDialog] = useState(false)
     const [productsList, setProductsList] = useState([])
-    const inputCode = useRef(null)
+    // const inputCode = useRef(null)
+
+    // useEffect(() => {
+    //     console.log('ordersPriority', ordersPriority)
+    //     if (ordersPriority == false){
+    //         console.log('ordersPriorityFromCode', ordersPriority)
+    //         inputCode.current.focus()
+    //     }
+        
+    // }, [ordersPriority])
 
 
     const addProduct = (code) => {
@@ -22,7 +33,7 @@ export default function ProductCodeFinder(props) {
             .then(res => {
                 if (res.length === 0) {
                     setCode('')
-                    inputCode.current.focus()
+                    inputCodeRef.current.focus()
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Producto no encontrado' } })
                 } else if (res.length > 1) {
                     setProductsList(res)
@@ -32,7 +43,7 @@ export default function ProductCodeFinder(props) {
                     if (product === undefined) {
                         if (stockControl == true && res[0].Stocks.find(item => (item.storage_id == 1001)).stock <= 0) {
                             setCode('')
-                            inputCode.current.focus()
+                            inputCodeRef.current.focus()
                             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
                         } else {
                             product = {
@@ -47,18 +58,18 @@ export default function ProductCodeFinder(props) {
                                 controlStock: res[0].control_stock
                             }
                             setCode('')
-                            inputCode.current.focus()
+                            inputCodeRef.current.focus()
                             dispatch({ type: 'ADD_TO_CART', value: product })
                             
                         }
                     } else {
                         if (stockControl == true && product.virtualStock <= 0) {
                             setCode('')
-                            inputCode.current.focus()
+                            inputCodeRef.current.focus()
                             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
                         } else {
                             setCode('')
-                            inputCode.current.focus()
+                            inputCodeRef.current.focus()
                             dispatch({ type: 'ADD_TO_CART', value: product })
                             
                         }
@@ -99,7 +110,7 @@ export default function ProductCodeFinder(props) {
                     <Grid container spacing={1} padding={1}>
                         <Grid item xs>
                             <TextField
-                                ref={inputCode}
+                                inputRef={inputCodeRef}
                                 label="Código"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value)}

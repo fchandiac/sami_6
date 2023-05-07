@@ -15,7 +15,7 @@ export default function StocksGrid(props) {
         .then(res => {
             let data = res.map((item,  index)=> ({
                 id: item.product_id == null? index : item.product_id,
-                productName: item.Product == null? 'Null':  item.Product.name,
+                productName: item.Product == null? '-':  item.Product.name,
                 total_stock: item.total_stock
             }))
             setStocksList(data)
@@ -30,7 +30,7 @@ export default function StocksGrid(props) {
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
         { field: 'productName', headerName: 'Producto', flex: 1 },
-        { field: 'total_stock', headerName: 'Stock total', flex: .5, type: 'number' },
+        { field: 'total_stock', headerName: 'Stock total', flex: .5, type: 'number', headerClassName: 'data-grid-last-column-header' },
     ]
 
     return (

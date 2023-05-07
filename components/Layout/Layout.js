@@ -1,29 +1,43 @@
 import {
   AppBar, Container, Grid, IconButton, Typography, Box, Divider, Drawer, List,
-  ListItem, ListItemButton, ListItemText, Chip, Badge
+  ListItem, ListItemButton, ListItemText, Chip, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button,
+  TextField
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import AccountCircle from '@mui/icons-material/AccountCircle'
 import ChevronLeft from '@mui/icons-material/ChevronLeft'
 import NotificationsIcon from '@mui/icons-material/Notifications'
+import LockIcon from '@mui/icons-material/Lock'
+import LockOpenIcon from '@mui/icons-material/LockOpen'
 import React, { useState, useEffect } from 'react'
 import { useAppContext } from '../../AppProvider'
 import { useRouter } from 'next/router'
 import { useTheme } from '@mui/material/styles'
+import electron from 'electron'
+const ipcRenderer = electron.ipcRenderer || false
 
 
 import styles from './Layout.module.css'
 import AppSnack from '../AppSnack/AppSnack'
+import { DataGrid } from '@mui/x-data-grid'
+
+
 
 
 const health = require('../../promises/health')
 
 export default function Layout(props) {
   const { children } = props
-  const { dispatch, pageTitle, stockAlertList } = useAppContext()
+  const { dispatch, pageTitle, stockAlertList, lock, ordersMode } = useAppContext()
   const theme = useTheme()
   const [drawerState, setDrawerState] = useState(false)
   const router = useRouter()
+  const [openStockAlertDialog, setOpenStockAlertDialog] = useState(false)
+  const [openAuthDialog, setOpenAuthDialog] = useState(false)
+  const [adminPass, setAdminPass] = useState('')
+  const [checkPass, setCheckPass] = useState('')
+ 
+
 
   useEffect(() => {
     health.test()
@@ -32,6 +46,38 @@ export default function Layout(props) {
         dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No se pudo conectar con el servidor' } })
       })
   }, [router.pathname])
+
+  useEffect(() => {
+    let adminPass = ipcRenderer.sendSync('get-admin-pass', 'sync')
+    let cashRegisterUI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
+    setAdminPass(adminPass)
+    dispatch({type: 'SET_ORDERS_MODE', value: cashRegisterUI.orders_mode})
+  }, [])
+
+  const updateLock = () => {
+    if (lock === false) {
+      if (checkPass == adminPass) {
+        dispatch({ type: 'LOCK' })
+        setCheckPass('')
+        setOpenAuthDialog(false)
+      } else {
+        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Contraseña incorrecta' } })
+        setCheckPass('')
+      }
+    } else {
+      if (checkPass == adminPass) {
+        dispatch({ type: 'UNLOCK' })
+        setCheckPass('')
+        setOpenAuthDialog(false)
+      } else {
+        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Contraseña incorrecta' } })
+        setCheckPass('')
+      }
+    }
+
+  }
+
+
 
   return (
     <>
@@ -52,29 +98,31 @@ export default function Layout(props) {
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography variant="h8" component="div" sx={{ flexGrow: 1, marginRight: '1rem' }}>
-              {stockAlertList.length > 0 ? `Alertas de stock: ${stockAlertList.length}` : ''}
+              UserName
             </Typography>
             <IconButton
               size="large"
               edge="start"
               color="inherit"
               aria-label="menu"
-              sx={{ mr: 2 }}
+              sx={{ mr: 1 }}
             >
               <AccountCircle />
+            </IconButton>
+            <IconButton onClick={() => { setOpenAuthDialog(true) }} color={'inherit'} size="large" sx={{ mr: 1 }}>
+              <LockOpenIcon sx={{ display: lock ? 'none' : 'block' }} />
+              <LockIcon sx={{ display: lock ? 'block' : 'none' }} />
             </IconButton>
             <Badge badgeContent={stockAlertList.length} color='secondary'>
               <Chip
                 label="Alertas de stock"
-                onClick={() => { console.log('click') }}
+                onClick={() => { setOpenStockAlertDialog(true); console.log(stockAlertList) }}
                 icon={<NotificationsIcon />}
                 variant='outlined'
                 color='info'
               />
-
             </Badge>
 
-            
           </Box>
         </Container>
       </AppBar>
@@ -91,12 +139,12 @@ export default function Layout(props) {
         <List>
           <ListItem disablePadding>
             <ListItemButton>
-              <ListItemText primary='Caja'
+              <ListItemText primary={ordersMode? 'Pedidos' : 'Caja'}
                 onClick={() => {
                   router.push({
                     pathname: '/cashRegister',
                   })
-                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Caja' })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: ordersMode? 'Pedidos' : 'Caja' })
                   setDrawerState(false)
                   dispatch({ type: 'CLEAR_CART' })
                 }}
@@ -151,8 +199,70 @@ export default function Layout(props) {
         {children}
       </Box>
       <AppSnack />
-    </>
+      <Dialog open={openStockAlertDialog} fullWidth maxWidth={'md'}>
+        <DialogTitle sx={{ p: 2 }}>Productos con alerta de stock</DialogTitle>
+        <DialogContent sx={{ p: 2 }}>
 
+          <DataGrid
+            rows={
+              stockAlertList.map(item => ({
+                id: item.id,
+                productName: item.Product.name,
+                code: item.Product.code,
+                storageName: item.Storage.name,
+                stock: item.stock,
+                critical_stock: item.critical_stock
+
+              }))
+            }
+            columns={[
+              { field: 'id', headerName: 'ID', flex: 1, hide: true },
+              { field: 'productName', headerName: 'Nombre', flex: 2 },
+              { field: 'code', headerName: 'Código', flex: 1 },
+              { field: 'storageName', headerName: 'Almacén', flex: 1 },
+              { field: 'stock', headerName: 'Stock', flex: 1 },
+              { field: 'critical_stock', headerName: 'Stock critico', flex: 1 }
+            ]}
+            pagination={false}
+            pageSize={100}
+            rowsPerPageOptions={[100]}
+            disableSelectionOnClick
+            autoHeight
+          />
+
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button variant={'outlined'} onClick={() => { setOpenStockAlertDialog(false) }}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openAuthDialog} fullWidth maxWidth={'xs'}>
+        <DialogTitle sx={{ p: 2 }}>Autorización de administrador</DialogTitle>
+        <form onSubmit={(e) => { e.preventDefault(); updateLock() }}>
+          <DialogContent sx={{ p: 2 }}>
+            <Grid container spacing={1} direction={'column'}>
+              <Grid item marginTop={1}>
+                <TextField
+                  label="Contraseña"
+                  value={checkPass}
+                  onChange={(e) => { setCheckPass(e.target.value) }}
+                  type="password"
+                  variant="outlined"
+                  size={'small'}
+                  fullWidth
+                  autoFocus
+                  required
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button variant="contained" type='submit'>Autorizar</Button>
+            <Button variant={'outlined'} onClick={() => { setOpenAuthDialog(false) }}>cerrar</Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </>
   )
 }
 

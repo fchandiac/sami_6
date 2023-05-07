@@ -21,6 +21,9 @@ const theme = createTheme(
       info: {
         main: '#fff',
       },
+      error: {
+        main: '#f44336',
+      }
   
     },
   }, esES)

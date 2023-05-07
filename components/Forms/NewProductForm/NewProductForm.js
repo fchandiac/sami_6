@@ -103,6 +103,7 @@ export default function NewProducForm(props) {
                                 variant="outlined"
                                 size={'small'}
                                 fullWidth
+                                autoFocus
                                 required
                             />
                         </Grid>
@@ -207,9 +208,9 @@ function productDataDefault() {
         sale: '',
         code: '',
         purchase: '',
-        category: null,
+        category: { id: 1001, label: 'Universal', key: 1001 },
         salesRoomStock: 0,
         criticalSalesRoomStock: 0,
-        tax: null
+        tax:  { id: 1001, label: 'iva', key: 1001 }
     }
 }

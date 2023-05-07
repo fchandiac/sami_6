@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Movements from '../../Movements';
 import CashRegister from '../../CashRegister'
+import { useAppContext } from '../../../AppProvider'
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -20,7 +21,7 @@ function TabPanel(props) {
     >
       {value === index && (
         <Box sx={{ p: 1 }}>
-         {children}
+          {children}
         </Box>
       )}
     </div>
@@ -41,30 +42,34 @@ function a11yProps(index) {
 }
 
 export default function BasicTabs() {
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = React.useState(0)
+  const { ordersMode } = useAppContext()
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
-  };
+  }
+
+
+
 
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-          <Tab label="Caja Registradora" {...a11yProps(0)} />
-          {/* <Tab label="Movimientos" {...a11yProps(1)} />
-          <Tab label="Pedidos" {...a11yProps(1)} /> */}
+          <Tab label={ordersMode ? 'Gestión de pedidos' : 'Caja Registradora'} {...a11yProps(0)} />
+          {ordersMode ? null : <Tab label="Movimientos" {...a11yProps(1)} />}
+          {ordersMode ? <Tab label="Pedidos" {...a11yProps(1)} /> : <Tab label="Pedidos" {...a11yProps(2)} />}
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
         <CashRegister></CashRegister>
       </TabPanel>
-      {/* <TabPanel value={value} index={1}>
+      <TabPanel value={value} index={ordersMode ? null : 1}>
         <Movements></Movements>
       </TabPanel>
-      <TabPanel value={value} index={2}>
+      <TabPanel value={value} index={ordersMode ? 1 : 2}>
         Pedidos
-      </TabPanel> */}
+      </TabPanel>
     </Box>
   )
 }

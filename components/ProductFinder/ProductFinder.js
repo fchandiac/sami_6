@@ -60,7 +60,7 @@ export default function ProductFinder(props) {
                             code: item.code,
                             sale: item.Price.sale,
                             salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)).stock,
-                            stockControl: item.item.stock_control
+                            stockControl: item.stock_control
                         }))
                         setProductsList(data)
                     })
@@ -108,9 +108,10 @@ export default function ProductFinder(props) {
             field: 'salesRoomStock',
             headerName: 'Stock sala', 
             flex: .7, 
+            hide: !stockControl,
             renderCell: (params) => (
-                //params.row.stockControl? params.value : '-'
-                params.value
+                params.row.stockControl? params.value : '-'
+                //params.value
             )
         },
         { field: 'sale', headerName: 'Precio Venta', flex: .7, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },

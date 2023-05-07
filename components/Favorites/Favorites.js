@@ -1,4 +1,4 @@
-import { Button, Grid } from '@mui/material'
+import {Chip, Grid } from '@mui/material'
 import React, { useState, useEffect } from 'react'
 import AppPaper from '../AppPaper/AppPaper'
 
@@ -11,7 +11,6 @@ export default function Favorites() {
         products.findAll().then(res => {
             let data = res.filter(product => product.favorite == true)
             setFavorites(data)
-            console.log(res)
         }).catch(err => {
             console.log(err)
         })
@@ -25,7 +24,7 @@ export default function Favorites() {
             <Grid container spacing={1} padding={1}>
                 {favorites.map((product) => (
                     <Grid item key={product.id}>
-                        <Button variant={'outlined'}>{product.name}</Button>
+                        <Chip variant='outlined' label={product.name} color='primary' onClick={()=>{console.log('favorite click')}}/>
                     </Grid>
                 ))}
             </Grid>

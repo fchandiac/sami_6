@@ -39,6 +39,22 @@ export default function PayDialog(props) {
     ]
 
     useEffect(() => {
+        if(openChangeDialog === true){
+            const handleKeyDown = (event) => {
+                if (event.key === " ") {
+                    dispatch({ type: 'CLEAR_CART' })
+                    setOpen(false)
+                    setOpenChangeDialog(false)
+                }
+            }
+            document.addEventListener("keydown", handleKeyDown);
+            return () => {
+                document.removeEventListener("keydown", handleKeyDown);
+            }
+        }
+    }, [openChangeDialog])
+
+    useEffect(() => {
         let paymentMethods = ipcRenderer.sendSync('get-payment-methods', 'sync')
         let customerCredit = ipcRenderer.sendSync('get-customer-credit', 'sync')
         let print_info = ipcRenderer.sendSync('get-printer', 'sync')
@@ -116,40 +132,73 @@ export default function PayDialog(props) {
         return Promise.all(newStocks)
     }
 
+    const printTicket = () => {
+        const print = new Promise((resolve, reject) => {
+            print.ticket(total, cart, ticketInfo, printerInfo)
+                .then(() => { resolve() })
+                .catch(err => {
+                    console.log(err)
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                    reject(err)
+                })
+        })
+        return print
+    }
+
+    const stockControlPayTrue = () => {
+        const pay = new Promise((resolve, reject) => {
+            updateStocks(cart)
+                .then(() => {
+                    stocks.findAllStockAlert()
+                        .then(res => {
+                            dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res})
+                            resolve()
+                        })
+                        .catch(err => {
+                            console.log(err)
+                            reject(err)
+                        })
+                })
+                .catch(err => {
+                    console.log(err)
+                    reject(err)
+                })
+        })
+        return pay
+    }
+
+    const stockControlPayFalse = () => {
+        const pay = new Promise((resolve, reject) => {
+            console.log('sin stock')
+            resolve()
+        })
+        return pay
+    }
+
     const pay = () => {
         switch (documentType) {
             case 'Ticket':
+                console.log('ticket')
                 print.test(printerInfo)
                     .then(() => {
                         if (stockControl == true) {
-                            updateStocks(cart)
-                                .then(res => {
-                                    console.log(res)
-                                    setOpen(false)
-                                    setOpenChangeDialog(true)
-                                    console.log('con impresora - con stock')
-                                    print.ticket(total, cart, ticketInfo, printerInfo)
+                            stockControlPayTrue()
+                                .then(() => {
+                                    printTicket()
                                         .then(() => {
                                             setOpen(false)
                                             setOpenChangeDialog(true)
                                         })
-                                        .catch(err => {
-                                            console.log(err)
-                                            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                                        })
                                 })
-                                .catch(err => { console.log(err) })
-                        } else {
-                            setOpen(false)
-                            setOpenChangeDialog(true)
-                            setDocumentType('Ticket')
-                            console.log('con impresora - sin stock')
-                        }
+                                .catch(err => { console.error(err) })
 
+                        } else {
+                            stockControlPayFalse()
+                        }
                     })
                     .catch(err => {
-                        console.error(err)
                         dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                        console.error(err)
                     })
 
                 break
@@ -158,18 +207,16 @@ export default function PayDialog(props) {
                 break
             case 'Sin impresora':
                 if (stockControl == true) {
-                    updateStocks(cart)
-                        .then(res => {
+                    stockControlPayTrue()
+                        .then(() => {
                             setOpen(false)
                             setOpenChangeDialog(true)
-                            setDocumentType('Ticket')
                             console.log('sin impresora - con stock')
                         })
-                        .catch(err => { console.log(err) })
+                        .catch(err => { console.error(err) })
                 } else {
                     setOpen(false)
                     setOpenChangeDialog(true)
-                    setDocumentType('Ticket')
                     console.log('sin impresora - sin stock')
                 }
                 break

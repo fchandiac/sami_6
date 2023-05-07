@@ -1,6 +1,8 @@
-import { Box, Card, Stack, Typography, Badge, IconButton, Dialog, DialogActions, DialogTitle, DialogContent, 
-Grid, TextField, Button} from '@mui/material'
-import React, {useState} from 'react'
+import {
+    Box, Card, Stack, Typography, Badge, IconButton, Dialog, DialogActions, DialogTitle, DialogContent,
+    Grid, TextField, Button
+} from '@mui/material'
+import React, { useState } from 'react'
 
 import WidgetsIcon from '@mui/icons-material/Widgets'
 import NotificationsIcon from '@mui/icons-material/Notifications'
@@ -9,12 +11,15 @@ import RemoveCircleIcon from '@mui/icons-material/RemoveCircle'
 import EditNotificationsIcon from '@mui/icons-material/EditNotifications'
 import DeleteIcon from '@mui/icons-material/Delete'
 
+import { useAppContext } from '../../../AppProvider'
+
 import { useTheme } from '@mui/material/styles'
 const stocks = require('../../../promises/stocks')
 
 export default function StockCard(props) {
     const { stock, updateComponent, setUpdateComponent } = props
     const theme = useTheme()
+    const { dispatch } = useAppContext()
     const [openAddDialog, setOpenAddDialog] = useState(false)
     const [openRemoveDialog, setOpenRemoveDialog] = useState(false)
     const [openUpdateAlertDialog, setOpenUpdateAlertDialog] = useState(false)
@@ -24,36 +29,56 @@ export default function StockCard(props) {
 
     const addStock = () => {
         stocks.updateByProductAndStorage(stock.product_id, stock.storage_id, (parseInt(stock.stock) + parseInt(stockToAdd)), stock.critical_stock)
-        .then(() =>{
-            setStockToAdd(0)
-            setUpdateComponent(!updateComponent)
-            setOpenAddDialog(false)
-        })
-        .catch(err => { console.error(err) })
+            .then(() => {
+                setStockToAdd(0)
+                setUpdateComponent(!updateComponent)
+                setOpenAddDialog(false)
+                stocks.findAllStockAlert()
+                .then(res => { 
+                    dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res 
+                }) })
+                .catch(err => { console.log(err) })
+            })
+            .catch(err => { console.error(err) })
     }
     const removeStock = () => {
         stocks.updateByProductAndStorage(stock.product_id, stock.storage_id, stock.stock - stockToRemove, stock.critical_stock)
-        .then(() =>{
-            setStockToRemove(0)
-            setUpdateComponent(!updateComponent)
-            setOpenRemoveDialog(false)
-        })
-        .catch(err => { console.error(err) })
+            .then(() => {
+                setStockToRemove(0)
+                setUpdateComponent(!updateComponent)
+                setOpenRemoveDialog(false)
+                stocks.findAllStockAlert()
+                .then(res => { 
+                    dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res 
+                }) })
+                .catch(err => { console.log(err) })
+            })
+            .catch(err => { console.error(err) })
     }
     const updateCriticalStock = () => {
         stocks.updateByProductAndStorage(stock.product_id, stock.storage_id, stock.stock, criticalStockToUpdate)
-        .then(() =>{
-            setCriticalStockToUpdate(0)
-            setUpdateComponent(!updateComponent)
-            setOpenUpdateAlertDialog(false)
-        })
-        .catch(err => { console.error(err) })
-        
+            .then(() => {
+                setCriticalStockToUpdate(0)
+                setUpdateComponent(!updateComponent)
+                setOpenUpdateAlertDialog(false)
+                stocks.findAllStockAlert()
+                    .then(res => { 
+                        dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res 
+                    }) })
+                    .catch(err => { console.log(err) })
+            })
+            .catch(err => { console.error(err) })
+
     }
     const destroyStock = () => {
         stocks.destroy(stock.id)
             .then(() => {
                 setUpdateComponent(!updateComponent)
+                stocks.findAllStockAlert()
+                    .then(res => { 
+                        dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res 
+                    }) })
+                    .catch(err => { console.log(err) })
             })
             .catch(err => { console.error(err) })
     }
@@ -77,16 +102,16 @@ export default function StockCard(props) {
                     </Stack>
                     <Stack direction={'row'} spacing={1}>
                         <IconButton onClick={() => setOpenAddDialog(true)} >
-                            <AddCircleIcon  fontSize={'small'}/>
+                            <AddCircleIcon fontSize={'small'} />
                         </IconButton>
                         <IconButton onClick={() => setOpenRemoveDialog(true)}>
-                            <RemoveCircleIcon fontSize={'small'}/>
+                            <RemoveCircleIcon fontSize={'small'} />
                         </IconButton>
                         <IconButton onClick={() => setOpenUpdateAlertDialog(true)}>
-                            <EditNotificationsIcon fontSize={'small'}/>
+                            <EditNotificationsIcon fontSize={'small'} />
                         </IconButton>
                         <IconButton onClick={() => destroyStock(stock.id)}>
-                            <DeleteIcon  fontSize={'small'} sx={{ display: stock.storage_id == 1001 ? 'none' : 'block' }}/>
+                            <DeleteIcon fontSize={'small'} sx={{ display: stock.storage_id == 1001 ? 'none' : 'block' }} />
                         </IconButton>
                     </Stack>
                 </Box>
@@ -96,7 +121,7 @@ export default function StockCard(props) {
                 <form onSubmit={(e) => { e.preventDefault(); addStock() }}>
                     <DialogContent sx={{ p: 2 }}>
                         <Grid container spacing={1} direction={'column'}>
-                        <Grid item>
+                            <Grid item>
                                 <TextField
                                     label={'Stock actual ' + stock.Storage.name}
                                     value={stock.stock}
@@ -134,7 +159,7 @@ export default function StockCard(props) {
                 <form onSubmit={(e) => { e.preventDefault(); removeStock() }}>
                     <DialogContent sx={{ p: 2 }}>
                         <Grid container spacing={1} direction={'column'}>
-                        <Grid item>
+                            <Grid item>
                                 <TextField
                                     label={'Stock actual ' + stock.Storage.name}
                                     value={stock.stock}
@@ -178,7 +203,7 @@ export default function StockCard(props) {
                                     value={criticalStockToUpdate}
                                     onChange={(e) => { setCriticalStockToUpdate(e.target.value) }}
                                     type="number"
-                                    inputProps={{min: 0 }}
+                                    inputProps={{ min: 0 }}
                                     variant="outlined"
                                     size={'small'}
                                     autoFocus
@@ -195,7 +220,7 @@ export default function StockCard(props) {
                 </form>
             </Dialog>
 
-    
+
         </>
     )
 }

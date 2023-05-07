@@ -22,6 +22,7 @@ function ticket(total, cart, ticketInfo, printerInfo) {
 }
 
 function test(printerInfo){
+    let data = { printerInfo }
     const print = new Promise((resolve, reject) => {
         fetch(url + 'print/test', {
             method: 'POST',

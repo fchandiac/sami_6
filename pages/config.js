@@ -19,7 +19,7 @@ export default function Home() {
     const [customerCredit, setCustomerCredit] = useState({ name: '', state: true })
     const [newPaymentMethod, setNewPaymentMethod] = useState('')
     const [adminPass, setAdminPass] = useState('')
-    const [cashRegisterUI, setCashRegisterUI] = useState({ stock_control: true,  quote: true})
+    const [cashRegisterUI, setCashRegisterUI] = useState({ stock_control: true, quote: true, orders_mode: false, orders_loader: false, orders_priority: true, favorites: false })
     const [printer, setPrinter] = useState({ idProduct: 0, idVendor: 0 })
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
     const [apiUrl, setApiUrl] = useState('')
@@ -70,6 +70,7 @@ export default function Home() {
 
     const updateCashRegisterUI = () => {
         ipcRenderer.send('update-cash-register-UI', cashRegisterUI)
+        dispatch({type: 'SET_ORDERS_MODE', value: cashRegisterUI.orders_mode})
         dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Configuración de caja actualizada' } })
     }
 
@@ -91,7 +92,7 @@ export default function Home() {
     return (
         <>
             <Grid container spacing={1}>
-                <Grid item>
+                <Grid item md={3}>
                     <AppPaper title='Api'>
                         <form onSubmit={(e) => { e.preventDefault(); updateApiUrl() }}>
                             <Grid container spacing={1} direction={'column'} p={1}>
@@ -116,7 +117,7 @@ export default function Home() {
                     </AppPaper>
                 </Grid>
 
-                <Grid item>
+                <Grid item md={3}>
                     <AppPaper title='Credito clientes'>
                         <form onSubmit={(e) => { e.preventDefault(); updateCustomerCredit() }}>
                             <Grid container spacing={1} direction={'column'} p={1}>
@@ -144,7 +145,8 @@ export default function Home() {
                         </form>
                     </AppPaper>
                 </Grid>
-                <Grid item>
+
+                <Grid item md={3}>
                     <AppPaper title='Contraseña Administrador'>
                         <form onSubmit={(e) => { e.preventDefault(); updateAdminPass() }}>
                             <Grid container spacing={1} direction={'column'} p={1}>
@@ -169,7 +171,8 @@ export default function Home() {
                         </form>
                     </AppPaper>
                 </Grid>
-                <Grid item>
+
+                <Grid item md={3}>
                     <AppPaper title='Caja UI'>
                         <form onSubmit={(e) => { e.preventDefault(); updateCashRegisterUI() }}>
                             <Grid container spacing={1} direction={'column'} p={1}>
@@ -195,6 +198,50 @@ export default function Home() {
                                         label="Cotización"
                                     />
                                 </Grid>
+                                <Grid item>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={cashRegisterUI.orders_mode}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, orders_mode: e.target.checked }) }}
+                                            />
+                                        }
+                                        label="Modo pedidos"
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={cashRegisterUI.orders_loader}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, orders_loader: e.target.checked}) }}
+                                            />
+                                        }
+                                        label="Cargar pedidos"
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={cashRegisterUI.orders_priority}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, orders_priority: e.target.checked}) }}
+                                            />
+                                        }
+                                        label="Prioridad pedidos"
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={cashRegisterUI.favorites}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, favorites: e.target.checked}) }}
+                                            />
+                                        }
+                                        label="Favoritos"
+                                    />
+                                </Grid>
                                 <Grid item textAlign={'right'}>
                                     <IconButton color='primary' type='submit'>
                                         <SaveIcon />
@@ -204,7 +251,8 @@ export default function Home() {
                         </form>
                     </AppPaper>
                 </Grid>
-                <Grid item>
+
+                <Grid item md={3}>
                     <AppPaper title='Impresora'>
                         <form onSubmit={(e) => { e.preventDefault(); updatePrinter() }}>
                             <Grid container spacing={1} direction={'column'} p={1}>
@@ -240,7 +288,8 @@ export default function Home() {
                         </form>
                     </AppPaper>
                 </Grid>
-                <Grid item>
+
+                <Grid item md={3}>
                     <AppPaper title='Información Ticket'>
                         <form onSubmit={(e) => { e.preventDefault(); updateTicketInfo() }}>
                             <Grid container spacing={1} direction={'column'} p={1}>
@@ -301,7 +350,8 @@ export default function Home() {
                         </form>
                     </AppPaper>
                 </Grid>
-                <Grid item>
+
+                <Grid item md={3}>
                     <AppPaper title='Medios de pago'>
                         <Grid container spacing={1} direction={'column'} p={1}>
                             <Grid item xs>
@@ -327,6 +377,62 @@ export default function Home() {
                                     <AddCircleIcon />
                                 </IconButton>
                                 <IconButton color='primary' onClick={() => { updatePaymentMethods() }}>
+                                    <SaveIcon />
+                                </IconButton>
+                            </Grid>
+                        </Grid>
+                    </AppPaper>
+                </Grid>
+
+                <Grid item md={3}>
+                    <AppPaper title='Documentos'>
+                        <Grid container spacing={1} direction={'column'} p={1}>
+                            <Grid item>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={cashRegisterUI.quote}
+                                            onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, quote: e.target.checked }) }}
+                                        />
+                                    }
+                                    label="Ticket"
+                                />
+                            </Grid>
+                            <Grid item>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={cashRegisterUI.quote}
+                                            onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, quote: e.target.checked }) }}
+                                        />
+                                    }
+                                    label="Boleta"
+                                />
+                            </Grid>
+                            <Grid item>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={cashRegisterUI.quote}
+                                            onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, quote: e.target.checked }) }}
+                                        />
+                                    }
+                                    label="Factura"
+                                />
+                            </Grid>
+                            <Grid item>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={cashRegisterUI.quote}
+                                            onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, quote: e.target.checked }) }}
+                                        />
+                                    }
+                                    label="Ticket de cambio"
+                                />
+                            </Grid>
+                            <Grid item textAlign={'right'}>
+                                <IconButton color='primary' onClick={() => { }}>
                                     <SaveIcon />
                                 </IconButton>
                             </Grid>

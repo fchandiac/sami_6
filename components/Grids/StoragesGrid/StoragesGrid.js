@@ -42,7 +42,7 @@ export default function StoragesGrid(props) {
         { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
         { field: 'storage_name', headerName: 'Nombre', flex: 1 },
         { field: 'products_count', headerName: 'Productos', flex: .5, type: 'number' },
-        { field: 'total_stock', headerName: 'Stock total', flex: .5, type: 'number' },
+        { field: 'total_stock', headerName: 'Stock total', flex: .5, type: 'number', headerClassName: 'data-grid-last-column-header' },
     ]
 
     return (

@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import Products from '../../Products';
 import Categories from '../../Categories';
 import Stocks from '../../Stocks/Stocks';
+import Taxes from '../../Taxes/Taxes';
 
 
 
@@ -69,7 +70,7 @@ export default function BasicTabs() {
         <Categories />
       </TabPanel>
       <TabPanel value={value} index={3}>
-        Impuestos
+        <Taxes />
       </TabPanel>
     </Box>
   )

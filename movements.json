@@ -1,0 +1,16 @@
+{
+    "state": true,
+    "balance": 0,
+    "movements": 
+        [
+            {"id": 1,
+            "date": "2019-01-01",
+            "amount": 100,
+            "description": "Salary"},
+            {"id": 2,
+            "date": "2019-01-02",
+            "amount": -50,
+            "description": "Rent"}
+
+        ]
+}

@@ -32,6 +32,7 @@ import PayDialog from './PayDialog/PayDialog'
 
 import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
+
 const utils = require('../../utils')
 const print = require('../../promises/print')
 
@@ -40,27 +41,43 @@ const print = require('../../promises/print')
 
 export default function ShoppingCart(props) {
     const { stockControl, quote } = props
-    const { cart, total, lock, dispatch } = useAppContext()
+    const { cart, total, lock, dispatch, ordersMode } = useAppContext()
     const [rowData, setRowData] = useState([])
     const [openPayDialog, setOpenPayDialog] = useState(false)
     const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
     const [openEditQuantyDialog, setOpenEditQuantyDialog] = useState(false)
     const [openDiscountDialog, setOpenDiscountDialog] = useState(false)
-    const [openAuthDialog, setOpenAuthDialog] = useState(false)
-    const [adminPass, setAdminPass] = useState('')
-    const [checkPass, setCheckPass] = useState('')
     const [discount, setDiscount] = useState(0)
     const [printerInfo, setPrinterInfo] = useState({ idProduct: 0, idVendor: 0 })
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
 
 
+
     useEffect(() => {
-        let adminPass = ipcRenderer.sendSync('get-admin-pass', 'sync')
         let print_info = ipcRenderer.sendSync('get-printer', 'sync')
         let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
-        setAdminPass(adminPass)
         setPrinterInfo(print_info)
         setTicketInfo(ticket_info)
+    }, [])
+
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === "ç") {
+                if (ordersMode === true){
+                    alert('Nuevo pedido')
+                } else {
+                    if (cart.length === 0) {
+                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
+                    } else {
+                        setOpenPayDialog(true)
+                    }
+                }
+            }
+        }
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        }
     }, [])
 
 
@@ -136,46 +153,24 @@ export default function ShoppingCart(props) {
         setOpenDiscountDialog(false)
     }
 
-    const updateLock = () => {
-        if (lock === false) {
-            if (checkPass == adminPass) {
-                dispatch({ type: 'LOCK' })
-                setOpenAuthDialog(false)
-                setCheckPass('')
-            } else {
-                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Contraseña incorrecta' } })
-                setCheckPass('')
-            }
-        } else {
-            if (checkPass == adminPass) {
-                dispatch({ type: 'UNLOCK' })
-                setOpenAuthDialog(false)
-                setCheckPass('')
-            } else {
-                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Contraseña incorrecta' } })
-                setCheckPass('')
-            }
-        }
-
-    }
 
     const printQuote = () => {
         if (cart.length === 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
         } else {
             print.test()
-            .then(() => {
-                print.quote(total, cart, printerInfo, ticketInfo)
                 .then(() => {
-                    dispatch({type: 'CLEAR_CART'})
+                    print.quote(total, cart, printerInfo, ticketInfo)
+                        .then(() => {
+                            dispatch({ type: 'CLEAR_CART' })
+                        })
+                        .catch((err) => { console.log(err) })
                 })
-                .catch((err) => {console.log(err)})
-            })
-            .catch((err) => {
-                console.log(err)
-                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-            })
-            
+                .catch((err) => {
+                    console.log(err)
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                })
+
 
         }
 
@@ -279,7 +274,7 @@ export default function ShoppingCart(props) {
                             proccessPayment: proccessPayment,
                             openDiscountUI: openDiscountUI,
                             clearCart: clearCart,
-                            setOpenAuthDialog: setOpenAuthDialog
+                            ordersMode: ordersMode,
 
                         }
 
@@ -321,32 +316,6 @@ export default function ShoppingCart(props) {
                     <DialogActions sx={{ p: 2 }}>
                         <Button variant="contained" type='submit'>Editar</Button>
                         <Button variant={'outlined'} onClick={() => setOpenEditQuantyDialog(false)}>Cerrar</Button>
-                    </DialogActions>
-                </form>
-            </Dialog>
-
-            <Dialog open={openAuthDialog} fullWidth maxWidth={'xs'}>
-                <DialogTitle sx={{ p: 2 }}>Autorización de administrador</DialogTitle>
-                <form onSubmit={(e) => { e.preventDefault(); updateLock() }}>
-                    <DialogContent sx={{ p: 2 }}>
-                        <Grid container spacing={1} direction={'column'}>
-                            <Grid item marginTop={1}>
-                                <TextField
-                                    label="Contraseña"
-                                    value={checkPass}
-                                    onChange={(e) => { setCheckPass(e.target.value) }}
-                                    type="password"
-                                    variant="outlined"
-                                    size={'small'}
-                                    fullWidth
-                                    required
-                                />
-                            </Grid>
-                        </Grid>
-                    </DialogContent>
-                    <DialogActions sx={{ p: 2 }}>
-                        <Button variant="contained" type='submit'>Autorizar</Button>
-                        <Button variant={'outlined'} onClick={() => { setOpenAuthDialog(false) }}>cerrar</Button>
                     </DialogActions>
                 </form>
             </Dialog>
@@ -395,27 +364,34 @@ function CustomToolbar(props) {
 }
 
 function CustomFooter(props) {
-    const { lock, proccessPayment, openDiscountUI, clearCart, setOpenAuthDialog, quote, printQuote } = props
+    const { lock, proccessPayment, openDiscountUI, clearCart, quote, printQuote, ordersMode } = props
 
     return (
         <Grid container spacing={1} direction={'row'} justifyContent={'flex-end'} alignItems={'center'} paddingRight={1}>
             <Grid item>
-                <Button variant="contained" onClick={() => { proccessPayment() }}>Procesar Pago</Button>
+                <Button
+                    sx={{ display: ordersMode ? 'none' : 'block' }}
+                    variant="contained"
+                    onClick={() => { proccessPayment() }}>
+                    Procesar Pago
+                </Button>
             </Grid>
             <Grid item>
-                <Button variant={'outlined'}  sx={{ display: quote ? 'block' : 'none' }} onClick={() => { printQuote() }}>Cotización</Button>
+                <Button
+                    sx={{ display: ordersMode ? 'block' : 'none' }}
+                    variant="contained"
+                    onClick={() => { console.log('New order') }}>
+                    Nuevo Pedido
+                </Button>
+            </Grid>
+            <Grid item>
+                <Button variant={'outlined'} sx={{ display: quote ? 'block' : 'none' }} onClick={() => { printQuote() }}>Cotización</Button>
             </Grid>
             <Grid item>
                 <Button variant={'outlined'} sx={{ display: lock ? 'none' : 'block' }} onClick={() => { openDiscountUI() }}>Descuento</Button>
             </Grid>
             <Grid item>
                 <IconButton onClick={() => { clearCart() }}><RemoveShoppingCartIcon /></IconButton>
-            </Grid>
-            <Grid item>
-                <IconButton onClick={() => { setOpenAuthDialog(true) }}>
-                    <LockOpenTwoToneIcon sx={{ display: lock ? 'none' : 'block' }} />
-                    <LockTwoToneIcon sx={{ display: lock ? 'block' : 'none' }} />
-                </IconButton>
             </Grid>
         </Grid>
 

@@ -150,7 +150,8 @@ export default function ProductsGrid(props) {
         {
             field: 'actions',
             headerName: '',
-            type: 'actions', flex: .5, getActions: (params) => [
+            headerClassName: 'data-grid-last-column-header',
+            type: 'actions', flex: .6, getActions: (params) => [
                 <GridActionsCellItem
                     label='delete'
                     icon={<DeleteIcon />}
