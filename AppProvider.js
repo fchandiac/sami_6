@@ -3,7 +3,6 @@ import React, { useReducer } from 'react'
 const AppContext = React.createContext()
 const useAppContext = () => React.useContext(AppContext)
 
-const stoks = require('./promises/stocks')
 
 const initialState = {
     cart: [],
@@ -18,6 +17,7 @@ const initialState = {
     pageTitle: '',
     stockAlertList: [],
     ordersMode: false,
+    movements: {balance: 0, movements: []},
 }
 
 const reducer = (state, action) => {
@@ -207,6 +207,8 @@ const reducer = (state, action) => {
             return { ...state, stockAlertList: action.value }
         case 'SET_ORDERS_MODE':
             return { ...state, ordersMode: action.value }
+        case 'SET_MOVEMENTS':
+            return { ...state, movements: action.value }
         default:
             console.log('No action type')
             break
@@ -229,6 +231,7 @@ const AppProvider = ({ children }) => {
             pageTitle: state.pageTitle,
             stockAlertList: state.stockAlertList,
             ordersMode: state.ordersMode,
+            movements: state.movements,
             dispatch
         }}>
             {children}

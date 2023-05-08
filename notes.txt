@@ -1,4 +1,4 @@
-PENDIENTE: UPDATE ALERTSTOCK ON PRODUCTOS Stock
+PENDIENTE: key ç to procces pay, call event.click not funtion
 
 
 

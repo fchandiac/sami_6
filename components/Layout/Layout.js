@@ -36,7 +36,7 @@ export default function Layout(props) {
   const [openAuthDialog, setOpenAuthDialog] = useState(false)
   const [adminPass, setAdminPass] = useState('')
   const [checkPass, setCheckPass] = useState('')
- 
+
 
 
   useEffect(() => {
@@ -98,7 +98,7 @@ export default function Layout(props) {
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography variant="h8" component="div" sx={{ flexGrow: 1, marginRight: '1rem' }}>
-              UserName
+              {''}
             </Typography>
             <IconButton
               size="large"

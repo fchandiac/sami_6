@@ -1,16 +1,22 @@
 {
     "state": true,
-    "balance": 0,
+    "balance": 400,
     "movements": 
         [
-            {"id": 1,
-            "date": "2019-01-01",
+            {
+            "sale_id": 1,
+            "type": 1001,
             "amount": 100,
-            "description": "Salary"},
-            {"id": 2,
-            "date": "2019-01-02",
-            "amount": -50,
-            "description": "Rent"}
-
+            "balance": 100,
+            "dte_code": 0,
+            "dte_number":0,
+            "date": "2019-01-01"
+            },
+            {"sale_id": 2,
+            "type": 1002,
+            "amount": 100,
+            "balance": 200,
+            "date": "2019-01-01"
+            }
         ]
 }

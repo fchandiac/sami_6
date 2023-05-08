@@ -139,6 +139,7 @@ function ejecuteNext(win, splash) {
 
 /////// --------> IPC COMMUNICATION <-------/////////
 const filePathConfig = path.join(__dirname, './config.json')
+const filePathMovements = path.join(__dirname, './movements.json')
 
 ipcMain.on('read-config', (e, arg) => {
 	let rawDataConfig = fs.readFileSync(filePathConfig)
@@ -244,5 +245,10 @@ ipcMain.on('update-api-url', (e, arg) => {
 	fs.writeFileSync(filePathConfig, data)
 })
 
+ipcMain.on('get-movements', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathMovements)
+	let movements = JSON.parse(rawDataConfig)
+	e.returnValue = movements
+})
 
 
