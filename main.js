@@ -251,4 +251,9 @@ ipcMain.on('get-movements', (e, arg) => {
 	e.returnValue = movements
 })
 
+ipcMain.on('update-movements', (e, arg) => {
+	data = JSON.stringify(arg)
+	fs.writeFileSync(filePathMovements, data)
+})
+
 

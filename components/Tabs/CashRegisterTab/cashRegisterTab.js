@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, {useEffect} from 'react';
 import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -7,6 +7,9 @@ import Box from '@mui/material/Box';
 import Movements from '../../Movements';
 import CashRegister from '../../CashRegister'
 import { useAppContext } from '../../../AppProvider'
+
+import electron from 'electron'
+const ipcRenderer = electron.ipcRenderer || false
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -43,10 +46,78 @@ function a11yProps(index) {
 
 export default function BasicTabs() {
   const [value, setValue] = React.useState(0)
-  const { ordersMode } = useAppContext()
+  const { ordersMode, movements, dispatch } = useAppContext()
+
+
+ 
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
+  }
+
+  const renderCashRegister = () => {
+    if (ordersMode == true && movements.state == true){
+      return (<Tab label={'Gestión de pedidos'} {...a11yProps(0)} />)
+    } else if (ordersMode == false && movements.state == true){
+      return (<Tab label={'Caja registradora'} {...a11yProps(0)} />)
+    } else if (ordersMode == false && movements.state == false){
+      return null
+    } else if (ordersMode == true && movements.state == false){
+      return (<Tab label={'Gestión de pedidos'} {...a11yProps(0)} />)
+    }
+
+  }
+
+  const cashRegisterindex = () => {
+    if (ordersMode == true && movements.state == true){
+      console.log('true / true')
+      return 0
+    } else if (ordersMode == false && movements.state == true){
+      console.log('false / true')
+      return 0
+    } else if (ordersMode == false && movements.state == false){
+      console.log('false / false')
+      return null
+    } else if (ordersMode == true && movements.state == false){
+      console.log('true / false')
+      return 0
+    }
+  }
+
+  const renderMovenments = () => {
+    if (ordersMode == true && movements.state == true){
+       return null
+    } else if (ordersMode == false && movements.state == true){
+      return (<Tab label={'Movimientos'} {...a11yProps(1)} />)
+    } else if (ordersMode == false && movements.state == false){
+      return (<Tab label={'Movimientos'} {...a11yProps(0)} />)
+    } else if (ordersMode == true && movements.state == false){
+      return null
+    }
+  }
+
+  const movenmentsindex = () => {
+    if (ordersMode == true && movements.state == true){
+      return null
+    } else if (ordersMode == false && movements.state == true){
+      return 1
+    } else if (ordersMode == false && movements.state == false){
+      return 0
+    } else if (ordersMode == true && movements.state == false){
+      return null
+    }
+  }
+
+  const ordersIndex = () => {
+    if (ordersMode == true && movements.state == true){
+      return 1
+    } else if (ordersMode == false && movements.state == true){
+      return 2
+    } else if (ordersMode == false && movements.state == false){
+      return 1
+    } else if (ordersMode == true && movements.state == false){
+      return 1
+    }
   }
 
 
@@ -56,18 +127,18 @@ export default function BasicTabs() {
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-          <Tab label={ordersMode ? 'Gestión de pedidos' : 'Caja Registradora'} {...a11yProps(0)} />
-          {ordersMode ? null : <Tab label="Movimientos" {...a11yProps(1)} />}
+          {renderCashRegister()}
+          {renderMovenments()}
           {ordersMode ? <Tab label="Pedidos" {...a11yProps(1)} /> : <Tab label="Pedidos" {...a11yProps(2)} />}
         </Tabs>
       </Box>
-      <TabPanel value={value} index={0}>
+      <TabPanel value={value} index={cashRegisterindex()}>
         <CashRegister></CashRegister>
       </TabPanel>
-      <TabPanel value={value} index={ordersMode ? null : 1}>
+      <TabPanel value={value} index={movenmentsindex()}>
         <Movements></Movements>
       </TabPanel>
-      <TabPanel value={value} index={ordersMode ? 1 : 2}>
+      <TabPanel value={value} index={ordersIndex()}>
         Pedidos
       </TabPanel>
     </Box>

@@ -25,6 +25,7 @@ import { DataGrid } from '@mui/x-data-grid'
 
 
 const health = require('../../promises/health')
+const stocks = require('../../promises/stocks')
 
 export default function Layout(props) {
   const { children } = props
@@ -36,7 +37,18 @@ export default function Layout(props) {
   const [openAuthDialog, setOpenAuthDialog] = useState(false)
   const [adminPass, setAdminPass] = useState('')
   const [checkPass, setCheckPass] = useState('')
+  const [cashRegisterUI, setCashRegisterUI] = useState({})
 
+  useEffect(() => {
+    let movements = ipcRenderer.sendSync('get-movements', 'sync')
+    dispatch({ type: 'SET_MOVEMENTS', value: movements })
+    let cashRegisterUI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
+    setCashRegisterUI(cashRegisterUI)
+
+    stocks.findAllStockAlert()
+      .then(res => { dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res }) })
+      .catch(err => { console.log(err) })
+  }, [router.pathname])
 
 
   useEffect(() => {

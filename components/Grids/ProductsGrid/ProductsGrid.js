@@ -145,8 +145,8 @@ export default function ProductsGrid(props) {
         { field: 'category', headerName: 'Categoría', flex: .6 },
         { field: 'salesRoomStock', headerName: 'Stock sala', flex: .5 },
         { field: 'stock', headerName: 'Stock total', flex: .5 },
-        { field: 'sale', headerName: 'Precio Venta', flex: .5, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
-        { field: 'purchase', headerName: 'Precio Compra', flex: .5, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'sale', headerName: 'Precio Venta', type: 'number', flex: .5, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'purchase', headerName: 'Precio Compra', flex: .5, type: 'number', valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
             headerName: '',

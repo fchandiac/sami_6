@@ -18,6 +18,7 @@ const initialState = {
     stockAlertList: [],
     ordersMode: false,
     movements: {balance: 0, movements: []},
+    user: {id: 0, name: '', profile: '', permissions: []},
 }
 
 const reducer = (state, action) => {
@@ -232,6 +233,7 @@ const AppProvider = ({ children }) => {
             stockAlertList: state.stockAlertList,
             ordersMode: state.ordersMode,
             movements: state.movements,
+            user: state.user,
             dispatch
         }}>
             {children}
