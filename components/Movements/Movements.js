@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Grid, Stack, Typography, TextField, Chip, Button, Autocomplete, Box } from '@mui/material'
+import {
+  Grid, Stack, Typography, TextField, Chip, Button, Autocomplete, Box,
+  Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText
+} from '@mui/material'
 import AppPaper from '../AppPaper/AppPaper'
 import { useAppContext } from '../../AppProvider'
 import { useTheme } from '@mui/material/styles'
@@ -18,13 +21,18 @@ export default function Movements() {
   const [movementsInput, setMovementsInput] = useState('')
   const [movementsOptions, setMovementsOptions] = useState([{ id: 1002, key: 1002, label: 'Ingreso' }, { id: 1003, key: 1003, label: 'Egreso' }])
   const [displayOpenForm, setDisplayOpenForm] = useState(false)
+  const [openCloseDialog, setOpenCloseDialog] = useState(false)
 
 
 
 
   const renderOpenCloseButton = () => {
     if (movements.state == true) {
-      return (<Chip label={'Cerrar caja'} />)
+      return (
+        <Chip
+          label={'Cerrar caja'}
+          onClick={() => { closeCashRegisterButton() }}
+        />)
     } else {
       return (
         <Chip
@@ -35,12 +43,28 @@ export default function Movements() {
   }
 
   const openCashRegisterButton = () => {
-    if (lock == false) {
-      setDisplayOpenForm(true)
-    } else {
-      dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Caja bloqueada, solicita desbloqueo al administrador' } })
-    }
+    setDisplayOpenForm(true)
+    // if (lock == false) {
+    //   setDisplayOpenForm(true)
+    // } else {
+    //   dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Caja bloqueada, solicita desbloqueo al administrador' } })
+    // }
+  }
 
+  const closeCashRegisterButton = () => {
+    setOpenCloseDialog(true)
+
+  }
+
+  const closeCashRegister = () => {
+    let newMov = {
+      state: false,
+      balance: 0,
+      movements: []
+    }
+    ipcRenderer.send('update-movements', newMov)
+    dispatch({ type: 'SET_MOVEMENTS', value: newMov })
+    setOpenCloseDialog(false)
   }
 
   const openCashRegister = () => {
@@ -69,7 +93,7 @@ export default function Movements() {
     switch (newMovementData.type.id) {
       case 1002:
         let movs = movements.movements
-        movs.push({ 
+        movs.push({
           sale_id: 0,
           user: user.name,
           type: 1002,
@@ -106,7 +130,7 @@ export default function Movements() {
           movements: movs2
         }
         ipcRenderer.send('update-movements', newMov)
-        dispatch({ type: 'SET_MOVEMENTS', value: newMov2})
+        dispatch({ type: 'SET_MOVEMENTS', value: newMov2 })
         setNewMovementData(newMovementDataDefault())
         break
       default:
@@ -208,6 +232,42 @@ export default function Movements() {
         </Grid>
       </Grid>
 
+      <Dialog open={openCloseDialog} maxWidth={'xs'} fullWidth>
+        <DialogTitle sx={{ p: 2 }}>
+          Cierre de Caja
+        </DialogTitle>
+        <form onSubmit={(e) => { e.preventDefault(); closeCashRegister() }}>
+          <DialogContent sx={{ p: 2 }}>
+            <Grid container spacing={1} direction={'column'}>
+              <Grid item marginTop={1}>
+                <TextField
+                  label="Balance"
+                  value={movements.balance}
+                  inputProps={{ readOnly: true }}
+                  variant="outlined"
+                  size={'small'}
+                  fullWidth
+                />
+              </Grid>
+              {/* <Grid item>
+                <TextField
+                  label="Nombre"
+                  // value={rowData.name}
+                  inputProps={{ readOnly: true }}
+                  variant="outlined"
+                  size={'small'}
+                  fullWidth
+                />
+              </Grid> */}
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button variant={'contained'} type={'submit'}>Cierre de Caja</Button>
+            <Button variant={'outlined'} onClick={() => setOpenCloseDialog(false)}>Cerrar</Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
 
 
     </>
@@ -223,5 +283,14 @@ function newMovementDataDefault() {
     dte_code: 0,
     dte_number: 0,
     date: new Date()
+  })
+}
+
+function closeDataDefault() {
+  return ({
+    balance: 0,
+    sales: 0,
+    incomes: 0,
+    outcomes: 0,
   })
 }

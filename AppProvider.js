@@ -18,7 +18,7 @@ const initialState = {
     stockAlertList: [],
     ordersMode: false,
     movements: {balance: 0, movements: []},
-    user: {id: 0, name: '', profile: '', permissions: []},
+    user: {id: 0, name: 'UserVersion', profile: '', permissions: []},
 }
 
 const reducer = (state, action) => {

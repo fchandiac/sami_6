@@ -1,7 +1,7 @@
 import {
   AppBar, Container, Grid, IconButton, Typography, Box, Divider, Drawer, List,
   ListItem, ListItemButton, ListItemText, Chip, Badge, Dialog, DialogTitle, DialogContent, DialogActions, Button,
-  TextField
+  TextField, Popper
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import AccountCircle from '@mui/icons-material/AccountCircle'
@@ -9,7 +9,7 @@ import ChevronLeft from '@mui/icons-material/ChevronLeft'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import LockIcon from '@mui/icons-material/Lock'
 import LockOpenIcon from '@mui/icons-material/LockOpen'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAppContext } from '../../AppProvider'
 import { useRouter } from 'next/router'
 import { useTheme } from '@mui/material/styles'
@@ -38,6 +38,8 @@ export default function Layout(props) {
   const [adminPass, setAdminPass] = useState('')
   const [checkPass, setCheckPass] = useState('')
   const [cashRegisterUI, setCashRegisterUI] = useState({})
+  const [popperAnchorEl, setpopperAnchorEl] = useState(null)
+
 
   useEffect(() => {
     let movements = ipcRenderer.sendSync('get-movements', 'sync')
@@ -63,7 +65,7 @@ export default function Layout(props) {
     let adminPass = ipcRenderer.sendSync('get-admin-pass', 'sync')
     let cashRegisterUI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
     setAdminPass(adminPass)
-    dispatch({type: 'SET_ORDERS_MODE', value: cashRegisterUI.orders_mode})
+    dispatch({ type: 'SET_ORDERS_MODE', value: cashRegisterUI.orders_mode })
   }, [])
 
   const updateLock = () => {
@@ -89,11 +91,19 @@ export default function Layout(props) {
 
   }
 
+  const profileHandleClick = (e) => {
+    setpopperAnchorEl(popperAnchorEl ? null : e.currentTarget)
+
+  }
+
+  const open = Boolean(popperAnchorEl);
+  const id = open ? 'simple-popper' : undefined;
 
 
+  
   return (
     <>
-      <AppBar >
+      <AppBar sx={{display: router.pathname == '/'? 'none': 'block'}}>
         <Container sx={{ display: 'flex', alignItems: 'center', paddingTop: '0.3rem', paddingBottom: '0.3rem' }}>
           <IconButton
             size="large"
@@ -118,9 +128,19 @@ export default function Layout(props) {
               color="inherit"
               aria-label="menu"
               sx={{ mr: 1 }}
+              onClick={profileHandleClick}
+              aria-describedby={id}
             >
               <AccountCircle />
             </IconButton>
+            <Popper
+              open={open}
+              id={id}
+              anchorEl={popperAnchorEl}
+              placement="bottom-start"
+            >
+              <Button onClick= {() => router.push('/')}>logOut</Button>
+            </Popper>
             <IconButton onClick={() => { setOpenAuthDialog(true) }} color={'inherit'} size="large" sx={{ mr: 1 }}>
               <LockOpenIcon sx={{ display: lock ? 'none' : 'block' }} />
               <LockIcon sx={{ display: lock ? 'block' : 'none' }} />
@@ -151,12 +171,12 @@ export default function Layout(props) {
         <List>
           <ListItem disablePadding>
             <ListItemButton>
-              <ListItemText primary={ordersMode? 'Pedidos' : 'Caja'}
+              <ListItemText primary={ordersMode ? 'Pedidos' : 'Caja'}
                 onClick={() => {
                   router.push({
                     pathname: '/cashRegister',
                   })
-                  dispatch({ type: 'SET_PAGE_TITLE', value: ordersMode? 'Pedidos' : 'Caja' })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: ordersMode ? 'Pedidos' : 'Caja' })
                   setDrawerState(false)
                   dispatch({ type: 'CLEAR_CART' })
                 }}
