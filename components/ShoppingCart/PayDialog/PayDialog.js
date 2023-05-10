@@ -13,11 +13,12 @@ const ipcRenderer = electron.ipcRenderer || false
 const utils = require('../../../utils')
 const print = require('../../../promises/print')
 const stocks = require('../../../promises/stocks')
+const sales = require('../../../promises/sales')
 
 
 export default function PayDialog(props) {
     const { open, setOpen, total, stockControl } = props
-    const { dispatch, cart } = useAppContext()
+    const { dispatch, cart, movements, user } = useAppContext()
     const [payAmount, setPayAmount] = useState(0)
     const [change, setChange] = useState(0)
     const [disablePay, setDisablePay] = useState(true)
@@ -39,7 +40,7 @@ export default function PayDialog(props) {
     ]
 
     useEffect(() => {
-        if(openChangeDialog === true){
+        if (openChangeDialog === true) {
             const handleKeyDown = (event) => {
                 if (event.key === " ") {
                     dispatch({ type: 'CLEAR_CART' })
@@ -133,7 +134,7 @@ export default function PayDialog(props) {
     }
 
     const printTicket = () => {
-        const print = new Promise((resolve, reject) => {
+        const pr = new Promise((resolve, reject) => {
             print.ticket(total, cart, ticketInfo, printerInfo)
                 .then(() => { resolve() })
                 .catch(err => {
@@ -142,7 +143,41 @@ export default function PayDialog(props) {
                     reject(err)
                 })
         })
-        return print
+        return pr
+    }
+
+    const sale = () => {
+        const pr = new Promise((resolve, reject) => {
+            sales.create(total, paymentMethod, 0, 0)
+                .then(res => {
+                    let movs = movements.movements
+                    movs.push({
+                        sale_id: res.id,
+                        user: user.name,
+                        type: 1004,
+                        amount: total,
+                        balance: movements.balance + total,
+                        dte_code: 0,
+                        dte_number: 0,
+                        date: new Date()
+                    })
+                    let newMov = {
+                        state: true,
+                        balance: movements.balance + total,
+                        movements: movs
+                    }
+                    console.log(newMov)
+                    ipcRenderer.send('update-movements', newMov)
+                    dispatch({ type: 'SET_MOVEMENTS', value: newMov })
+                    resolve()
+
+                })
+                .catch(err => {
+                    console.log(err)
+                    reject(err)
+                })
+        })
+        return pr
     }
 
     const stockControlPayTrue = () => {
@@ -151,7 +186,7 @@ export default function PayDialog(props) {
                 .then(() => {
                     stocks.findAllStockAlert()
                         .then(res => {
-                            dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res})
+                            dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res })
                             resolve()
                         })
                         .catch(err => {
@@ -175,6 +210,8 @@ export default function PayDialog(props) {
         return pay
     }
 
+
+
     const pay = () => {
         switch (documentType) {
             case 'Ticket':
@@ -184,16 +221,32 @@ export default function PayDialog(props) {
                         if (stockControl == true) {
                             stockControlPayTrue()
                                 .then(() => {
-                                    printTicket()
+                                    sale()
                                         .then(() => {
-                                            setOpen(false)
-                                            setOpenChangeDialog(true)
+                                            printTicket()
+                                                .then(() => {
+                                                    setOpen(false)
+                                                    setOpenChangeDialog(true)
+                                                })
                                         })
+                                        .catch(err => { console.error(err) })
                                 })
                                 .catch(err => { console.error(err) })
 
                         } else {
                             stockControlPayFalse()
+                                .then(() => {
+                                    sale()
+                                        .then(() => {
+                                            printTicket()
+                                                .then(() => {
+                                                    setOpen(false)
+                                                    setOpenChangeDialog(true)
+                                                })
+                                        })
+                                        .catch(err => { console.error(err) })
+                                })
+                                .catch(err => { console.error(err) })
                         }
                     })
                     .catch(err => {
@@ -209,15 +262,25 @@ export default function PayDialog(props) {
                 if (stockControl == true) {
                     stockControlPayTrue()
                         .then(() => {
-                            setOpen(false)
-                            setOpenChangeDialog(true)
-                            console.log('sin impresora - con stock')
+                            sale()
+                                .then(() => {
+                                    setOpen(false)
+                                    setOpenChangeDialog(true)
+                                })
+                                .catch(err => { console.error(err) })
                         })
                         .catch(err => { console.error(err) })
                 } else {
-                    setOpen(false)
-                    setOpenChangeDialog(true)
-                    console.log('sin impresora - sin stock')
+                    stockControlPayFalse()
+                        .then(() => {
+                            sale()
+                                .then(() => {
+                                    setOpen(false)
+                                    setOpenChangeDialog(true)
+                                })
+                                .catch(err => { console.error(err) })
+                        })
+                        .catch(err => { console.error(err) })
                 }
                 break
 

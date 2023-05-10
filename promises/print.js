@@ -42,6 +42,7 @@ function test(printerInfo){
 }
 
 function quote(total, cart, ticketInfo, printerInfo) {
+    console.log('quote', printerInfo)
     let data = { total, cart, ticketInfo, printerInfo }
     const print = new Promise((resolve, reject) => {
         fetch(url + 'print/quote', {

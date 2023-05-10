@@ -63,7 +63,7 @@ export default function ShoppingCart(props) {
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.key === "ç") {
-                if (ordersMode === true){
+                if (ordersMode === true) {
                     alert('Nuevo pedido')
                 } else {
                     if (cart.length === 0) {
@@ -158,15 +158,12 @@ export default function ShoppingCart(props) {
         if (cart.length === 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
         } else {
-            print.test()
+            print.quote(total, cart, ticketInfo, printerInfo)
                 .then(() => {
-                    print.quote(total, cart, printerInfo, ticketInfo)
-                        .then(() => {
-                            dispatch({ type: 'CLEAR_CART' })
-                        })
-                        .catch((err) => { console.log(err) })
+                    dispatch({ type: 'CLEAR_CART' })
                 })
                 .catch((err) => {
+                    console.log('imprimiendo', printerInfo)
                     console.log(err)
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
                 })

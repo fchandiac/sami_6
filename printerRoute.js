@@ -28,7 +28,7 @@ router.post('/print/ticket', (req, res) => {
 })
 
 router.post('/print/quote', (req, res) => {
-    ticket(req.body.total, req.body.cart, req.body.ticketInfo, req.body.printerInfo)
+    quote(req.body.total, req.body.cart, req.body.ticketInfo, req.body.printerInfo)
         .then(() => {
             res.json({ status: 'success' })
         }).catch(err => {
@@ -45,13 +45,12 @@ function ticket(total, cart, ticketInfo, printerInfo) {
             const printer = new escpos.Printer(device, options)
             device.open(function (error) {
                 printer.font('b').align('ct').style('NORMAL')
-                printer.size(1, 1)
+                printer.size(0, 0)
                 printer.text('TICKET')
                 printer.text(ticketInfo.name)
                 printer.text(ticketInfo.rut)
                 printer.text(ticketInfo.address)
                 printer.text(ticketInfo.phone)
-                printer.size(0, 0)
                 printer.text('_________________________________________')
                 printer.tableCustom([
                     { text: '#', align: "LEFT", width: 0.1 },
@@ -77,7 +76,7 @@ function ticket(total, cart, ticketInfo, printerInfo) {
                 printer.text('')
                 printer.cut()
                 printer.cashdraw(2)
-                printer.size(1, 0)
+                printer.flush()
                 printer.close()
             })
             resolve({ 'code': 1, 'data': 'success' })
@@ -97,13 +96,12 @@ function quote(total, cart, ticketInfo, printerInfo) {
             const printer = new escpos.Printer(device, options)
             device.open(function (error) {
                 printer.font('b').align('ct').style('NORMAL')
-                printer.size(1, 1)
+                printer.size(0, 0)
                 printer.text('COTIZACION')
                 printer.text(ticketInfo.name)
                 printer.text(ticketInfo.rut)
                 printer.text(ticketInfo.address)
                 printer.text(ticketInfo.phone)
-                printer.size(0, 0)
                 printer.text('_________________________________________')
                 printer.tableCustom([
                     { text: '#', align: "LEFT", width: 0.1 },
@@ -128,14 +126,13 @@ function quote(total, cart, ticketInfo, printerInfo) {
                 printer.text(date_line)
                 printer.text('')
                 printer.cut()
-                printer.cashdraw(2)
-                printer.size(1, 0)
+                printer.size(0, 0)
                 printer.close()
             })
             resolve({ 'code': 1, 'data': 'success' })
 
         } catch (err) {
-            reject({ 'code': 0, 'data': err })
+            reject({ 'code': 0, 'data':{ err , printerInfo}})
         }
     })
     return print

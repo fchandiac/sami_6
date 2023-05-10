@@ -70,16 +70,12 @@ export default function BasicTabs() {
 
   const cashRegisterindex = () => {
     if (ordersMode == true && movements.state == true){
-      console.log('true / true')
       return 0
     } else if (ordersMode == false && movements.state == true){
-      console.log('false / true')
       return 0
     } else if (ordersMode == false && movements.state == false){
-      console.log('false / false')
       return null
     } else if (ordersMode == true && movements.state == false){
-      console.log('true / false')
       return 0
     }
   }
