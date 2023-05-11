@@ -156,6 +156,7 @@ export default function PayDialog(props) {
                         user: user.name,
                         type: 1004,
                         amount: total,
+                        payment_method: paymentMethod,
                         balance: movements.balance + total,
                         dte_code: 0,
                         dte_number: 0,

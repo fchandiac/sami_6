@@ -139,14 +139,14 @@ export default function ProductsGrid(props) {
 
 
     const columns = [
-        { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
+        { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
         { field: 'name', headerName: 'Nombre', flex: 1 },
         { field: 'code', headerName: 'Código', flex: .6 },
         { field: 'category', headerName: 'Categoría', flex: .6 },
-        { field: 'salesRoomStock', headerName: 'Stock sala', flex: .5 },
-        { field: 'stock', headerName: 'Stock total', flex: .5 },
-        { field: 'sale', headerName: 'Precio Venta', type: 'number', flex: .5, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
-        { field: 'purchase', headerName: 'Precio Compra', flex: .5, type: 'number', valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'salesRoomStock', headerName: 'Stock sala', flex: .4 },
+        { field: 'stock', headerName: 'Stock total', flex: .4 },
+        { field: 'sale', headerName: 'Precio Venta', type: 'number', flex: .45, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'purchase', headerName: 'Precio Compra', flex: .47, type: 'number', valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
             headerName: '',

@@ -77,6 +77,7 @@ export default function Movements() {
           user: user.name,
           type: 1001,
           amount: newMovementData.amount,
+          payment_method: '-', 
           balance: newMovementData.amount,
           dte_code: 0,
           dte_number: 0,
@@ -98,6 +99,7 @@ export default function Movements() {
           user: user.name,
           type: 1002,
           amount: newMovementData.amount,
+          payment_method: '-',
           balance: movements.balance + newMovementData.amount,
           dte_code: 0,
           dte_number: 0,
@@ -119,6 +121,7 @@ export default function Movements() {
           user: user.name,
           type: 1003,
           amount: newMovementData.amount,
+          payment_method: '-',
           balance: movements.balance - newMovementData.amount,
           dte_code: 0,
           dte_number: 0,
@@ -144,7 +147,7 @@ export default function Movements() {
   return (
     <>
       <Grid container spacing={1}>
-        <Grid item xs={3}>
+        <Grid item xs={2}>
           <Grid container spacing={1} direction={'column'}>
             <Grid item>
               <AppPaper title={'Balance de Caja'}>
@@ -227,7 +230,7 @@ export default function Movements() {
             </Grid>
           </Grid>
         </Grid>
-        <Grid item xs={9}>
+        <Grid item xs={10}>
           <MovementsGrid />
         </Grid>
       </Grid>

@@ -26,6 +26,7 @@ export default function MovementsGrid() {
             dteType: getDteType(item.dte_code),
             dteNumber: item.dte_number == 0? 'Sin DTE': item.dte_number,
             amount: item.amount,
+            paymentMethod: item.payment_method,
             balance: item.balance,
             date: moment(item.date).format('HH:mm:ss'),
         }))
@@ -58,11 +59,12 @@ export default function MovementsGrid() {
 
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
-        { field: 'user', headerName: 'Usuario', flex: 1 },
+        { field: 'user', headerName: 'Usuario', flex: .5 },
         { field: 'type', headerName: 'Tipo', flex: .5 },
-        { field: 'sale_id', headerName: 'Venta', flex: .5, type: 'number' },
-        { field: 'dteType', headerName: 'DTE', flex: .5 },
-        { field: 'dteNumber', headerName: 'N° DTE', flex: .5, type: 'number' },
+        { field: 'sale_id', headerName: 'Venta', flex: .3, type: 'number' },
+        { field: 'paymentMethod', headerName: 'Medio de pago', flex: .5},
+        { field: 'dteType', headerName: 'DTE', flex: .4 },
+        { field: 'dteNumber', headerName: 'N° DTE', flex: .4, type: 'number' },
         { field: 'amount', headerName: 'Monto', flex: .5, type: 'number', valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         { field: 'balance', headerName: 'Balance', flex: .5, type: 'number', valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         { field: 'date', headerName: 'Hora', flex: .5,  headerClassName: 'data-grid-last-column-header' },
