@@ -73,9 +73,16 @@ export default function MovementsGrid() {
 
     return (
         <>
-
-            <AppDataGrid title={'Movimientos de caja'} rows={movementsList} columns={columns} height='80vh' setGridApiRef={setGridApiRef} />
-            <AppInfoDataGrid title={'Movimientos de caja'} rows={movementsList} columns={columns} height='80vh' setGridApiRef={setGridApiRef} gridApiRef={gridApiRef} />
+            <AppInfoDataGrid 
+            title={'Movimientos de caja'} 
+            rows={movementsList} columns={columns} 
+            height='80vh' 
+            setGridApiRef={setGridApiRef} 
+            gridApiRef={gridApiRef} 
+            infoField={'amount'}
+            infoTitle={'Total movimentos'}
+            money={true}
+            />
         </>
     )
 }
