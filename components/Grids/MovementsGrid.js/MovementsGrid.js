@@ -5,6 +5,7 @@ import { useAppContext } from '../../../AppProvider'
 import electron from 'electron'
 
 import moment from 'moment'
+import AppInfoDataGrid from '../../AppInfoDataGrid/AppInfoDataGrid'
 const ipcRenderer = electron.ipcRenderer || false
 
 const utils = require('../../../utils')
@@ -24,7 +25,7 @@ export default function MovementsGrid() {
             type: getMovementType(item.type),
             sale_id: item.sale_id,
             dteType: getDteType(item.dte_code),
-            dteNumber: item.dte_number == 0? 'Sin DTE': item.dte_number,
+            dteNumber: item.dte_number == 0 ? 'Sin DTE' : item.dte_number,
             amount: item.amount,
             paymentMethod: item.payment_method,
             balance: item.balance,
@@ -62,15 +63,19 @@ export default function MovementsGrid() {
         { field: 'user', headerName: 'Usuario', flex: .5 },
         { field: 'type', headerName: 'Tipo', flex: .5 },
         { field: 'sale_id', headerName: 'Venta', flex: .3, type: 'number' },
-        { field: 'paymentMethod', headerName: 'Medio de pago', flex: .5},
+        { field: 'paymentMethod', headerName: 'Medio de pago', flex: .5 },
         { field: 'dteType', headerName: 'DTE', flex: .4 },
         { field: 'dteNumber', headerName: 'N° DTE', flex: .4, type: 'number' },
         { field: 'amount', headerName: 'Monto', flex: .5, type: 'number', valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         { field: 'balance', headerName: 'Balance', flex: .5, type: 'number', valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
-        { field: 'date', headerName: 'Hora', flex: .5,  headerClassName: 'data-grid-last-column-header' },
+        { field: 'date', headerName: 'Hora', flex: .5, headerClassName: 'data-grid-last-column-header' },
     ]
 
     return (
-        <AppDataGrid title={'Movimientos de caja'} rows={movementsList} columns={columns} height='80vh' setGridApiRef={setGridApiRef} />
+        <>
+
+            <AppDataGrid title={'Movimientos de caja'} rows={movementsList} columns={columns} height='80vh' setGridApiRef={setGridApiRef} />
+            <AppInfoDataGrid title={'Movimientos de caja'} rows={movementsList} columns={columns} height='80vh' setGridApiRef={setGridApiRef} gridApiRef={gridApiRef} />
+        </>
     )
 }

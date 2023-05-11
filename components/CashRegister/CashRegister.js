@@ -1,4 +1,4 @@
-import { Grid, IconButton, TextField } from '@mui/material'
+import { Grid } from '@mui/material'
 import React, { useState, useEffect, useRef } from 'react'
 import ShoppingCart from '../ShoppingCart'
 import ProductFinder from '../ProductFinder/ProductFinder'
