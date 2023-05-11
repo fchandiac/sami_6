@@ -154,7 +154,7 @@ export default function Movements() {
                 <Typography variant={'h4'} sx={{ padding: 1 }} textAlign={'center'}>
                   {utils.renderMoneystr(movements.balance)}
                 </Typography>
-                <Stack justifyContent={'center'} direction={'row'} p={1}>
+                <Stack justifyContent={'center'} direction={'row'} p={1} alignItems={'center'}>
                   <Typography variant={'caption'} sx={{ padding: 1 }} color={movements.state ? theme.palette.success.main : theme.palette.error.main}>
                     {movements.state ? 'Caja abierta' : 'Caja cerrada'}
                   </Typography>

@@ -80,7 +80,7 @@ export default function MovementsGrid() {
             setGridApiRef={setGridApiRef} 
             gridApiRef={gridApiRef} 
             infoField={'amount'}
-            infoTitle={'Total movimentos'}
+            infoTitle={'Total movimientos'}
             money={true}
             />
         </>

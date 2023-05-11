@@ -1,1 +1,1 @@
-{"state":false,"balance":0,"movements":[]}
+{"state":true,"balance":7000,"movements":[{"sale_id":0,"user":"UserVersion","type":1001,"amount":7000,"payment_method":"-","balance":7000,"dte_code":0,"dte_number":0,"date":"2023-05-11T04:35:39.837Z"}]}
