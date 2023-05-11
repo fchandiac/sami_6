@@ -1,6 +1,6 @@
 PENDIENTE: key ç to procces pay, call event.click not funtion
 
-
+test git
 
 
 npm i --save electron next react react-dom
