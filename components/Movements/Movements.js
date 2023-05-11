@@ -22,6 +22,8 @@ export default function Movements() {
   const [movementsOptions, setMovementsOptions] = useState([{ id: 1002, key: 1002, label: 'Ingreso' }, { id: 1003, key: 1003, label: 'Egreso' }])
   const [displayOpenForm, setDisplayOpenForm] = useState(false)
   const [openCloseDialog, setOpenCloseDialog] = useState(false)
+  const [closeData, setCloseData] = useState(closeDataDefault())
+
 
 
 
@@ -42,7 +44,35 @@ export default function Movements() {
     }
   }
 
+  const closeCalc = () => {
+    let movs = movements.movements
+    let incomes = movs.filter(item => item.type == 1002)
+    let incomesTotal = incomes.reduce((a, b) => a + b.amount, 0)
+    let outcomes = movs.filter(item => item.type == 1003)
+    let outcomesTotal = outcomes.reduce((a, b) => a + b.amount, 0)
+    let creditNotes = movs.filter(item => item.type == 1005)
+    let creditNotesTotal = creditNotes.reduce((a, b) => a + b.amount, 0)
+    let deleteSales = movs.filter(item => item.type == 1007)
+    let deleteSalesTotal = deleteSales.reduce((a, b) => a + b.amount, 0)
+    let sales = movs.filter(item => item.type == 1004)
+    let salesTotal = sales.reduce((a, b) => a + b.amount, 0)
+
+    let openAmount = movs.filter(item => item.type == 1001)[0].amount
+
+
+    setCloseData({
+      incomes: incomesTotal,
+      outcomes: outcomesTotal,
+      creditNotes: creditNotesTotal,
+      deleteSales: deleteSalesTotal,
+      sales: salesTotal,
+      openAmount: openAmount,
+      balance: movements.balance
+    })
+  }
+
   const openCashRegisterButton = () => {
+
     setDisplayOpenForm(true)
     // if (lock == false) {
     //   setDisplayOpenForm(true)
@@ -52,6 +82,7 @@ export default function Movements() {
   }
 
   const closeCashRegisterButton = () => {
+    closeCalc()
     setOpenCloseDialog(true)
 
   }
@@ -70,15 +101,15 @@ export default function Movements() {
   const openCashRegister = () => {
     let newMov = {
       state: true,
-      balance: newMovementData.amount,
+      balance: newMovementData.openAmount,
       movements: [
         {
           sale_id: 0,
           user: user.name,
           type: 1001,
-          amount: newMovementData.amount,
-          payment_method: '-', 
-          balance: newMovementData.amount,
+          amount: newMovementData.openAmount,
+          payment_method: '-',
+          balance: newMovementData.openAmount,
           dte_code: 0,
           dte_number: 0,
           date: new Date()
@@ -120,7 +151,7 @@ export default function Movements() {
           sale_id: 0,
           user: user.name,
           type: 1003,
-          amount: newMovementData.amount,
+          amount: newMovementData.amount * -1,
           payment_method: '-',
           balance: movements.balance - newMovementData.amount,
           dte_code: 0,
@@ -168,8 +199,8 @@ export default function Movements() {
                         <Grid item>
                           <TextField
                             label={'Monto'}
-                            value={utils.renderMoneystr(newMovementData.amount)}
-                            onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setNewMovementData({ ...newMovementData, amount: 0 }) : setNewMovementData({ ...newMovementData, amount: utils.moneyToInt(e.target.value) }) }}
+                            value={utils.renderMoneystr(newMovementData.openAmount)}
+                            onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setNewMovementData({ ...newMovementData, openAmount: 0 }) : setNewMovementData({ ...newMovementData, openAmount: utils.moneyToInt(e.target.value) }) }}
                             variant="outlined"
                             size={'small'}
                             fullWidth
@@ -242,34 +273,78 @@ export default function Movements() {
         <form onSubmit={(e) => { e.preventDefault(); closeCashRegister() }}>
           <DialogContent sx={{ p: 2 }}>
             <Grid container spacing={1} direction={'column'}>
-              <Grid item marginTop={1}>
+              <Grid item>
                 <TextField
-                  label="Balance"
-                  value={movements.balance}
+                  label="Apertura"
+                  value={utils.renderMoneystr(closeData.openAmount)}
                   inputProps={{ readOnly: true }}
                   variant="outlined"
                   size={'small'}
                   fullWidth
                 />
               </Grid>
-              {/* <Grid item>
+              <Grid item>
                 <TextField
-                  label="Nombre"
-                  // value={rowData.name}
+                  label="Ventas"
+                  value={utils.renderMoneystr(closeData.sales)}
                   inputProps={{ readOnly: true }}
                   variant="outlined"
                   size={'small'}
                   fullWidth
                 />
-              </Grid> */}
+              </Grid>
+              <Grid item>
+                <TextField
+                  label="Ventas eliminadas"
+                  value={utils.renderMoneystr(closeData.deleteSales)}
+                  inputProps={{ readOnly: true }}
+                  variant="outlined"
+                  size={'small'}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item>
+                <TextField
+                  label="Notas de Credito"
+                  value={utils.renderMoneystr(closeData.creditNotes)}
+                  inputProps={{ readOnly: true }}
+                  variant="outlined"
+                  size={'small'}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item>
+                <TextField
+                  label="ingresos"
+                  value={utils.renderMoneystr(closeData.incomes)}
+                  inputProps={{ readOnly: true }}
+                  variant="outlined"
+                  size={'small'}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item>
+                <TextField
+                  label="Egresos"
+                  value={utils.renderMoneystr(closeData.outcomes)}
+                  inputProps={{ readOnly: true }}
+                  variant="outlined"
+                  size={'small'}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item textAlign={'right'}>
+                <Typography variant={'h6'}> Balance al cierre de caja: {utils.renderMoneystr(closeData.balance)}</Typography>
+              </Grid>
+
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 2 }}>
             <Button variant={'contained'} type={'submit'}>Cierre de Caja</Button>
             <Button variant={'outlined'} onClick={() => setOpenCloseDialog(false)}>Cerrar</Button>
           </DialogActions>
-        </form>
-      </Dialog>
+        </form >
+      </Dialog >
 
 
 
@@ -285,15 +360,20 @@ function newMovementDataDefault() {
     balance: 0,
     dte_code: 0,
     dte_number: 0,
-    date: new Date()
+    date: new Date(),
+    openAmount: 0,
   })
 }
 
 function closeDataDefault() {
   return ({
     balance: 0,
+    openAmount: 0,
     sales: 0,
+    deleteSales: 0,
     incomes: 0,
     outcomes: 0,
+    creditNotes: 0,
+    notes: ''
   })
 }

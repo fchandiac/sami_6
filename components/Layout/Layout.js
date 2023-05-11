@@ -70,14 +70,9 @@ export default function Layout(props) {
 
   const updateLock = () => {
     if (lock === false) {
-      if (checkPass == adminPass) {
-        dispatch({ type: 'LOCK' })
-        setCheckPass('')
-        setOpenAuthDialog(false)
-      } else {
-        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Contraseña incorrecta' } })
-        setCheckPass('')
-      }
+      
+      dispatch({ type: 'LOCK' })
+      console.log('Open')
     } else {
       if (checkPass == adminPass) {
         dispatch({ type: 'UNLOCK' })
@@ -141,7 +136,7 @@ export default function Layout(props) {
             >
               <Button onClick= {() => router.push('/')}>logOut</Button>
             </Popper>
-            <IconButton onClick={() => { setOpenAuthDialog(true) }} color={'inherit'} size="large" sx={{ mr: 1 }}>
+            <IconButton onClick={() => { lock ? setOpenAuthDialog(true) : updateLock()  }} color={'inherit'} size="large" sx={{ mr: 1 }}>
               <LockOpenIcon sx={{ display: lock ? 'none' : 'block' }} />
               <LockIcon sx={{ display: lock ? 'block' : 'none' }} />
             </IconButton>
