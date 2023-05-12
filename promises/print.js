@@ -1,4 +1,5 @@
 
+
 const url = "http://localhost:3001/"
 
 function ticket(total, cart, ticketInfo, printerInfo) {
@@ -31,12 +32,13 @@ function test(printerInfo){
         }).then(res => {
             res.json().then(res => {
                 if (res.code === 0) {
-                    reject(res.data)
+                    reject('printer Error')
                 } else {
-                    resolve(res.data)
+                    resolve(res)
                 }
             })
-        }).catch(err => { reject(err) })
+        }).catch(err => { 
+            reject('printer Error') })
     })
     return print
 }

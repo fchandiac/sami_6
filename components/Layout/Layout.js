@@ -194,12 +194,40 @@ export default function Layout(props) {
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton>
-              <ListItemText primary='Usuarios'
+              <ListItemText primary='Contabilidad'
+                onClick={() => {
+                  router.push({
+                    pathname: '/accounting',
+                  })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Contabilidad' })
+                  setDrawerState(false)
+                  dispatch({ type: 'CLEAR_CART' })
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton>
+              <ListItemText primary='Clientes'
+                onClick={() => {
+                  router.push({
+                    pathname: '/customers',
+                  })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Clientes' })
+                  setDrawerState(false)
+                  dispatch({ type: 'CLEAR_CART' })
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton>
+              <ListItemText primary='Cuentas de usuario'
                 onClick={() => {
                   router.push({
                     pathname: '/users',
                   })
-                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Usuarios' })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Cuentas de usuario' })
                   setDrawerState(false)
                   dispatch({ type: 'CLEAR_CART' })
                 }}

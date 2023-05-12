@@ -141,16 +141,14 @@ function quote(total, cart, ticketInfo, printerInfo) {
 function test(printerInfo) {
     const print = new Promise((resolve, reject) => {
         try {
-            const device = new escpos.USB(parseInt(printerInfo.idVendor), parseInt(printerInfo.idProduct))
+            const device = new escpos.USB(printerInfo.idVendor, printerInfo.idProduct)
             const options = { encoding: "GB18030" /* default */ }
             const printer = new escpos.Printer(device, options)
             device.open(function (error) {
-                resolve({ 'code': 1, 'data': 'success' })
+                resolve({ code: 1, data: 'success' })
             })
-            
-
         } catch (err) {
-            reject({ 'code': 0, 'data': err })
+            reject({ code: 0, data: err })
         }
     })
     return print

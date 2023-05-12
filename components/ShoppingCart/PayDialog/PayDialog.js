@@ -14,6 +14,8 @@ const utils = require('../../../utils')
 const print = require('../../../promises/print')
 const stocks = require('../../../promises/stocks')
 const sales = require('../../../promises/sales')
+const lioren = require('../../../promises/lioren')
+
 
 
 export default function PayDialog(props) {
@@ -87,6 +89,7 @@ export default function PayDialog(props) {
     useEffect(() => {
         if (open === false) {
             setPayAmount(0)
+            setPaymentMethod('Efectivo')
         }
     }, [open])
 
@@ -167,7 +170,6 @@ export default function PayDialog(props) {
                         balance: movements.balance + total,
                         movements: movs
                     }
-                    console.log(newMov)
                     ipcRenderer.send('update-movements', newMov)
                     dispatch({ type: 'SET_MOVEMENTS', value: newMov })
                     resolve()
@@ -213,78 +215,65 @@ export default function PayDialog(props) {
 
 
 
-    const pay = () => {
+    const pay = async () => {
         switch (documentType) {
             case 'Ticket':
                 console.log('ticket')
-                print.test(printerInfo)
-                    .then(() => {
-                        if (stockControl == true) {
-                            stockControlPayTrue()
-                                .then(() => {
-                                    sale()
-                                        .then(() => {
-                                            printTicket()
-                                                .then(() => {
-                                                    setOpen(false)
-                                                    setOpenChangeDialog(true)
-                                                })
-                                        })
-                                        .catch(err => { console.error(err) })
-                                })
-                                .catch(err => { console.error(err) })
+                try {
+                    await print.test(printerInfo)
+                    if (stockControl == true) {
+                        await updateStocks(cart)
+                        const stockAlertList = await stocks.findAllStockAlert()
+                        dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
+                        await sale()
+                        await printTicket()
+                        setOpen(false)
+                        setOpenChangeDialog(true)
 
-                        } else {
-                            stockControlPayFalse()
-                                .then(() => {
-                                    sale()
-                                        .then(() => {
-                                            printTicket()
-                                                .then(() => {
-                                                    setOpen(false)
-                                                    setOpenChangeDialog(true)
-                                                })
-                                        })
-                                        .catch(err => { console.error(err) })
-                                })
-                                .catch(err => { console.error(err) })
-                        }
-                    })
-                    .catch(err => {
+                    } else {
+                        await sale()
+                        await printTicket()
+                        setOpen(false)
+                        setOpenChangeDialog(true)
+                    }
+                } catch (err) {
+                    if (err === 'printer Error') {
                         dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                        console.error(err)
-                    })
-
+                    } else {
+                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error durante el proceso' } })
+                    }
+                }
                 break
             case 'Boleta':
                 console.log('boleta')
                 break
             case 'Sin impresora':
-                if (stockControl == true) {
-                    stockControlPayTrue()
-                        .then(() => {
-                            sale()
-                                .then(() => {
-                                    setOpen(false)
-                                    setOpenChangeDialog(true)
-                                })
-                                .catch(err => { console.error(err) })
-                        })
-                        .catch(err => { console.error(err) })
-                } else {
-                    stockControlPayFalse()
-                        .then(() => {
-                            sale()
-                                .then(() => {
-                                    setOpen(false)
-                                    setOpenChangeDialog(true)
-                                })
-                                .catch(err => { console.error(err) })
-                        })
-                        .catch(err => { console.error(err) })
+                try {
+                    if (stockControl == true) {
+                        await updateStocks(cart)
+                        const stockAlertList = await stocks.findAllStockAlert()
+                        dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
+                        await sale()
+                        const boleta = await lioren.boleta()
+                        console.log('boleta', boleta)
+                        setOpen(false)
+                        setOpenChangeDialog(true)
+                        
+
+                    } else {
+                        await sale()
+                        setOpen(false)
+                        setOpenChangeDialog(true)
+                    }
+                } catch (err) {
+                    if (err === 'printer Error') {
+                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                    } else {
+                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error durante el proceso' } })
+                    }
+
                 }
                 break
-
             default:
                 console.log('default')
                 break
@@ -495,5 +484,10 @@ export default function PayDialog(props) {
 
     )
 }
+
+
+
+
+
 
 
