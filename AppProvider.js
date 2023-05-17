@@ -17,8 +17,11 @@ const initialState = {
     pageTitle: '',
     stockAlertList: [],
     ordersMode: false,
-    movements: {balance: 0, movements: []},
-    user: {id: 0, name: 'UserVersion', profile: '', permissions: []},
+    orders: true,
+    movements: { balance: 0, movements: [] },
+    user: { id: 0, name: 'UserVersion', profile: '', permissions: [] },
+    webConnection: false,
+    lioren: {integration: false, token: '', mail: ''}
 }
 
 const reducer = (state, action) => {
@@ -27,7 +30,7 @@ const reducer = (state, action) => {
             if (state.cart.find((item) => item.id === action.value.id)) {
                 let productIndex = state.cart.findIndex((item) => item.id === action.value.id)
                 state.cart[productIndex].quanty += 1
-                state.cart[productIndex].stockControl? state.cart[productIndex].virtualStock -= 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
+                state.cart[productIndex].stockControl ? state.cart[productIndex].virtualStock -= 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
                 state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
@@ -45,7 +48,7 @@ const reducer = (state, action) => {
                 }
             } else {
                 action.value.subTotal = roundToNearestTenth(action.value.sale)
-                action.value.stockControl? action.value.virtualStock -= 1 : action.value.virtualStock = action.value.virtualStock
+                action.value.stockControl ? action.value.virtualStock -= 1 : action.value.virtualStock = action.value.virtualStock
                 state.cart = [...state.cart, action.value]
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
@@ -99,7 +102,7 @@ const reducer = (state, action) => {
             } else {
                 let productIndex = state.cart.findIndex((item) => item.id === action.value.id)
                 state.cart[productIndex].quanty -= 1
-                state.cart[productIndex].stockControl? state.cart[productIndex].virtualStock += 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
+                state.cart[productIndex].stockControl ? state.cart[productIndex].virtualStock += 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
                 state.cart[productIndex].subTotal = (state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
                 state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].subTotal)
                 state.total = 0
@@ -121,7 +124,7 @@ const reducer = (state, action) => {
         case 'ADD_QUANTY':
             let productIndex = state.cart.findIndex((item) => item.id === action.value.id)
             state.cart[productIndex].quanty += 1
-            state.cart[productIndex].stockControl? state.cart[productIndex].virtualStock -= 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
+            state.cart[productIndex].stockControl ? state.cart[productIndex].virtualStock -= 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
             state.cart[productIndex].subTotal = (state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
             state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].subTotal)
             state.total = 0
@@ -140,7 +143,7 @@ const reducer = (state, action) => {
         case 'EDIT_QUANTY':
             let productIndx = state.cart.findIndex((item) => item.id === action.value.id)
             let editQuanty = isNaN(parseFloat(action.value.quanty)) ? action.value.id : parseFloat(action.value.quanty)
-            let vrStock = state.cart[productIndx].stockControl? (state.cart[productIndx].salesRoomStock - editQuanty) : state.cart[productIndx].salesRoomStock
+            let vrStock = state.cart[productIndx].stockControl ? (state.cart[productIndx].salesRoomStock - editQuanty) : state.cart[productIndx].salesRoomStock
             let desc = state.cart[productIndx].discount
             state.cart[productIndx].quanty = editQuanty
             state.cart[productIndx].virtualStock = vrStock
@@ -166,7 +169,7 @@ const reducer = (state, action) => {
             return { ...state, lock: false }
         case 'ADD_DISCOUNT':
             let productInd = state.cart.findIndex((item) => item.id === action.value)
-            let disc = parseInt(state.cart[productInd].discount) 
+            let disc = parseInt(state.cart[productInd].discount)
             state.cart[productInd].discount = disc += 1
             state.cart[productInd].subTotal = Math.round((state.cart[productInd].quanty * state.cart[productInd].sale) * (1 - (state.cart[productInd].discount / 100)))
             state.cart[productInd].subTotal = roundToNearestTenth(state.cart[productInd].subTotal)
@@ -208,8 +211,14 @@ const reducer = (state, action) => {
             return { ...state, stockAlertList: action.value }
         case 'SET_ORDERS_MODE':
             return { ...state, ordersMode: action.value }
+        case 'SET_ORDERS':
+            return { ...state, orders: action.value }
         case 'SET_MOVEMENTS':
             return { ...state, movements: action.value }
+        case 'SET_WEB_CONNECTION':
+            return { ...state, webConnection: action.value }
+        case 'SET_LIOREN':
+            return { ...state, lioren: action.value }
         default:
             console.log('No action type')
             break
@@ -234,6 +243,9 @@ const AppProvider = ({ children }) => {
             ordersMode: state.ordersMode,
             movements: state.movements,
             user: state.user,
+            orders: state.orders,
+            webConnection: state.webConnection,
+            lioren: state.lioren,
             dispatch
         }}>
             {children}

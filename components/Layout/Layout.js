@@ -26,6 +26,7 @@ import { DataGrid } from '@mui/x-data-grid'
 
 const health = require('../../promises/health')
 const stocks = require('../../promises/stocks')
+const lioren = require('../../promises/lioren')
 
 export default function Layout(props) {
   const { children } = props
@@ -66,11 +67,18 @@ export default function Layout(props) {
     let cashRegisterUI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
     setAdminPass(adminPass)
     dispatch({ type: 'SET_ORDERS_MODE', value: cashRegisterUI.orders_mode })
+    dispatch({ type: 'SET_ORDERS', value: cashRegisterUI.orders })
+  }, [])
+
+  useEffect(() => {
+    lioren.miEmpresa()
+      .then(res => { console.log(res) })
+
   }, [])
 
   const updateLock = () => {
     if (lock === false) {
-      
+
       dispatch({ type: 'LOCK' })
       console.log('Open')
     } else {
@@ -95,10 +103,10 @@ export default function Layout(props) {
   const id = open ? 'simple-popper' : undefined;
 
 
-  
+
   return (
     <>
-      <AppBar sx={{display: router.pathname == '/'? 'none': 'block'}}>
+      <AppBar sx={{ display: router.pathname == '/' ? 'none' : 'block' }}>
         <Container sx={{ display: 'flex', alignItems: 'center', paddingTop: '0.3rem', paddingBottom: '0.3rem' }}>
           <IconButton
             size="large"
@@ -134,9 +142,9 @@ export default function Layout(props) {
               anchorEl={popperAnchorEl}
               placement="bottom-start"
             >
-              <Button onClick= {() => router.push('/')}>logOut</Button>
+              <Button onClick={() => router.push('/')}>logOut</Button>
             </Popper>
-            <IconButton onClick={() => { lock ? setOpenAuthDialog(true) : updateLock()  }} color={'inherit'} size="large" sx={{ mr: 1 }}>
+            <IconButton onClick={() => { lock ? setOpenAuthDialog(true) : updateLock() }} color={'inherit'} size="large" sx={{ mr: 1 }}>
               <LockOpenIcon sx={{ display: lock ? 'none' : 'block' }} />
               <LockIcon sx={{ display: lock ? 'block' : 'none' }} />
             </IconButton>
@@ -192,7 +200,7 @@ export default function Layout(props) {
               />
             </ListItemButton>
           </ListItem>
-          <ListItem disablePadding>
+          {/* <ListItem disablePadding>
             <ListItemButton>
               <ListItemText primary='Contabilidad'
                 onClick={() => {
@@ -205,8 +213,8 @@ export default function Layout(props) {
                 }}
               />
             </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
+          </ListItem> */}
+          {/* <ListItem disablePadding>
             <ListItemButton>
               <ListItemText primary='Clientes'
                 onClick={() => {
@@ -219,8 +227,8 @@ export default function Layout(props) {
                 }}
               />
             </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
+          </ListItem> */}
+          {/* <ListItem disablePadding>
             <ListItemButton>
               <ListItemText primary='Cuentas de usuario'
                 onClick={() => {
@@ -233,7 +241,7 @@ export default function Layout(props) {
                 }}
               />
             </ListItemButton>
-          </ListItem>
+          </ListItem> */}
           <ListItem disablePadding>
             <ListItemButton>
               <ListItemText primary='Configuración'

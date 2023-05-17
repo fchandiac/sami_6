@@ -5,6 +5,12 @@ const url = require('url')
 const port = 3001
 
 
+const hddSerial = require('hddserial');
+
+hddSerial.one(1, function (err, serial) {
+	console.log("hdd serial for first hdd : %s", serial);
+});
+
 
 
 ///// --------> NODE ENV <-------/////////
@@ -85,7 +91,7 @@ const createWindow = () => {
 const gotTheLock = app.requestSingleInstanceLock()
 if (!gotTheLock) {
 	app.quit()
-} 
+}
 
 app.on('ready', createWindow);
 app.on('window-all-closed', () => {
@@ -263,4 +269,134 @@ ipcMain.on('update-movements', (e, arg) => {
 	fs.writeFileSync(filePathMovements, data)
 })
 
+ipcMain.on('get-docs', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	e.returnValue = config.docs
+})
 
+ipcMain.on('update-docs', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	config.docs = arg
+	data = JSON.stringify(config)
+	fs.writeFileSync(filePathConfig, data)
+})
+
+ipcMain.on('get-lioren', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	e.returnValue = config.docs
+})
+
+ipcMain.on('update-lioren', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	config.lioren = arg
+	data = JSON.stringify(config)
+	fs.writeFileSync(filePathConfig, data)
+})
+
+
+/////// --------> IPC PRINTER <-------/////////
+const escpos = require('escpos')
+escpos.USB = require('escpos-usb')
+const usb = require('usb')
+
+ipcMain.handle('find-printer', (e, printer) => {
+	try {
+		let devices = usb.getDeviceList()
+		const idVendor = parseInt(printer.idVendor)
+		const idProduct = parseInt(printer.idProduct)
+
+		const device = devices.find(dev => dev.deviceDescriptor.idVendor === idVendor && dev.deviceDescriptor.idProduct === idProduct);
+
+		if (device) {
+			console.log('Dispositivo idVendor: ' + idVendor + ' idProduct: ' + idProduct + ' encontrado')
+			return true
+		} else {
+			console.log('Dispositivo idVendor: ' + idVendor + ' idProduct: ' + idProduct + '  no encontrado')
+			return false
+		}
+	} catch (err) {
+		console.log(err)
+		return false
+	}
+})
+
+
+ipcMain.on('print-ticket', (e, printInfo) => {
+	const device = new escpos.USB(printInfo.printer.idVendor, printInfo.printer.idProduct)
+	const options = { encoding: "GB18030" /* delt */ }
+	const printer = new escpos.Printer(device, options)
+	let total = printInfo.total
+	let name = printInfo.ticketInfo.name
+	let rut = printInfo.ticketInfo.rut
+	let address = printInfo.ticketInfo.address
+	let phone = printInfo.ticketInfo.phone
+	let cart = printInfo.cart
+	let paymentMethod = printInfo.paymentMethod
+
+	device.open(function () {
+		printer.font('b').align('ct').style('NORMAL')
+		printer.size(0, 0)
+		printer.text('_________________________________________')
+		printer.size(1, 0)
+		printer.text('TICKET DE VENTA')
+		printer.size(0, 0)
+		printer.text('_________________________________________')
+		printer.text(name)
+		printer.text(rut)
+		printer.text(address)
+		printer.text(phone)
+		printer.text('_________________________________________')
+		printer.tableCustom([
+			{ text: '#', align: "LEFT", width: 0.1 },
+			{ text: 'Producto', align: "LEFT", width: 0.8 },
+			{ text: 'Subtotal', align: "LEFT", width: 0.2 }
+		])
+		cart.map(product => {
+			printer.tableCustom([
+				{ text: product.quanty, align: "LEFT", width: 0.1 },
+				{ text: product.name, align: "LEFT", width: 0.8 },
+				{ text: renderMoneystr(product.subTotal), align: "LEFT", width: 0.2 }
+			])
+		})
+		printer.size(1, 0)
+		printer.text('')
+		printer.text('TOTAL: ' + renderMoneystr(total))
+		printer.size(0, 0)
+		printer.text('Medio de pago: ' + paymentMethod)
+		printer.text('')
+		printer.text('')
+		printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
+		printer.align('ct')
+
+		printer.text('Gracias por su compra')
+		printer.text('')
+		printer.cut()
+		printer.close()
+	})
+	device.close()
+	e.returnValue = true
+
+})
+
+
+
+
+function renderMoneystr(value) {
+	if (value < 0) {
+		value = value.toString()
+		value = value.replace(/[^0-9]/g, '')
+		value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+		value = '$ -' + value
+		return value
+	} else {
+		value = value.toString()
+		value = value.replace(/[^0-9]/g, '')
+		value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+		value = '$ ' + value
+		return value
+	}
+}

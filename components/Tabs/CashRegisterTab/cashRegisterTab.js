@@ -46,7 +46,7 @@ function a11yProps(index) {
 
 export default function BasicTabs() {
   const [value, setValue] = React.useState(0)
-  const { ordersMode, movements, dispatch } = useAppContext()
+  const { ordersMode, movements, dispatch, orders } = useAppContext()
 
 
  
@@ -65,8 +65,8 @@ export default function BasicTabs() {
     } else if (ordersMode == true && movements.state == false){
       return (<Tab label={'Gestión de pedidos'} {...a11yProps(0)} />)
     }
-
   }
+
 
   const cashRegisterindex = () => {
     if (ordersMode == true && movements.state == true){
@@ -92,6 +92,7 @@ export default function BasicTabs() {
     }
   }
 
+
   const movenmentsindex = () => {
     if (ordersMode == true && movements.state == true){
       return null
@@ -104,6 +105,21 @@ export default function BasicTabs() {
     }
   }
 
+  const renderOrders = () => {
+    if(orders == false){
+      null
+    } else if (ordersMode == true && movements.state == true){
+      return (<Tab label={'Pedidos'} {...a11yProps(1)} />)
+    } else if (ordersMode == false && movements.state == true){
+      return (<Tab label={'Pedidos'} {...a11yProps(2)} />)
+    } else if (ordersMode == false && movements.state == false){
+      return <Tab label="Pedidos" {...a11yProps(1)} />
+    } else if (ordersMode == true && movements.state == false){
+      return (<Tab label={'Pedidos'} {...a11yProps(1)} />)
+    } 
+
+  }
+
   const ordersIndex = () => {
     if (ordersMode == true && movements.state == true){
       return 1
@@ -113,6 +129,14 @@ export default function BasicTabs() {
       return 1
     } else if (ordersMode == true && movements.state == false){
       return 1
+    } else if (ordersMode == true && movements.state == true && orders == false){
+      return null
+    } else if (ordersMode == false && movements.state == true && orders == false){
+      return null
+    } else if (ordersMode == false && movements.state == false && orders == false){
+      return null
+    } else if (ordersMode == true && movements.state == false && orders == false){
+      return null
     }
   }
 
@@ -125,7 +149,7 @@ export default function BasicTabs() {
         <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
           {renderCashRegister()}
           {renderMovenments()}
-          {ordersMode ? <Tab label="Pedidos" {...a11yProps(1)} /> : <Tab label="Pedidos" {...a11yProps(2)} />}
+          {renderOrders()}
         </Tabs>
       </Box>
       <TabPanel value={value} index={cashRegisterindex()}>

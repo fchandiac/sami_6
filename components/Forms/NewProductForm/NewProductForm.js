@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import AppPaper from '../../AppPaper'
-import { Button, Grid, TextField, Autocomplete } from '@mui/material'
+import { Button, Grid, TextField, Autocomplete, Switch, FormControlLabel} from '@mui/material'
 import AppErrorSnack from '../../AppErrorSnack'
 import { useAppContext } from '../../../AppProvider'
 
@@ -103,7 +103,6 @@ export default function NewProducForm(props) {
                                 variant="outlined"
                                 size={'small'}
                                 fullWidth
-                                autoFocus
                                 required
                             />
                         </Grid>
@@ -182,6 +181,17 @@ export default function NewProducForm(props) {
                             />
                         </Grid>
                         <Grid item>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={productData.affected}
+                                        onChange={(e) => { setProductData({ ...productData, affected: e.target.checked }) }}
+                                    />
+                                }
+                                label="Venta afecta"
+                            />
+                        </Grid>
+                        <Grid item>
                             <TextField
                                 label="Código"
                                 value={productData.code}
@@ -211,6 +221,7 @@ function productDataDefault() {
         category: { id: 1001, label: 'Universal', key: 1001 },
         salesRoomStock: 0,
         criticalSalesRoomStock: 0,
-        tax:  { id: 1001, label: 'iva', key: 1001 }
+        tax: { id: 1001, label: 'iva', key: 1001 },
+        affected: true,
     }
 }

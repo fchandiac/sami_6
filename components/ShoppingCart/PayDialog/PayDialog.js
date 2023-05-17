@@ -8,6 +8,8 @@ import {
 import { useAppContext } from '../../../AppProvider'
 import electron from 'electron'
 import AppPaper from '../../AppPaper/AppPaper'
+import moment from 'moment'
+
 const ipcRenderer = electron.ipcRenderer || false
 
 const utils = require('../../../utils')
@@ -27,7 +29,7 @@ export default function PayDialog(props) {
     const [openChangeDialog, setOpenChangeDialog] = useState(false)
     const [paymentMethod, setPaymentMethod] = useState('Efectivo')
     const [paymentMethodsList, setPaymentMethodsList] = useState([])
-    const [printerInfo, setPrinterInfo] = useState({ idProduct: 0, idVendor: 0 })
+    const [printer, setPrinter] = useState({ idProduct: 0, idVendor: 0 })
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
     const [showCustomerFinder, setShowCustomerFinder] = useState(false)
     const [customersOptions, setCustomersOptions] = useState([])
@@ -60,7 +62,7 @@ export default function PayDialog(props) {
     useEffect(() => {
         let paymentMethods = ipcRenderer.sendSync('get-payment-methods', 'sync')
         let customerCredit = ipcRenderer.sendSync('get-customer-credit', 'sync')
-        let print_info = ipcRenderer.sendSync('get-printer', 'sync')
+        let printer = ipcRenderer.sendSync('get-printer', 'sync')
         let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
         paymentMethods = paymentMethods.map((method) => {
             return { name: method.name, label: method.name }
@@ -68,7 +70,7 @@ export default function PayDialog(props) {
         customerCredit.state === true ? paymentMethods.unshift({ name: 'customerCredit', label: customerCredit.name }) : null
         paymentMethods.unshift({ name: 'Efectivo', label: 'Efectivo' })
         setPaymentMethodsList(paymentMethods)
-        setPrinterInfo(print_info)
+        setPrinter(printer)
         setTicketInfo(ticket_info)
     }, [])
 
@@ -138,7 +140,7 @@ export default function PayDialog(props) {
 
     const printTicket = () => {
         const pr = new Promise((resolve, reject) => {
-            print.ticket(total, cart, ticketInfo, printerInfo)
+            print.ticket(total, cart, ticketInfo, printer)
                 .then(() => { resolve() })
                 .catch(err => {
                     console.log(err)
@@ -219,14 +221,27 @@ export default function PayDialog(props) {
         switch (documentType) {
             case 'Ticket':
                 console.log('ticket')
-                try {
-                    await print.test(printerInfo)
+                console.log('PRinterData', printer)
+                const findPrinter = await ipcRenderer.invoke('find-printer', printer)
+                if (findPrinter == true) {
+                    console.log('testPrint', printer)
                     if (stockControl == true) {
                         await updateStocks(cart)
                         const stockAlertList = await stocks.findAllStockAlert()
                         dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
                         await sale()
-                        await printTicket()
+                        let date = moment(new Date()).format('DD-MM-yyyy')
+                        let time = moment(new Date()).format('HH:mm')
+                        let printInfo = {
+                            total: total,
+                            cart: cart,
+                            printer: printer,
+                            ticketInfo: ticketInfo,
+                            date: date, time:time,
+                            paymentMethod: paymentMethod,
+                        }
+                        console.log('printInfo', printInfo)
+                        ipcRenderer.sendSync('print-ticket', printInfo)
                         setOpen(false)
                         setOpenChangeDialog(true)
 
@@ -236,12 +251,8 @@ export default function PayDialog(props) {
                         setOpen(false)
                         setOpenChangeDialog(true)
                     }
-                } catch (err) {
-                    if (err === 'printer Error') {
-                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                    } else {
-                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error durante el proceso' } })
-                    }
+                } else {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
                 }
                 break
             case 'Boleta':
@@ -254,11 +265,9 @@ export default function PayDialog(props) {
                         const stockAlertList = await stocks.findAllStockAlert()
                         dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
                         await sale()
-                        const boleta = await lioren.boleta()
-                        console.log('boleta', boleta)
                         setOpen(false)
                         setOpenChangeDialog(true)
-                        
+
 
                     } else {
                         await sale()

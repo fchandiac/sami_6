@@ -78,7 +78,7 @@ export default function ShoppingCart(props) {
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         }
-    }, [])
+    }, [cart])
 
 
     const removeProduct = (id, salesRoomStock) => {

@@ -34,7 +34,7 @@ function CustomToolbar(props) {
                 alignItems="center"
                 spacing={2}
             >
-                <GridToolbarQuickFilter />
+                <GridToolbarQuickFilter inputProps={{autoFocus: true}}/>
                 <Typography variant="h5" gutterBottom component="div">{gridHeader}</Typography>
             </Stack>
         </Box>

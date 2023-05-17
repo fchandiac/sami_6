@@ -82,4 +82,24 @@ function boleta(){
     return dte
 }
 
-export {boleta}
+
+function miEmpresa(){
+    const dte = new Promise((resolve, reject) => {
+        fetch('https://www.lioren.cl/api/miempresa', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token}
+        }).then(res => {
+            res.json().then(res => {
+               resolve(res)
+            }).catch(err => {
+                reject(err)
+            })
+        })
+    })
+    return dte
+}
+
+export {boleta, miEmpresa}

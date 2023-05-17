@@ -52,6 +52,7 @@ function ticket(total, cart, ticketInfo, printerInfo) {
                 printer.text(ticketInfo.address)
                 printer.text(ticketInfo.phone)
                 printer.text('_________________________________________')
+                
                 printer.tableCustom([
                     { text: '#', align: "LEFT", width: 0.1 },
                     { text: 'Producto', align: "LEFT", width: 0.8 },
@@ -76,7 +77,6 @@ function ticket(total, cart, ticketInfo, printerInfo) {
                 printer.text('')
                 printer.cut()
                 printer.cashdraw(2)
-                printer.flush()
                 printer.close()
             })
             resolve({ 'code': 1, 'data': 'success' })

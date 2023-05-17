@@ -4,6 +4,8 @@ import { useAppContext } from '../../AppProvider'
 import Barcode from 'react-barcode'
 import AppPaper from '../AppPaper/AppPaper'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
+import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
+import WidgetsIcon from '@mui/icons-material/Widgets'
 
 
 
@@ -11,21 +13,12 @@ const products = require('../../promises/products')
 const utils = require('../../utils')
 
 export default function ProductCodeFinder(props) {
-    const { stockControl, inputCodeRef} = props
+    const { stockControl, inputCodeRef } = props
     const { cart, dispatch } = useAppContext()
     const [code, setCode] = useState('')
     const [openSelectionDialog, setOpenSelectionDialog] = useState(false)
     const [productsList, setProductsList] = useState([])
-    // const inputCode = useRef(null)
 
-    // useEffect(() => {
-    //     console.log('ordersPriority', ordersPriority)
-    //     if (ordersPriority == false){
-    //         console.log('ordersPriorityFromCode', ordersPriority)
-    //         inputCode.current.focus()
-    //     }
-        
-    // }, [ordersPriority])
 
 
     const addProduct = (code) => {
@@ -41,7 +34,22 @@ export default function ProductCodeFinder(props) {
                 } else {
                     let product = cart.find((product) => product.id === res[0].id)
                     if (product === undefined) {
-                        if (stockControl == true && res[0].Stocks.find(item => (item.storage_id == 1001)).stock <= 0) {
+                        if (res[0].stock_control == false) {
+                            product = {
+                                id: res[0].id,
+                                name: res[0].name,
+                                quanty: 1,
+                                sale: res[0].Price.sale,
+                                subTotal: res[0].Price.sale,
+                                salesRoomStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
+                                virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
+                                discount: 0,
+                                controlStock: res[0].stock_control
+                            }
+                            setCode('')
+                            inputCodeRef.current.focus()
+                            dispatch({ type: 'ADD_TO_CART', value: product })
+                        } else if (stockControl == true && res[0].Stocks.find(item => (item.storage_id == 1001)).stock <= 0) {
                             setCode('')
                             inputCodeRef.current.focus()
                             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
@@ -60,10 +68,16 @@ export default function ProductCodeFinder(props) {
                             setCode('')
                             inputCodeRef.current.focus()
                             dispatch({ type: 'ADD_TO_CART', value: product })
-                            
+
                         }
                     } else {
-                        if (stockControl == true && product.virtualStock <= 0) {
+                        console.log(product)
+                        if (product.controlStock == false) {
+                            setCode('')
+                            inputCodeRef.current.focus()
+                            dispatch({ type: 'ADD_TO_CART', value: product })
+
+                        } else if (stockControl == true && product.virtualStock <= 0) {
                             setCode('')
                             inputCodeRef.current.focus()
                             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
@@ -71,7 +85,7 @@ export default function ProductCodeFinder(props) {
                             setCode('')
                             inputCodeRef.current.focus()
                             dispatch({ type: 'ADD_TO_CART', value: product })
-                            
+
                         }
 
                     }
@@ -85,21 +99,38 @@ export default function ProductCodeFinder(props) {
         setOpenSelectionDialog(false)
         let productInCart = cart.find((item) => item.id === product.id)
         if (productInCart === undefined) {
-            if (stockControl == true && product.salesRoomStock <= 0) {
+            if (product.stockControl == false) {
+                dispatch({ type: 'ADD_TO_CART', value: product })
+                setCode('')
+            } else if (stockControl == true && product.salesRoomStock <= 0) {
                 dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
             } else {
                 dispatch({ type: 'ADD_TO_CART', value: product })
                 setCode('')
             }
         } else {
-            if (stockControl == true && productInCart.virtualStock <= 0) {
+            if (productInCart.stockControl == false) {
+                dispatch({ type: 'ADD_TO_CART', value: product })
+                setCode('')
+            } else if (stockControl == true && productInCart.virtualStock <= 0) {
                 dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
             } else {
                 dispatch({ type: 'ADD_TO_CART', value: product })
                 setCode('')
             }
         }
+    }
 
+    const renderStockControl = (product) => {
+        if (product.stock_control == false) {
+            return (
+                <WidgetsOutlinedIcon />
+            )
+        } else {
+            return (
+                <WidgetsIcon />
+            )
+        }
     }
 
 
@@ -142,7 +173,6 @@ export default function ProductCodeFinder(props) {
                                         <IconButton onClick={() => {
                                             addToCart({
                                                 id: product.id,
-                                                id: product.id,
                                                 name: product.name,
                                                 quanty: 1,
                                                 sale: product.Price.sale,
@@ -159,7 +189,10 @@ export default function ProductCodeFinder(props) {
                                     </Box>
                                     <Box sx={{ padding: 1 }}>
                                         <Typography> {utils.renderMoneystr(product.Price.sale)}</Typography>
-                                        <Typography>{'Stock en sala: ' + product.Stocks.find(item => (item.storage_id == 1001)).stock}</Typography>
+                                        <Stack direction="row" spacing={1} alignItems={'center'} justifyContent={'space-between'}>
+                                            <Typography>{'Stock en sala: ' + product.Stocks.find(item => (item.storage_id == 1001)).stock}</Typography>
+                                            {renderStockControl(product)}
+                                        </Stack>
 
                                     </Box>
                                     <Box sx={{ padding: 1 }} textAlign={'center'}>

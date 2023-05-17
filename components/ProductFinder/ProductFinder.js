@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
     DataGrid,
     esES,
@@ -91,7 +91,9 @@ export default function ProductFinder(props) {
     }, [])
 
     const addToCart = (product) => {
-            if (stockControl == true && product.salesRoomStock <= 0) {
+            if (product.stockControl == false){
+                dispatch({ type: 'ADD_TO_CART', value: product })
+            } else if (stockControl == true && product.salesRoomStock <= 0) {
                 dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
             } else {
                 dispatch({ type: 'ADD_TO_CART', value: product })

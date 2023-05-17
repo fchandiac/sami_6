@@ -1,6 +1,6 @@
 import { React, useState, useEffect } from 'react'
 import Layout from '../components/Layout'
-import { Button, Grid, TextField, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Switch, FormControlLabel } from '@mui/material'
+import { Button, Grid, TextField, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Switch, FormControlLabel, Stack } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddCircleIcon from '@mui/icons-material/AddCircle'
 import SaveIcon from '@mui/icons-material/Save'
@@ -19,10 +19,16 @@ export default function Home() {
     const [customerCredit, setCustomerCredit] = useState({ name: '', state: true })
     const [newPaymentMethod, setNewPaymentMethod] = useState('')
     const [adminPass, setAdminPass] = useState('')
-    const [cashRegisterUI, setCashRegisterUI] = useState({ stock_control: true, quote: true, orders_mode: false, orders_loader: false, orders_priority: true, favorites: false })
+    const [cashRegisterUI, setCashRegisterUI] = useState({ stock_control: true, quote: true, orders_mode: false, orders_loader: false, orders_priority: true, favorites: false, orders: true })
     const [printer, setPrinter] = useState({ idProduct: 0, idVendor: 0 })
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
     const [apiUrl, setApiUrl] = useState('')
+    const [docs, setDocs] = useState({ simple_ticket: true, ticket: true, invoice: true, change_ticket: true })
+    const [lioren, setLioren] = useState({
+        integration: true,
+        token: '',
+        mail: ''
+    })
 
     useEffect(() => {
         const readConfig = ipcRenderer.sendSync('read-config', 'sync');
@@ -35,6 +41,8 @@ export default function Home() {
         setPrinter(readConfig.printer)
         setTicketInfo(readConfig.ticket_info)
         setApiUrl(readConfig.api.url)
+        setDocs(readConfig.docs)
+        setLioren(readConfig.lioren)
         console.log(readConfig.api.url)
     }, [])
 
@@ -70,7 +78,7 @@ export default function Home() {
 
     const updateCashRegisterUI = () => {
         ipcRenderer.send('update-cash-register-UI', cashRegisterUI)
-        dispatch({type: 'SET_ORDERS_MODE', value: cashRegisterUI.orders_mode})
+        dispatch({ type: 'SET_ORDERS_MODE', value: cashRegisterUI.orders_mode })
         dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Configuración de caja actualizada' } })
     }
 
@@ -87,6 +95,25 @@ export default function Home() {
     const updateApiUrl = () => {
         ipcRenderer.send('update-api-url', apiUrl)
         dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'URL de API actualizada' } })
+    }
+
+    const updateDocs = () => {
+        ipcRenderer.send('update-docs', docs)
+        dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Documentos actualizados' } })
+    }
+
+    const updateLioren = () => {
+        ipcRenderer.send('update-lioren', lioren)
+        dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Integración Lioren actualizada' } })
+    }
+
+    const findPrinter = async () => {
+        const findPrinter = await ipcRenderer.invoke('find-printer', printer)
+        if (findPrinter) {
+            alert('Impresora encontrada')
+        } else {
+            alert('Impresora no encontrada')
+        }
     }
 
     return (
@@ -214,7 +241,7 @@ export default function Home() {
                                         control={
                                             <Switch
                                                 checked={cashRegisterUI.orders_loader}
-                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, orders_loader: e.target.checked}) }}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, orders_loader: e.target.checked }) }}
                                             />
                                         }
                                         label="Cargar pedidos"
@@ -225,7 +252,7 @@ export default function Home() {
                                         control={
                                             <Switch
                                                 checked={cashRegisterUI.orders_priority}
-                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, orders_priority: e.target.checked}) }}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, orders_priority: e.target.checked }) }}
                                             />
                                         }
                                         label="Prioridad pedidos"
@@ -235,13 +262,25 @@ export default function Home() {
                                     <FormControlLabel
                                         control={
                                             <Switch
+                                                checked={cashRegisterUI.orders}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, orders: e.target.checked }) }}
+                                            />
+                                        }
+                                        label="Pedidos"
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
                                                 checked={cashRegisterUI.favorites}
-                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, favorites: e.target.checked}) }}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, favorites: e.target.checked }) }}
                                             />
                                         }
                                         label="Favoritos"
                                     />
                                 </Grid>
+
                                 <Grid item textAlign={'right'}>
                                     <IconButton color='primary' type='submit'>
                                         <SaveIcon />
@@ -280,9 +319,12 @@ export default function Home() {
                                     />
                                 </Grid>
                                 <Grid item textAlign={'right'}>
-                                    <IconButton color='primary' type='submit'>
-                                        <SaveIcon />
-                                    </IconButton>
+                                    <Stack direction="row" spacing={1} justifyContent={'space-between'}>
+                                        <Button variant="outlined" onClick={() => findPrinter()}>Probar conexión</Button>
+                                        <IconButton color='primary' type='submit'>
+                                            <SaveIcon />
+                                        </IconButton>
+                                    </Stack>
                                 </Grid>
                             </Grid>
                         </form>
@@ -391,8 +433,8 @@ export default function Home() {
                                 <FormControlLabel
                                     control={
                                         <Switch
-                                            checked={cashRegisterUI.quote}
-                                            onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, quote: e.target.checked }) }}
+                                            checked={docs.simple_ticket}
+                                            onChange={(e) => { setDocs({ ...docs, simple_ticket: e.target.checked }) }}
                                         />
                                     }
                                     label="Ticket"
@@ -402,8 +444,8 @@ export default function Home() {
                                 <FormControlLabel
                                     control={
                                         <Switch
-                                            checked={cashRegisterUI.quote}
-                                            onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, quote: e.target.checked }) }}
+                                            checked={docs.ticket}
+                                            onChange={(e) => { setDocs({ ...docs, ticket: e.target.checked }) }}
                                         />
                                     }
                                     label="Boleta"
@@ -413,8 +455,8 @@ export default function Home() {
                                 <FormControlLabel
                                     control={
                                         <Switch
-                                            checked={cashRegisterUI.quote}
-                                            onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, quote: e.target.checked }) }}
+                                            checked={docs.invoice}
+                                            onChange={(e) => { setDocs({ ...docs, invoice: e.target.checked }) }}
                                         />
                                     }
                                     label="Factura"
@@ -424,19 +466,67 @@ export default function Home() {
                                 <FormControlLabel
                                     control={
                                         <Switch
-                                            checked={cashRegisterUI.quote}
-                                            onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, quote: e.target.checked }) }}
+                                            checked={docs.change_ticket}
+                                            onChange={(e) => { setDocs({ ...docs, change_ticket: e.target.checked }) }}
                                         />
                                     }
                                     label="Ticket de cambio"
                                 />
                             </Grid>
                             <Grid item textAlign={'right'}>
-                                <IconButton color='primary' onClick={() => { }}>
+                                <IconButton color='primary' onClick={() => { updateDocs() }}>
                                     <SaveIcon />
                                 </IconButton>
                             </Grid>
                         </Grid>
+                    </AppPaper>
+                </Grid>
+
+                <Grid item md={3}>
+                    <AppPaper title='Integración Lioren'>
+                        <form onSubmit={(e) => { e.preventDefault(); updateLioren() }}>
+                            <Grid container spacing={1} direction={'column'} p={1}>
+                            <Grid item>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={lioren.integration}
+                                                onChange={(e) => { setLioren({ ...lioren, integration: e.target.checked }) }}
+                                            />
+                                        }
+                                        label="Integración"
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <TextField
+                                        label='Token'
+                                        value={lioren.token}
+                                        onChange={(e) => { setLioren({ ...lioren, token: e.target.value }) }}
+                                        variant="outlined"
+                                        size={'small'}
+                                        fullWidth
+                                        required
+                                    />
+                                </Grid>
+                                <Grid item>
+                                    <TextField
+                                        label='Mail'
+                                        value={lioren.mail}
+                                        inputProps={{readOnly: true}}
+                                        variant="outlined"
+                                        size={'small'}
+                                        fullWidth
+                                        required
+                                    />
+                                </Grid>
+
+                                <Grid item textAlign={'right'}>
+                                        <IconButton color='primary' type='submit'>
+                                            <SaveIcon />
+                                        </IconButton>
+                                </Grid>
+                            </Grid>
+                        </form>
                     </AppPaper>
                 </Grid>
 
