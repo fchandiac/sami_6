@@ -9,6 +9,7 @@ import { useAppContext } from '../../../AppProvider'
 import electron from 'electron'
 import AppPaper from '../../AppPaper/AppPaper'
 import moment from 'moment'
+const PDF417 = require("pdf417-generator")
 
 const ipcRenderer = electron.ipcRenderer || false
 
@@ -22,7 +23,7 @@ const lioren = require('../../../promises/lioren')
 
 export default function PayDialog(props) {
     const { open, setOpen, total, stockControl } = props
-    const { dispatch, cart, movements, user } = useAppContext()
+    const { dispatch, cart, movements, user, webConnection } = useAppContext()
     const [payAmount, setPayAmount] = useState(0)
     const [change, setChange] = useState(0)
     const [disablePay, setDisablePay] = useState(true)
@@ -36,12 +37,25 @@ export default function PayDialog(props) {
     const [customerInput, setCustomerInput] = useState('')
     const [customer, setCustomer] = useState(null)
     const [documentType, setDocumentType] = useState('Ticket')
+    const [documentTypesList, setDocumentTypesList] = useState([])
+    const [configDocs, setConfigDocs] = useState({})
+    const [liorenConfig, setLiorenConfig] = useState({})
 
-    const documentTypesList = [
-        { name: 'Ticket', label: 'Ticket' },
-        // { name: 'Boleta', label: 'Boleta' },
-        { name: 'Sin impresora', label: 'Sin impresora' }
-    ]
+
+
+    const setDocumentsTypes = (webConnection, liorenConfig, configDocs) => {
+        console.log('Lioren config', liorenConfig)
+        let docs = [
+            { name: 'Ticket', label: 'Ticket' }
+        ]
+        let ticket = ticketDoc(webConnection, configDocs, liorenConfig.integration)
+        if (ticket) docs.push({ name: 'Boleta', label: 'Boleta' })
+
+        //-----//
+        docs.push({ name: 'Sin impresora', label: 'Sin impresora' })
+        setDocumentTypesList(docs)
+    }
+
 
     useEffect(() => {
         if (openChangeDialog === true) {
@@ -64,14 +78,19 @@ export default function PayDialog(props) {
         let customerCredit = ipcRenderer.sendSync('get-customer-credit', 'sync')
         let printer = ipcRenderer.sendSync('get-printer', 'sync')
         let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
+        let docs = ipcRenderer.sendSync('get-docs', 'sync')
+        let lioren = ipcRenderer.sendSync('get-lioren', 'sync')
         paymentMethods = paymentMethods.map((method) => {
             return { name: method.name, label: method.name }
         })
         customerCredit.state === true ? paymentMethods.unshift({ name: 'customerCredit', label: customerCredit.name }) : null
         paymentMethods.unshift({ name: 'Efectivo', label: 'Efectivo' })
+        setConfigDocs(docs)
         setPaymentMethodsList(paymentMethods)
         setPrinter(printer)
         setTicketInfo(ticket_info)
+        setLiorenConfig(lioren)
+        setDocumentsTypes(webConnection, lioren, docs)
     }, [])
 
 
@@ -221,7 +240,6 @@ export default function PayDialog(props) {
         switch (documentType) {
             case 'Ticket':
                 console.log('ticket')
-                console.log('PRinterData', printer)
                 const findPrinter = await ipcRenderer.invoke('find-printer', printer)
                 if (findPrinter == true) {
                     console.log('testPrint', printer)
@@ -237,7 +255,7 @@ export default function PayDialog(props) {
                             cart: cart,
                             printer: printer,
                             ticketInfo: ticketInfo,
-                            date: date, time:time,
+                            date: date, time: time,
                             paymentMethod: paymentMethod,
                         }
                         console.log('printInfo', printInfo)
@@ -256,7 +274,55 @@ export default function PayDialog(props) {
                 }
                 break
             case 'Boleta':
-                console.log('boleta')
+                console.log('Boleta')
+                const findPrinter2 = await ipcRenderer.invoke('find-printer', printer)
+                if (findPrinter2 == true) {
+                    if (stockControl == true) {
+                        await updateStocks(cart)
+                        const stockAlertList = await stocks.findAllStockAlert()
+                        dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
+                        await sale()
+                        let date = moment(new Date()).format('DD-MM-yyyy')
+                        let time = moment(new Date()).format('HH:mm')
+                        lioren.boleta(liorenConfig.token, total)
+                            .catch(err => { dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con Lioren' } }) })
+                            .then(data => {
+                                let timbre = data[0]
+                                let canvas = document.createElement('canvas')
+                                PDF417.draw(timbre, canvas, 2, 2, 1.5)
+                                let stamp_img = canvas.toDataURL('image/jpg')
+                                let date = moment(new Date()).format('DD-MM-yyyy')
+                                let time = moment(new Date()).format('HH:mm')
+                                let printInfo = {
+                                    printer: printer,
+                                    stamp: stamp_img,
+                                    date: date, time: time,
+                                    name: ticketInfo.name,
+                                    rut: ticketInfo.rut,
+                                    address: ticketInfo.address,
+                                    phone: ticketInfo.phone,
+                                    total: total,
+                                    iva: data[1],
+                                    invoiceNumber: data[2],
+                                    cart: cart,
+                                }
+                                ipcRenderer.sendSync('boleta', printInfo)
+                                setOpen(false)
+                                setOpenChangeDialog(true)
+                            })
+                    } else {
+                        await sale()
+                        await printTicket()
+                        setOpen(false)
+                        setOpenChangeDialog(true)
+                    }
+                } else {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                }
+                break
+
+
+
                 break
             case 'Sin impresora':
                 try {
@@ -498,5 +564,17 @@ export default function PayDialog(props) {
 
 
 
-
-
+function ticketDoc(webConnection, docs, liorenIntegration) {
+    console.log('connnn', webConnection)
+    console.log('docs', docs)
+    console.log('integration', liorenIntegration)
+    if (!webConnection) {
+        return false
+    } else if (!liorenIntegration) {
+        return false
+    } else if (!docs.ticket) {
+        return false
+    } else {
+        return true
+    }
+}

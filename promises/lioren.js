@@ -1,10 +1,10 @@
 
 
-const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI2MDkiLCJqdGkiOiJmNDQ4NWIxODBmNDVkNTQxMjhjMDljNjVjY2Y4ZDJhYWM0ODA3MzE0NjRkZWFjN2UwZDZiMjNmN2NmY2RmZGE4YmY1MDE2ZDAzMmEzNTQ4NiIsImlhdCI6MTY4Mzg0ODA4Ni42MDY2MTYsIm5iZiI6MTY4Mzg0ODA4Ni42MDY2MTgsImV4cCI6MTcxNTQ3MDQ4Ni42MDQwNTgsInN1YiI6IjU5NzYiLCJzY29wZXMiOltdfQ.K6GvR5-po-phzaseb7k0KG4z1ofzb3NRsaDXCcLZbQHhXNXholRHkw7GjRzax_52GkQ6_oxV6fabuEOFas_8dIl8ZAlHgS4t300TGMOfdNZzoBRIDVO9tHdT1RNeOOGFOMIGq8TkiGi6TS9zg9Yv9vOkPQG3Eslrxdgkg03b2VPa6aiRGSxfMRng0dnMifY-LtMgk1WVF9FZks1pL3EMJo19WXzkeqs6x-5KMZ96qp7Yxy644a-xG_rhWR0pIQ5_Zs2bYoViyiRPp59EGMZ7vLxX9TfLVgC0UqHAEEDMWDzL75H3vDUQe68KOAI3OAcqh3Kqp7nvgqNJCyjLn0wJeimjaxIZTUWIEYAY5Hw13OdLDNYbK2hgd546791BCBQ9_XZOTgz9CDp-SJd-uDmdjSgZ-0fqKJF8iwA9gdM-XeRWr19ne9peSWohhBUYwlA4BRSE12Rpsv64KJdBD1nyc_-x9taD-QEQf-QDbQGdwlteNj6r9jInfZMoytqp5_LKkU3TsPvpAa8gb5XlNIu8SwOVStoQdH9t2xKCChKFND5SIZUm1FL3TJL1V1Q-L65XydW5lKD5UmnQencnr7dxN6lTxZyZjtH6GBjyr1I2Xt5bQySSJPggcX4OZNaeATLlb50kyhuDiHb9CE4DEhsn6YQy_HA_I6CTeJhIn9o4BGg'
+//const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI2MDkiLCJqdGkiOiJmNDQ4NWIxODBmNDVkNTQxMjhjMDljNjVjY2Y4ZDJhYWM0ODA3MzE0NjRkZWFjN2UwZDZiMjNmN2NmY2RmZGE4YmY1MDE2ZDAzMmEzNTQ4NiIsImlhdCI6MTY4Mzg0ODA4Ni42MDY2MTYsIm5iZiI6MTY4Mzg0ODA4Ni42MDY2MTgsImV4cCI6MTcxNTQ3MDQ4Ni42MDQwNTgsInN1YiI6IjU5NzYiLCJzY29wZXMiOltdfQ.K6GvR5-po-phzaseb7k0KG4z1ofzb3NRsaDXCcLZbQHhXNXholRHkw7GjRzax_52GkQ6_oxV6fabuEOFas_8dIl8ZAlHgS4t300TGMOfdNZzoBRIDVO9tHdT1RNeOOGFOMIGq8TkiGi6TS9zg9Yv9vOkPQG3Eslrxdgkg03b2VPa6aiRGSxfMRng0dnMifY-LtMgk1WVF9FZks1pL3EMJo19WXzkeqs6x-5KMZ96qp7Yxy644a-xG_rhWR0pIQ5_Zs2bYoViyiRPp59EGMZ7vLxX9TfLVgC0UqHAEEDMWDzL75H3vDUQe68KOAI3OAcqh3Kqp7nvgqNJCyjLn0wJeimjaxIZTUWIEYAY5Hw13OdLDNYbK2hgd546791BCBQ9_XZOTgz9CDp-SJd-uDmdjSgZ-0fqKJF8iwA9gdM-XeRWr19ne9peSWohhBUYwlA4BRSE12Rpsv64KJdBD1nyc_-x9taD-QEQf-QDbQGdwlteNj6r9jInfZMoytqp5_LKkU3TsPvpAa8gb5XlNIu8SwOVStoQdH9t2xKCChKFND5SIZUm1FL3TJL1V1Q-L65XydW5lKD5UmnQencnr7dxN6lTxZyZjtH6GBjyr1I2Xt5bQySSJPggcX4OZNaeATLlb50kyhuDiHb9CE4DEhsn6YQy_HA_I6CTeJhIn9o4BGg'
 
-function boleta(){
+function boleta(token, total){
     let data = {'emisor' : {'tipodoc' : '39','servicio' : 3},
-        'detalles' : [{'codigo' : '10001', 'nombre' : 'Venta','cantidad' : 1, 'precio' : 100,'exento' : false}],
+        'detalles' : [{'codigo' : '10001', 'nombre' : 'Venta','cantidad' : 1, 'precio' : total,'exento' : false}],
         'expects' : 'all'}
     const dte = new Promise((resolve, reject) => {
         fetch('https://www.lioren.cl/api/boletas', {

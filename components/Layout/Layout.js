@@ -17,9 +17,13 @@ import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 
 
+
+
+
 import styles from './Layout.module.css'
 import AppSnack from '../AppSnack/AppSnack'
 import { DataGrid } from '@mui/x-data-grid'
+
 
 
 
@@ -63,6 +67,14 @@ export default function Layout(props) {
   }, [router.pathname])
 
   useEffect(() => {
+    ipcRenderer.invoke('connection')
+      .then(conn => {
+        console.log('connection', conn)
+        dispatch({ type: 'SET_WEB_CONNECTION', value: conn })
+      })
+  }, [router.pathname])
+
+  useEffect(() => {
     let adminPass = ipcRenderer.sendSync('get-admin-pass', 'sync')
     let cashRegisterUI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
     setAdminPass(adminPass)
@@ -70,11 +82,11 @@ export default function Layout(props) {
     dispatch({ type: 'SET_ORDERS', value: cashRegisterUI.orders })
   }, [])
 
-  useEffect(() => {
-    lioren.miEmpresa()
-      .then(res => { console.log(res) })
+  // useEffect(() => {
+  //   lioren.miEmpresa()
+  //     .then(res => { console.log(res) })
 
-  }, [])
+  // }, [])
 
   const updateLock = () => {
     if (lock === false) {

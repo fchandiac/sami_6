@@ -13,7 +13,7 @@ const stocks = require('../../promises/stocks')
 
 
 export default function CashRegister() {
-  const { dispatch } = useAppContext()
+  const { dispatch, webConnection } = useAppContext()
   const [cashRegisterUI, setCashRegisterUI] = useState({})
   const inputCodeRef = useRef(null)
   const inputOrderRef = useRef(null)
@@ -28,6 +28,11 @@ export default function CashRegister() {
     stocks.findAllStockAlert()
       .then(res => { dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res }) })
       .catch(err => { console.log(err) })
+    
+    if(!webConnection){
+      dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay conexión a internet' } })
+    }
+  
   }, [])
 
   useEffect(() => {
