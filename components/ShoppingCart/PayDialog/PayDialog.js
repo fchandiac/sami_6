@@ -235,13 +235,13 @@ export default function PayDialog(props) {
     }
 
 
-
     const pay = async () => {
+        console.log('Doc', documentType)
         switch (documentType) {
             case 'Ticket':
                 console.log('ticket')
-                const findPrinter = await ipcRenderer.invoke('find-printer', printer)
-                if (findPrinter == true) {
+                //const findPrinter = await ipcRenderer.invoke('find-printer', printer)
+                if (ipcRenderer.invoke('find-printer', printer)) {
                     console.log('testPrint', printer)
                     if (stockControl == true) {
                         await updateStocks(cart)
@@ -265,7 +265,17 @@ export default function PayDialog(props) {
 
                     } else {
                         await sale()
-                        await printTicket()
+                        let date = moment(new Date()).format('DD-MM-yyyy')
+                        let time = moment(new Date()).format('HH:mm')
+                        let printInfo = {
+                            total: total,
+                            cart: cart,
+                            printer: printer,
+                            ticketInfo: ticketInfo,
+                            date: date, time: time,
+                            paymentMethod: paymentMethod,
+                        }
+                        ipcRenderer.sendSync('print-ticket', printInfo)
                         setOpen(false)
                         setOpenChangeDialog(true)
                     }
@@ -275,8 +285,7 @@ export default function PayDialog(props) {
                 break
             case 'Boleta':
                 console.log('Boleta')
-                const findPrinter2 = await ipcRenderer.invoke('find-printer', printer)
-                if (findPrinter2 == true) {
+                if (await ipcRenderer.invoke('find-printer', printer) == true) {
                     if (stockControl == true) {
                         await updateStocks(cart)
                         const stockAlertList = await stocks.findAllStockAlert()
@@ -312,9 +321,34 @@ export default function PayDialog(props) {
                             })
                     } else {
                         await sale()
-                        await printTicket()
-                        setOpen(false)
-                        setOpenChangeDialog(true)
+                        let date = moment(new Date()).format('DD-MM-yyyy')
+                        let time = moment(new Date()).format('HH:mm')
+                        lioren.boleta(liorenConfig.token, total)
+                            .catch(err => { dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con Lioren' } }) })
+                            .then(data => {
+                                let timbre = data[0]
+                                let canvas = document.createElement('canvas')
+                                PDF417.draw(timbre, canvas, 2, 2, 1.5)
+                                let stamp_img = canvas.toDataURL('image/jpg')
+                                let date = moment(new Date()).format('DD-MM-yyyy')
+                                let time = moment(new Date()).format('HH:mm')
+                                let printInfo = {
+                                    printer: printer,
+                                    stamp: stamp_img,
+                                    date: date, time: time,
+                                    name: ticketInfo.name,
+                                    rut: ticketInfo.rut,
+                                    address: ticketInfo.address,
+                                    phone: ticketInfo.phone,
+                                    total: total,
+                                    iva: data[1],
+                                    invoiceNumber: data[2],
+                                    cart: cart,
+                                }
+                                ipcRenderer.sendSync('boleta', printInfo)
+                                setOpen(false)
+                                setOpenChangeDialog(true)
+                            })
                     }
                 } else {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })

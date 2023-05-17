@@ -1,6 +1,6 @@
 {
   "name": "sami6",
-  "version": "6.0.7",
+  "version": "6.0.8",
   "description": "Sami 6",
   "main": "main.js",
   "scripts": {
@@ -38,7 +38,7 @@
     "xml2js": "^0.5.0"
   },
   "devDependencies": {
-    "electron": "^19.0.4",
+    "electron": "^19.1.9",
     "electron-builder": "^24.3.0"
   },
   "build": {

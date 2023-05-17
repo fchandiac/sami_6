@@ -228,12 +228,14 @@ ipcMain.on('update-printer', (e, arg) => {
 	config.printer = arg
 	data = JSON.stringify(config)
 	fs.writeFileSync(filePathConfig, data)
+	e.returnValue = true
 })
 
 ipcMain.on('get-ticket-info', (e, arg) => {
 	let rawDataConfig = fs.readFileSync(filePathConfig)
 	let config = JSON.parse(rawDataConfig)
 	e.returnValue = config.ticket_info
+
 })
 
 ipcMain.on('update-ticket-info', (e, arg) => {
@@ -333,7 +335,9 @@ ipcMain.handle('find-printer', (e, printer) => {
 
 
 ipcMain.on('print-ticket', (e, printInfo) => {
-	const device = new escpos.USB(printInfo.printer.idVendor, printInfo.printer.idProduct)
+	const idVendor = parseInt(printInfo.printer.idVendor)
+	const idProduct = parseInt(printInfo.printer.idProduct)
+	const device = new escpos.USB(idVendor, idProduct)
 	const options = { encoding: "GB18030" /* delt */ }
 	const printer = new escpos.Printer(device, options)
 	let total = printInfo.total
@@ -390,7 +394,9 @@ ipcMain.on('print-ticket', (e, printInfo) => {
 })
 
 ipcMain.on('boleta', (e, printInfo) => {
-	const device = new escpos.USB(printInfo.printer.idVendor, printInfo.printer.idProduct)
+	const idVendor = parseInt(printInfo.printer.idVendor)
+	const idProduct = parseInt(printInfo.printer.idProduct)
+	const device = new escpos.USB(idVendor, idProduct)
 	const options = { encoding: "GB18030" /* delt */ }
 	const printer = new escpos.Printer(device)
 	let stamp = printInfo.stamp
