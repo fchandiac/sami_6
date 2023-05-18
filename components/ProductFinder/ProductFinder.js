@@ -135,7 +135,8 @@ export default function ProductFinder(props) {
                             discount: 0,
                             salesRoomStock: params.row.salesRoomStock,
                             virtualStock: params.row.salesRoomStock,
-                            stockControl: params.row.stockControl
+                            stockControl: params.row.stockControl,
+                            code: params.row.code
                         })
                     }}
                 />

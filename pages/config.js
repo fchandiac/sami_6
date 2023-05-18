@@ -281,6 +281,18 @@ export default function Home() {
                                     />
                                 </Grid>
 
+                                <Grid item>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={cashRegisterUI.number_pad}
+                                                onChange={(e) => { setCashRegisterUI({ ...cashRegisterUI, number_pad: e.target.checked }) }}
+                                            />
+                                        }
+                                        label="Teclado numérico"
+                                    />
+                                </Grid>
+
                                 <Grid item textAlign={'right'}>
                                     <IconButton color='primary' type='submit'>
                                         <SaveIcon />

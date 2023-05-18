@@ -44,7 +44,8 @@ export default function ProductCodeFinder(props) {
                                 salesRoomStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 discount: 0,
-                                controlStock: res[0].stock_control
+                                controlStock: res[0].stock_control,
+                                code: res[0].code
                             }
                             setCode('')
                             inputCodeRef.current.focus()
@@ -63,7 +64,8 @@ export default function ProductCodeFinder(props) {
                                 salesRoomStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 discount: 0,
-                                controlStock: res[0].control_stock
+                                controlStock: res[0].control_stock,
+                                code: res[0].code
                             }
                             setCode('')
                             inputCodeRef.current.focus()

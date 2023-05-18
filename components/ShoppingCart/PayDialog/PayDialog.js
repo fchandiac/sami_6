@@ -11,6 +11,8 @@ import AppPaper from '../../AppPaper/AppPaper'
 import moment from 'moment'
 const PDF417 = require("pdf417-generator")
 
+import Invoice from '../../Invoice'
+
 const ipcRenderer = electron.ipcRenderer || false
 
 const utils = require('../../../utils')
@@ -40,6 +42,8 @@ export default function PayDialog(props) {
     const [documentTypesList, setDocumentTypesList] = useState([])
     const [configDocs, setConfigDocs] = useState({})
     const [liorenConfig, setLiorenConfig] = useState({})
+    const [numeric_pad, setNumeric_pad] = useState(false)
+    const [openInvoiceDialog, setOpenInvoiceDialog] = useState(false)
 
 
 
@@ -50,7 +54,8 @@ export default function PayDialog(props) {
         ]
         let ticket = ticketDoc(webConnection, configDocs, liorenConfig.integration)
         if (ticket) docs.push({ name: 'Boleta', label: 'Boleta' })
-
+        let invoice = invoiceDoc(webConnection, configDocs, liorenConfig.integration)
+        if (invoice) docs.push({ name: 'Factura', label: 'Factura' })
         //-----//
         docs.push({ name: 'Sin impresora', label: 'Sin impresora' })
         setDocumentTypesList(docs)
@@ -80,6 +85,7 @@ export default function PayDialog(props) {
         let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
         let docs = ipcRenderer.sendSync('get-docs', 'sync')
         let lioren = ipcRenderer.sendSync('get-lioren', 'sync')
+        let config = ipcRenderer.sendSync('read-config', 'sync')
         paymentMethods = paymentMethods.map((method) => {
             return { name: method.name, label: method.name }
         })
@@ -91,6 +97,7 @@ export default function PayDialog(props) {
         setTicketInfo(ticket_info)
         setLiorenConfig(lioren)
         setDocumentsTypes(webConnection, lioren, docs)
+        setNumeric_pad(config.numeric_pad)
     }, [])
 
 
@@ -354,10 +361,6 @@ export default function PayDialog(props) {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
                 }
                 break
-
-
-
-                break
             case 'Sin impresora':
                 try {
                     if (stockControl == true) {
@@ -383,6 +386,8 @@ export default function PayDialog(props) {
 
                 }
                 break
+            case 'Factura':
+                setOpenInvoiceDialog(true)
             default:
                 console.log('default')
                 break
@@ -392,13 +397,13 @@ export default function PayDialog(props) {
 
     return (
         <>
-            <Dialog open={open} maxWidth={'xs'} >
+            <Dialog open={open} maxWidth={'lg'}>
                 <form onSubmit={(e) => { e.preventDefault(); pay() }}>
                     <DialogTitle sx={{ p: 2 }}>
                         Proceso de pago
                     </DialogTitle>
                     <DialogContent sx={{ p: 2 }}>
-                        <Grid container spacing={1} direction={'column'}>
+                        <Grid container spacing={1} direction={'column'} width={'500px'}>
                             <Grid item marginTop={1}>
                                 <TextField
                                     label="Total:"
@@ -429,7 +434,7 @@ export default function PayDialog(props) {
                             <Grid item textAlign={'right'} sx={{ display: disablePay ? 'none' : 'block' }}>
                                 <Typography color={'pimary'}>{'Vuelto: ' + utils.renderMoneystr(change)}</Typography>
                             </Grid>
-                            <Grid item>
+                            <Grid item sx={{display: numeric_pad? 'block': 'none'}}>
                                 <Grid container spacing={1}>
                                     <Grid item xs={4} sm={4} md={4}>
                                         <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(1) }}>1</Button>
@@ -492,8 +497,8 @@ export default function PayDialog(props) {
                                             </AppPaper>
                                         </Grid>
                                     </Grid>
-                                    <Grid item xs={6} sm={6} md={6} height={'100%'}>
-                                        <AppPaper title={'Documento'} sx={{ height: '100%' }}>
+                                    <Grid item xs={6} sm={6} md={6} >
+                                        <AppPaper title={'Documento'}>
                                             <FormGroup sx={{ p: 1 }}>
                                                 {documentTypesList.map(item => (
                                                     <FormControlLabel
@@ -589,6 +594,10 @@ export default function PayDialog(props) {
                 </DialogActions>
             </Dialog>
 
+            <Invoice open={openInvoiceDialog} setOpen={setOpenInvoiceDialog} setOpenChangeDialog={setOpenChangeDialog} setOpenPayDialog={setOpen} />
+
+        
+
         </>
 
     )
@@ -599,14 +608,23 @@ export default function PayDialog(props) {
 
 
 function ticketDoc(webConnection, docs, liorenIntegration) {
-    console.log('connnn', webConnection)
-    console.log('docs', docs)
-    console.log('integration', liorenIntegration)
     if (!webConnection) {
         return false
     } else if (!liorenIntegration) {
         return false
     } else if (!docs.ticket) {
+        return false
+    } else {
+        return true
+    }
+}
+
+function invoiceDoc(webConnection, docs, liorenIntegration) {
+    if (!webConnection) {
+        return false
+    } else if (!liorenIntegration) {
+        return false
+    } else if (!docs.invoice) {
         return false
     } else {
         return true

@@ -1,6 +1,6 @@
 {
   "name": "sami6",
-  "version": "6.0.8",
+  "version": "6.0.9",
   "description": "Sami 6",
   "main": "main.js",
   "scripts": {
@@ -20,6 +20,7 @@
     "@mui/icons-material": "^5.8.4",
     "@mui/material": "^5.8.4",
     "@mui/x-data-grid": "^5.12.2",
+    "@mui/x-date-pickers": "^5.0.0",
     "cors": "^2.8.5",
     "escpos": "^3.0.0-alpha.6",
     "escpos-usb": "^3.0.0-alpha.4",
@@ -28,9 +29,11 @@
     "file-saver": "^2.0.5",
     "fs": "0.0.1-security",
     "hddserial": "^0.0.7",
+    "jquery": "^3.7.0",
     "moment": "^2.29.4",
     "next": "^12.1.6",
     "pdf417-generator": "^1.0.4",
+    "pdfjs-dist": "^3.6.172",
     "react": "^18.1.0",
     "react-barcode": "^1.4.6",
     "react-dom": "^18.1.0",

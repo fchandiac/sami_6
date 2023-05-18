@@ -24,6 +24,8 @@ export default function NewProducForm(props) {
     const [openErrorSnack, setOpenErrorSnack] = useState(false)
     const [errorText, setErrorText] = useState('')
     const [productData, setProductData] = useState(productDataDefault())
+   
+
 
 
 
