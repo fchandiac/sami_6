@@ -158,6 +158,7 @@ export default function Invoice(props) {
                 "direccion": customerData.direccion
             },
             "detalles": formatCart(),
+            "referencias": [],
             // "referencias": [
             //     {
             //         "fecha": moment(new Date()).format('YYYY-MM-DD'),
@@ -235,6 +236,66 @@ export default function Invoice(props) {
         console.log(factura)
     }
 
+    const renderReference = () => {
+        if (showReference) {
+            return (
+                <AppPaper title={'Referencia'}>
+                    <Grid container spacing={1} direction={'column'} p={1}>
+                        <Grid item>
+                            <Autocomplete
+                                inputValue={docsRefinput}
+                                onInputChange={(e, newInputValue) => {
+                                    setDocsRefInput(newInputValue)
+                                }}
+                                isOptionEqualToValue={(option, value) => null || option.id === value.id}
+                                value={referenceData.tipodoc}
+                                onChange={(e, newValue) => {
+                                    setReferenceData({ ...referenceData, tipodoc: newValue })
+                                }}
+                                disablePortal
+                                options={docsRefOptions}
+                                renderInput={(params) => <TextField {...params} label='Tipo Documento' size={'small'} fullWidth required />}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <DesktopDatePicker
+                                label="Fecha"
+                                inputFormat='DD-MM-YYYY'
+                                value={referenceData.date}
+                                onChange={(e) => {
+                                    setReferenceData({ ...referenceData, date: e })
+                                }}
+                                renderInput={(params) => <TextField {...params} size={'small'} fullWidth />}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <TextField
+                                label='Razon social'
+                                value={customerData.razon_social}
+                                onChange={(e) => { setCustomerData({ ...customerData, razon_social: e.target.value }) }}
+                                variant="outlined"
+                                size={'small'}
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+                        <Grid item>
+                            <TextField
+                                label='Glosa'
+                                value={customerData.razon_social}
+                                onChange={(e) => { setCustomerData({ ...customerData, razon_social: e.target.value }) }}
+                                variant="outlined"
+                                size={'small'}
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+                    </Grid>
+                </AppPaper>
+
+            )
+        }
+    }
 
 
 
@@ -336,52 +397,22 @@ export default function Invoice(props) {
                                 </AppPaper>
                             </Grid>
 
-                            {/* 
-                        <Grid item textAlign={'right'}>
-                            <FormControlLabel sx={{ flexDirection: 'row-reverse' }}
-                                control={
-                                    <Switch
-                                        checked={showReference}
-                                        onChange={(e) => { setShowReference(e.target.checked) }}
-                                    />
-                                }
-                                label="Referencia"
-                            />
-                        </Grid> */}
 
-                            {/* <Grid item marginTop={1} sx={{display: showReference? 'block': 'none'}}>
-                            <AppPaper title={'Referencia'}>
-                                <Grid container spacing={1} direction={'column'} p={1}>
-                                    <Grid item>
-                                        <Autocomplete
-                                            inputValue={docsRefinput}
-                                            onInputChange={(e, newInputValue) => {
-                                                setDocsRefInput(newInputValue)
-                                            }}
-                                            isOptionEqualToValue={(option, value) => null || option.id === value.id}
-                                            value={referenceData.tipodoc}
-                                            onChange={(e, newValue) => {
-                                                setReferenceData({ ...referenceData, tipodoc: newValue })
-                                            }}
-                                            disablePortal
-                                            options={docsRefOptions}
-                                            renderInput={(params) => <TextField {...params} label='Tipo Documento' size={'small'} fullWidth required />}
+                            <Grid item textAlign={'right'}>
+                                <FormControlLabel sx={{ flexDirection: 'row-reverse' }}
+                                    control={
+                                        <Switch
+                                            checked={showReference}
+                                            onChange={(e) => { setShowReference(e.target.checked) }}
                                         />
-                                    </Grid>
-                                    <Grid item>
-                                        <DesktopDatePicker
-                                            label="Fecha"
-                                            inputFormat='DD-MM-YYYY'
-                                            value={referenceData.date}
-                                            onChange={(e) => {
-                                                setReferenceData({ ...referenceData, date: e })
-                                            }}
-                                            renderInput={(params) => <TextField {...params} size={'small'} fullWidth />}
-                                        />
-                                    </Grid>
-                                </Grid>
-                            </AppPaper>
-                        </Grid> */}
+                                    }
+                                    label="Referencia"
+                                />
+                            </Grid>
+
+                            <Grid item marginTop={1} sx={{ display: showReference ? 'block' : 'none' }}>
+                                {renderReference()}
+                            </Grid>
 
                             <Grid item textAlign={'right'}>
                                 <FormControlLabel sx={{ flexDirection: 'row-reverse' }}
@@ -492,7 +523,7 @@ function referenceDataDefault() {
 
 function docsRef() {
     return [
-        { key: 30, label: '30 Factura' },
+        { key: 30, label: '30 Factura', id: 30 },
         { key: 32, label: '32 Factura de ventas y servicios no afectos o exentos de IVA' },
         { key: 33, label: '33 Factura electrónica' },
         { key: 34, label: '34 Factura no afecta o exenta electrónica' },

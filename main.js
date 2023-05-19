@@ -11,11 +11,9 @@ hddSerial.one(1, function (err, serial) {
 	console.log("hdd serial for first hdd : %s", serial);
 });
 
-
-
 ///// --------> NODE ENV <-------/////////
-//const env = process.env.NODE_ENV
-const env = 'build'
+const env = process.env.NODE_ENV
+//const env = 'build'
 ///// --------------------------/////////
 
 
