@@ -86,7 +86,7 @@ function boleta(token, total) {
 }
 
 
-function miEmpresa() {
+function miEmpresa(token) {
     const dte = new Promise((resolve, reject) => {
         fetch('https://www.lioren.cl/api/miempresa', {
             method: 'GET',
@@ -292,5 +292,36 @@ function tipodocs(token) {
 }
 
 
+function mediosDePago(token) {
+    const dte = new Promise((resolve, reject) => {
+        fetch('	https://www.lioren.cl/api/mediopagos', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            }
+        }).then(res => {
+            res.json().then(res => {
+                resolve(res)
+            }).catch(err => {
+                reject(err)
+            })
+        })
+    })
+    return dte
+}
 
-export { boleta, miEmpresa, receptor, regiones, comunas, ciudades, factura, razonesRef, tipodocs }
+
+export { 
+    boleta, 
+    miEmpresa, 
+    receptor, 
+    regiones, 
+    comunas, 
+    ciudades, 
+    factura, 
+    razonesRef, 
+    tipodocs,
+    mediosDePago
+}

@@ -20,6 +20,7 @@ const print = require('../../../promises/print')
 const stocks = require('../../../promises/stocks')
 const sales = require('../../../promises/sales')
 const lioren = require('../../../promises/lioren')
+const salesDetails = require('../../../promises/salesDetails')
 
 
 
@@ -48,7 +49,6 @@ export default function PayDialog(props) {
 
 
     const setDocumentsTypes = (webConnection, liorenConfig, configDocs) => {
-        console.log('Lioren config', liorenConfig)
         let docs = [
             { name: 'Ticket', label: 'Ticket' }
         ]
@@ -177,6 +177,16 @@ export default function PayDialog(props) {
         return pr
     }
 
+    const saleDetailAll = (sale_id, cart) => {
+        let details = []
+        cart.map(product => {
+            console.log('product', product)
+            details.push(salesDetails.create(sale_id, product.id, product.quanty, product.sale, product.discount, product.subTotal))
+        })
+
+        return Promise.all(details)
+    }
+
     const sale = () => {
         const pr = new Promise((resolve, reject) => {
             sales.create(total, paymentMethod, 0, 0)
@@ -200,8 +210,7 @@ export default function PayDialog(props) {
                     }
                     ipcRenderer.send('update-movements', newMov)
                     dispatch({ type: 'SET_MOVEMENTS', value: newMov })
-                    resolve()
-
+                    resolve(res)
                 })
                 .catch(err => {
                     console.log(err)
@@ -367,20 +376,23 @@ export default function PayDialog(props) {
                         await updateStocks(cart)
                         const stockAlertList = await stocks.findAllStockAlert()
                         dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
-                        await sale()
+                        const sale_ = await sale()
+                        await saleDetailAll(sale_.id, cart)
                         setOpen(false)
                         setOpenChangeDialog(true)
-
-
                     } else {
-                        await sale()
-                        setOpen(false)
-                        setOpenChangeDialog(true)
+                        const sale_ = await sale()
+                        console.log(sale_)
+                        await saleDetailAll(sale_.id, cart)
+
+                        // setOpen(false)
+                        // setOpenChangeDialog(true)
                     }
                 } catch (err) {
                     if (err === 'printer Error') {
                         dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
                     } else {
+                        console.log(err)
                         dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error durante el proceso' } })
                     }
 
@@ -434,7 +446,7 @@ export default function PayDialog(props) {
                             <Grid item textAlign={'right'} sx={{ display: disablePay ? 'none' : 'block' }}>
                                 <Typography color={'pimary'}>{'Vuelto: ' + utils.renderMoneystr(change)}</Typography>
                             </Grid>
-                            <Grid item sx={{display: numeric_pad? 'block': 'none'}}>
+                            <Grid item sx={{ display: numeric_pad ? 'block' : 'none' }}>
                                 <Grid container spacing={1}>
                                     <Grid item xs={4} sm={4} md={4}>
                                         <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(1) }}>1</Button>
@@ -596,7 +608,7 @@ export default function PayDialog(props) {
 
             <Invoice open={openInvoiceDialog} setOpen={setOpenInvoiceDialog} setOpenChangeDialog={setOpenChangeDialog} setOpenPayDialog={setOpen} />
 
-        
+
 
         </>
 

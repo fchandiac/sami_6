@@ -108,11 +108,10 @@ export default function Home() {
     }
 
     const findPrinter = async () => {
-        const findPrinter = await ipcRenderer.invoke('find-printer', printer)
-        if (findPrinter) {
-            alert('Impresora encontrada')
+        if (await ipcRenderer.invoke('find-printer', printer)) {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Impresora encontrada' } })
         } else {
-            alert('Impresora no encontrada')
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Impresora no encontrada' } })
         }
     }
 

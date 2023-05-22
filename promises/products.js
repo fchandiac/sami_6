@@ -115,7 +115,7 @@ function updateFull(id, name, code, category_id, price_id) {
 }
 
 function findOneByCode(code) {
-    let data = {code}
+    let data = { code }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/findOneByCode', {
@@ -136,7 +136,7 @@ function findOneByCode(code) {
 }
 
 function findOneById(id) {
-    let data = {id}
+    let data = { id }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/findOneById', {
@@ -157,7 +157,7 @@ function findOneById(id) {
 }
 
 function destroy(id) {
-    let data = {id}
+    let data = { id }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/destroy', {
@@ -180,7 +180,7 @@ function destroy(id) {
 
 
 function updateStockControl(id, stock_control) {
-    let data = {id, stock_control}
+    let data = { id, stock_control }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/updateStockControl', {
@@ -202,13 +202,13 @@ function updateStockControl(id, stock_control) {
 
 
 export {
-    findAll, 
-    create, 
+    findAll,
+    create,
     findOneByName,
-     updateFavorite, 
-     updateFull, 
-     findOneByCode, 
-     findOneById, 
-     destroy,
-     updateStockControl
-    }
+    updateFavorite,
+    updateFull,
+    findOneByCode,
+    findOneById,
+    destroy,
+    updateStockControl
+}

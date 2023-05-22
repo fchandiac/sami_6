@@ -46,11 +46,11 @@ export default function ProductsGrid(props) {
                 price_id: item.Price.id,
                 tax: item.Price.Tax.name,
                 tax_id: item.Price.Tax.id,
-                category: item.Category.name,
-                category_id: item.Category.id,
+                category: item.Category != undefined? item.Category.name: '',
+                category_id: item.Category!= undefined? item.Category.id: '',
                 favorite: item.favorite,
                 stock: item.Stocks.reduce((accumulator, currentValue) => { return accumulator + currentValue.stock; }, 0),
-                salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001))  == undefined ?  0: item.Stocks.find(item => (item.storage_id == 1001)).stock,
                 stock_control: item.stock_control
             }))
             setProductsList(data)

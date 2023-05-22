@@ -25,7 +25,12 @@ export default function CategoriesGrid(props) {
     [update])
 
     const destroy = () => {
-
+            categories.destroy(rowData.id)
+                .then(() => {
+                    gridApiRef.current.updateRows([{ id: rowData.rowId, _action: 'delete' }])
+                    setOpenDestroyDialog(false)
+                })
+                .catch(err => { console.error(err) })
     }
 
     const columns = [

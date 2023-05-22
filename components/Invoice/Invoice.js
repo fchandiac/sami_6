@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import {
-    Dialog, DialogContent, DialogTitle, DialogActions, Button, TextField, Grid,
+    Dialog, DialogContent, DialogTitle, DialogActions, Button, TextField, Grid, Chip,
     Typography, FormGroup, FormControlLabel, Checkbox, Autocomplete, IconButton, Stack, Switch
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import AppPaper from '../AppPaper/AppPaper'
 import { useAppContext } from '../../AppProvider'
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker'
-
 import electron, { BrowserWindow } from 'electron'
 import moment from 'moment'
-import { teal } from '@mui/material/colors'
 const ipcRenderer = electron.ipcRenderer || false
-
 const lioren = require('../../promises/lioren')
 const utils = require('../../utils')
 const https = require('https');
@@ -38,12 +35,19 @@ export default function Invoice(props) {
     const [printer, setPrinter] = useState({ idVendor: 0, idProduct: 0 })
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
     const [thermalPrinting, setThermalPrinting] = useState(true)
+    const [token, setToken] = useState('')
+    const [showPay, setShowPay] = useState(false)
+    const [payData, setPayData] = useState(payDataDefault())
+    const [paymentMethodsOptions, setPaymentMethodsOptions] = useState([])
+    const [paymentMethodsInput, setPaymentMethodsInput] = useState('')
 
     useEffect(() => {
         let printer = ipcRenderer.sendSync('get-printer', 'sync')
         let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
+        let token = ipcRenderer.sendSync('get-lioren', 'sync').token
         setPrinter(printer)
         setTicketInfo(ticket_info)
+        setToken(token)
     }, [])
 
     useEffect(() => {
@@ -64,6 +68,20 @@ export default function Invoice(props) {
 
     useEffect(() => {
         let token = ipcRenderer.sendSync('get-lioren', 'sync').token
+        lioren.mediosDePago(token)
+            .then(res => {
+                let data = res.mediopagos.map((item) => ({
+                    label: item.nombre,
+                    id: item.id,
+                    key: item.id,
+                }))
+                setPaymentMethodsOptions(data)
+            })
+            .catch(err => { console.log(err) })
+    }, [])
+
+    useEffect(() => {
+        let token = ipcRenderer.sendSync('get-lioren', 'sync').token
         lioren.ciudades(token)
             .then(res => {
                 let data = res.map((item) => ({
@@ -78,14 +96,6 @@ export default function Invoice(props) {
             })
             .catch(err => { console.log(err) })
     }, [customerData.comuna])
-
-    // useEffect(() => {
-    //     setCustomerData({
-    //         ...customerData, 
-    //         razon_social: requestData.razon_social,
-    //         giro: requestData.actividades[0].giro,
-    //     })
-    // }, [requestData])
 
 
     const findCustomer = () => {
@@ -142,6 +152,134 @@ export default function Invoice(props) {
         return data
     }
 
+    const printMode = () => {
+        if (thermalPrinting && pdfView) {
+            return 0
+        } else if (thermalPrinting && !pdfView) {
+            return 1
+        } else if (!thermalPrinting && pdfView) {
+            return 2
+        } else if (!thermalPrinting && !pdfView) {
+            return 3
+        }
+    }
+
+    const total = () => {
+        let cartForTotal = cart.map((item) => ({ value: ((item.sale / 1.19) * item.quanty) * 1.19 }))
+        let sumProducts = cartForTotal.reduce((a, b) => a + b.value, 0)
+        let total = sumProducts
+        console.log('Total',parseInt(total))
+        return total
+    }
+
+    const printDocument = async (data) => {
+        switch (printMode()) {
+            case 0:
+                if (await ipcRenderer.invoke('find-printer', printer) == false) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                } else {
+                    factura = await lioren.factura(token, data)
+
+                    let stamp_str = stamp(factura.xml)
+                    console.log(stamp_str)
+                    let canvas = document.createElement('canvas')
+                    PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
+                    let stamp_img = canvas.toDataURL('image/jpg')
+                    let date = moment(new Date()).format('DD-MM-yyyy')
+                    let time = moment(new Date()).format('HH:mm')
+                    let printInfo = {
+                        printer: printer,
+                        stamp: stamp_img,
+                        date: date, time: time,
+                        name: ticketInfo.name,
+                        rut: ticketInfo.rut,
+                        address: ticketInfo.address,
+                        phone: ticketInfo.phone,
+                        total: factura.montototal,
+                        iva: factura.montoiva,
+                        invoiceNumber: factura.folio,
+                        cart: cart,
+                        customer: customerData,
+                    }
+                    ipcRenderer.send('factura', printInfo)
+                    const pdfData = Buffer.from(factura.pdf, 'base64')
+                    const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
+                    window.open(pdfUrl)
+                    // setOpenPayDialog(false)
+                    // setOpen(false)
+                    // setCustomerData(customerDataDefault())
+                    //setReferenceData(referenceDataDefault())
+                    //setPayData(payDataDefault())
+                    // setOpenChangeDialog(true)
+                    break
+                }
+            case 1:
+                if (await ipcRenderer.invoke('find-printer', printer) == false) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                } else {
+                    factura = await lioren.factura(token, data)
+
+                    let stamp_str = stamp(factura.xml)
+                    console.log(stamp_str)
+                    let canvas = document.createElement('canvas')
+                    PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
+                    let stamp_img = canvas.toDataURL('image/jpg')
+                    let date = moment(new Date()).format('DD-MM-yyyy')
+                    let time = moment(new Date()).format('HH:mm')
+                    let printInfo = {
+                        printer: printer,
+                        stamp: stamp_img,
+                        date: date, time: time,
+                        name: ticketInfo.name,
+                        rut: ticketInfo.rut,
+                        address: ticketInfo.address,
+                        phone: ticketInfo.phone,
+                        total: total(),
+                        iva: factura.montoiva,
+                        invoiceNumber: factura.folio,
+                        cart: cart,
+                        customer: customerData,
+                    }
+                    ipcRenderer.send('factura', printInfo)
+                    // setOpenPayDialog(false)
+                    // setOpen(false)
+                    // setCustomerData(customerDataDefault())
+                    //setReferenceData(referenceDataDefault())
+                    //setPayData(payDataDefault())
+                    // setOpenChangeDialog(true)
+                    break
+                }
+            case 2:
+                factura = await lioren.factura(token, data)
+                const pdfData = Buffer.from(factura.pdf, 'base64')
+                const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
+                window.open(pdfUrl)
+                // setOpenPayDialog(false)
+                // setOpen(false)
+                // setCustomerData(customerDataDefault())
+                //setReferenceData(referenceDataDefault())
+                //setPayData(payDataDefault())
+                // setOpenChangeDialog(true)
+
+                break
+            case 3:
+                factura = await lioren.factura(token, data)
+                // setOpenPayDialog(false)
+                // setOpen(false)
+                // setCustomerData(customerDataDefault())
+                //setReferenceData(referenceDataDefault())
+                //setPayData(payDataDefault())
+                // setOpenChangeDialog(true)
+                console.log('factura', factura)
+
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Factura enviada al Sii' } })
+
+                break
+            default:
+                break
+        }
+    }
+
     const factura = async () => {
         console.log('detalles', formatCart())
         const data = {
@@ -159,89 +297,52 @@ export default function Invoice(props) {
             },
             "detalles": formatCart(),
             "referencias": [],
-            // "referencias": [
-            //     {
-            //         "fecha": moment(new Date()).format('YYYY-MM-DD'),
-            //         "tipodoc": referenceData.tipodoc.key,
-            //         "folio": "123456",
-            //         "razon": 4,
-            //         "glosa": "Esta es una glosa un poco ",
-            //     }
-            // ],
+            "pagos": [],
             "expects": "all"
         }
 
-        let token = ipcRenderer.sendSync('get-lioren', 'sync').token
 
-        let factura = []
 
-        if (thermalPrinting) {
-            if (await ipcRenderer.invoke('find-printer', printer) == false) {
-                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-            } else {
-                factura = await lioren.factura(token, data)
-                if (pdfView) {
-                    const pdfData = Buffer.from(factura.pdf, 'base64')
-                    const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
-                    window.open(pdfUrl)
-                }
-
-                let stamp_str = stamp(factura.xml)
-                console.log(stamp_str)
-                let canvas = document.createElement('canvas')
-                PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
-                let stamp_img = canvas.toDataURL('image/jpg')
-                let date = moment(new Date()).format('DD-MM-yyyy')
-                let time = moment(new Date()).format('HH:mm')
-                let printInfo = {
-                    printer: printer,
-                    stamp: stamp_img,
-                    date: date, time: time,
-                    name: ticketInfo.name,
-                    rut: ticketInfo.rut,
-                    address: ticketInfo.address,
-                    phone: ticketInfo.phone,
-                    total: factura.montototal,
-                    iva: factura.montoiva,
-                    invoiceNumber: factura.folio,
-                    cart: cart,
-                    customer: customerData,
-                }
-
-                ipcRenderer.send('factura', printInfo)
-                setOpenPayDialog(false)
-                setOpen(false)
-                setCustomerData(customerDataDefault())
-                setOpenChangeDialog(true)
-
-            }
-        } else if (thermalPrinting == false && pdfView == false) {
-            factura = await lioren.factura(token, data)
-            setOpenPayDialog(false)
-            setOpen(false)
-            setCustomerData(customerDataDefault())
-            setOpenChangeDialog(true)
-            dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Factura enviada al Sii' } })
-        } else if (thermalPrinting == false && pdfView == true) {
-            factura = await lioren.factura(token, data)
-            const pdfData = Buffer.from(factura.pdf, 'base64')
-            const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
-            window.open(pdfUrl)
-            setOpenPayDialog(false)
-            setOpen(false)
-            setCustomerData(customerDataDefault())
-            setOpenChangeDialog(true)
+        let ref = {
+            "fecha": moment(new Date()).format('YYYY-MM-DD'),
+            "tipodoc": referenceData.tipodoc.key.toString(),
+            "folio": referenceData.folio,
+            "razon": 4,
+            "glosa": referenceData.glosa.substring(0, 70)
         }
 
-        console.log(factura)
+        if (showReference == true) {
+            console.log('show reference', showReference)
+            data.referencias.push(ref)
+        }
+
+        let pay = {
+            "fecha": moment(payData.fecha).format('YYYY-MM-DD'),
+            "mediopago": payData.mediopago.id,
+            "monto": total(),
+            "glosa": "",
+            "cobrar": false
+        }
+
+        if (showPay == true) {
+            data.pagos.push(pay)
+        }
+
+        printDocument(data)
+            .then((res) => {
+                console.log(factura)
+            })
+            .catch((err) => { console.log(err) })
+
+
     }
 
     const renderReference = () => {
         if (showReference) {
             return (
                 <AppPaper title={'Referencia'}>
-                    <Grid container spacing={1} direction={'column'} p={1}>
-                        <Grid item>
+                    <Grid container spacing={1} p={1}>
+                        <Grid item xs={6} sm={6} md={6} lg={6}>
                             <Autocomplete
                                 inputValue={docsRefinput}
                                 onInputChange={(e, newInputValue) => {
@@ -257,7 +358,7 @@ export default function Invoice(props) {
                                 renderInput={(params) => <TextField {...params} label='Tipo Documento' size={'small'} fullWidth required />}
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item xs={6} sm={6} md={6} lg={6}>
                             <DesktopDatePicker
                                 label="Fecha"
                                 inputFormat='DD-MM-YYYY'
@@ -268,22 +369,22 @@ export default function Invoice(props) {
                                 renderInput={(params) => <TextField {...params} size={'small'} fullWidth />}
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item xs={6} sm={6} md={6} lg={6}>
                             <TextField
-                                label='Razon social'
-                                value={customerData.razon_social}
-                                onChange={(e) => { setCustomerData({ ...customerData, razon_social: e.target.value }) }}
+                                label='Folio'
+                                value={referenceData.folio}
+                                onChange={(e) => { setReferenceData({ ...referenceData, folio: e.target.value }) }}
                                 variant="outlined"
                                 size={'small'}
                                 fullWidth
                                 required
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item xs={6} sm={6} md={6} lg={6}>
                             <TextField
                                 label='Glosa'
-                                value={customerData.razon_social}
-                                onChange={(e) => { setCustomerData({ ...customerData, razon_social: e.target.value }) }}
+                                value={referenceData.glosa}
+                                onChange={(e) => { setReferenceData({ ...referenceData, glosa: e.target.value }) }}
                                 variant="outlined"
                                 size={'small'}
                                 fullWidth
@@ -292,7 +393,70 @@ export default function Invoice(props) {
                         </Grid>
                     </Grid>
                 </AppPaper>
+            )
+        }
+    }
 
+    const addDaysToPay = (quanty) => {
+        let date = moment(referenceData.date).add(quanty, 'days')
+        setPayData({ ...payData, date: date })
+
+    }
+
+    const renderPay = () => {
+        if (showPay) {
+            return (
+                <AppPaper title={'Pago'}>
+                    <Grid container spacing={1} p={1}>
+                        <Grid item xs={4} sm={4} md={4} lg={4}>
+                            <DesktopDatePicker
+                                label="Fecha"
+                                inputFormat='DD-MM-YYYY'
+                                value={payData.date}
+                                onChange={(e) => {
+                                    setPayData({ ...payData, date: e })
+                                }}
+                                renderInput={(params) => <TextField {...params} size={'small'} fullWidth />}
+                            />
+                        </Grid>
+                        <Grid item xs={4} sm={4} md={4} lg={4}>
+                            <Autocomplete
+                                inputValue={paymentMethodsInput}
+                                onInputChange={(e, newInputValue) => {
+                                    setPaymentMethodsInput(newInputValue)
+                                }}
+                                isOptionEqualToValue={(option, value) => null || option.id === value.id}
+                                value={payData.mediopago}
+                                onChange={(e, newValue) => {
+                                    setPayData({ ...payData, mediopago: newValue })
+                                }}
+                                disablePortal
+                                options={paymentMethodsOptions}
+                                renderInput={(params) => <TextField {...params} label='Medio de pago' size={'small'} fullWidth required />}
+                            />
+
+                        </Grid>
+
+
+                        <Grid item>
+                            <Stack direction={'row'} spacing={1}>
+                                <Chip
+                                    label='30 días'
+                                    onClick={() => { addDaysToPay(30) }}
+                                />
+                                <Chip
+                                    label='60 días'
+                                    onClick={() => { addDaysToPay(90) }}
+                                />
+                                <Chip
+                                    label='90 días'
+                                    onClick={() => { addDaysToPay(90) }}
+                                />
+                            </Stack>
+
+                        </Grid>
+                    </Grid>
+                </AppPaper>
             )
         }
     }
@@ -308,8 +472,8 @@ export default function Invoice(props) {
                         <Grid container spacing={1} direction={'column'}>
                             <Grid item marginTop={1}>
                                 <AppPaper title={'Receptor'}>
-                                    <Grid container spacing={1} direction={'column'} p={1}>
-                                        <Grid item>
+                                    <Grid container spacing={1} p={1}>
+                                        <Grid item xs={12} sm={12} md={12} lg={12}>
                                             <Stack direction={'row'} spacing={1}>
                                                 <TextField
                                                     label='Rut'
@@ -325,7 +489,7 @@ export default function Invoice(props) {
                                                 </IconButton>
                                             </Stack>
                                         </Grid>
-                                        <Grid item>
+                                        <Grid item xs={12} sm={12} md={12} lg={12}>
                                             <TextField
                                                 label='Razon social'
                                                 value={customerData.razon_social}
@@ -335,7 +499,7 @@ export default function Invoice(props) {
                                                 required
                                             />
                                         </Grid>
-                                        <Grid item>
+                                        <Grid item xs={12} sm={12} md={12} lg={12}>
                                             <TextField
                                                 label='Giro'
                                                 value={customerData.giro}
@@ -345,7 +509,7 @@ export default function Invoice(props) {
                                                 required
                                             />
                                         </Grid>
-                                        <Grid item>
+                                        <Grid item xs={6} sm={6} md={6} lg={6}>
                                             <Autocomplete
                                                 inputValue={comunasInput}
                                                 onInputChange={(e, newInputValue) => {
@@ -363,7 +527,7 @@ export default function Invoice(props) {
                                                 renderInput={(params) => <TextField {...params} label='Comuna' size={'small'} fullWidth required />}
                                             />
                                         </Grid>
-                                        <Grid item>
+                                        <Grid item xs={6} sm={6} md={6} lg={6}>
                                             <Autocomplete
                                                 inputValue={ciudadesInput}
                                                 onInputChange={(e, newInputValue) => {
@@ -379,7 +543,7 @@ export default function Invoice(props) {
                                                 renderInput={(params) => <TextField {...params} label='Ciudad' size={'small'} fullWidth required />}
                                             />
                                         </Grid>
-                                        <Grid item>
+                                        <Grid item xs={12} sm={12} md={12} lg={12}>
                                             <TextField
                                                 label='Dirección'
                                                 value={customerData.direccion}
@@ -413,6 +577,24 @@ export default function Invoice(props) {
                             <Grid item marginTop={1} sx={{ display: showReference ? 'block' : 'none' }}>
                                 {renderReference()}
                             </Grid>
+
+                            <Grid item textAlign={'right'}>
+                                <FormControlLabel sx={{ flexDirection: 'row-reverse' }}
+                                    control={
+                                        <Switch
+                                            checked={showPay}
+                                            onChange={(e) => { setShowPay(e.target.checked) }}
+                                        />
+                                    }
+                                    label="Pago"
+                                />
+                            </Grid>
+
+                            <Grid item marginTop={1} sx={{ display: showPay ? 'block' : 'none' }}>
+                                {renderPay()}
+                            </Grid>
+
+
 
                             <Grid item textAlign={'right'}>
                                 <FormControlLabel sx={{ flexDirection: 'row-reverse' }}
@@ -512,13 +694,19 @@ function referenceDataDefault() {
     return {
         fecha: new Date(),
         tipodoc: { key: 0, label: '' },
-        folio: "123456",
+        folio: "",
         razon: 4,
-        glosa: "Esta es una glosa un poco ",
+        glosa: "",
     }
 }
 
+function payDataDefault() {
+    return {
+        fecha: new Date(),
+        mediopago: { key: 0, label: '', id: 0 },
+    }
 
+}
 
 
 function docsRef() {

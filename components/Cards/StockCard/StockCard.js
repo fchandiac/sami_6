@@ -110,8 +110,8 @@ export default function StockCard(props) {
                         <IconButton onClick={() => setOpenUpdateAlertDialog(true)}>
                             <EditNotificationsIcon fontSize={'small'} />
                         </IconButton>
-                        <IconButton onClick={() => destroyStock(stock.id)}>
-                            <DeleteIcon fontSize={'small'} sx={{ display: stock.storage_id == 1001 ? 'none' : 'block' }} />
+                        <IconButton onClick={() => destroyStock(stock.id)} sx={{ display: stock.storage_id == 1001 ? 'none' : 'block' }} >
+                            <DeleteIcon fontSize={'small'} />
                         </IconButton>
                     </Stack>
                 </Box>

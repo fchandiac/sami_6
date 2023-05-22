@@ -220,7 +220,7 @@ function productDataDefault() {
         sale: '',
         code: '',
         purchase: '',
-        category: { id: 1001, label: 'Universal', key: 1001 },
+        category: { id: 0, label: '', key: 0 },
         salesRoomStock: 0,
         criticalSalesRoomStock: 0,
         tax: { id: 1001, label: 'iva', key: 1001 },
