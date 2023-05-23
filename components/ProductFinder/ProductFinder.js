@@ -58,7 +58,7 @@ export default function ProductFinder(props) {
                             id: item.id,
                             name: item.name,
                             code: item.code,
-                            sale: item.Price.sale,
+                            sale: item.sale,
                             salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001))  == undefined ?  0: item.Stocks.find(item => (item.storage_id == 1001)).stock,
                             stockControl: item.stock_control
                         }))
@@ -81,7 +81,7 @@ export default function ProductFinder(props) {
                         id: item.id,
                         name: item.name,
                         code: item.code,
-                        sale: item.Price.sale,
+                        sale: item.sale,
                         salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001))  == undefined ?  0: item.Stocks.find(item => (item.storage_id == 1001)).stock,
                         stockControl: item.stock_control
                     }))

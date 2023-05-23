@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import AppPaper from '../../AppPaper'
-import { Button, Grid, TextField, Autocomplete, Switch, FormControlLabel} from '@mui/material'
+import { Button, Grid, TextField, Autocomplete, Switch, FormControlLabel } from '@mui/material'
 import AppErrorSnack from '../../AppErrorSnack'
 import { useAppContext } from '../../../AppProvider'
 
@@ -24,7 +24,7 @@ export default function NewProducForm(props) {
     const [openErrorSnack, setOpenErrorSnack] = useState(false)
     const [errorText, setErrorText] = useState('')
     const [productData, setProductData] = useState(productDataDefault())
-   
+
 
 
 
@@ -66,27 +66,25 @@ export default function NewProducForm(props) {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'El nombre del producto ya existe' } })
                 } else {
                     let purchase = productData.purchase === '' ? 0 : utils.moneyToInt(productData.purchase)
-                    prices.create(productData.tax.id, utils.moneyToInt(productData.sale), purchase)
-                        .then(res => {
-                            let price_id = res.id
-                            products.create(productData.name, productData.code, productData.category.id, price_id)
-                                .then(res => {
-                                    stocks.create(res.id, 1001, productData.salesRoomStock, productData.criticalSalesRoomStock)
-                                        .then(() => {
-                                            updateGrid()
-                                            setProductData(productDataDefault())
-                                        })
-                                        .catch(err => { console.error(err) })
+                    let sale = utils.moneyToInt(productData.sale)
 
+                    products.create(productData.name, productData.code, sale, purchase, productData.category.id, productData.tax.id)
+                        .then(res => {
+                            stocks.create(res.id, 1001, productData.salesRoomStock, productData.criticalSalesRoomStock)
+                                .then(() => {
+                                    updateGrid()
+                                    setProductData(productDataDefault())
                                 })
-                                .catch(err => {
-                                    console.error(err)
-                                    if (err.errors[0].message === 'name must be unique') {
-                                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'El nombre del producto ya existe' } })
-                                    }
-                                })
+                                .catch(err => { console.error(err) })
+
                         })
-                        .catch(err => { console.error(err) })
+                        .catch(err => {
+                            console.error(err)
+                            if (err.errors[0].message === 'name must be unique') {
+                                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'El nombre del producto ya existe' } })
+                            }
+                        })
+
                 }
             })
             .catch(err => { console.error(err) })
@@ -223,7 +221,7 @@ function productDataDefault() {
         category: { id: 0, label: '', key: 0 },
         salesRoomStock: 0,
         criticalSalesRoomStock: 0,
-        tax: { id: 1001, label: 'iva', key: 1001 },
+        tax: { id: 0, label: '', key: 0 },
         affected: true,
     }
 }

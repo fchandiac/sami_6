@@ -39,8 +39,8 @@ export default function ProductCodeFinder(props) {
                                 id: res[0].id,
                                 name: res[0].name,
                                 quanty: 1,
-                                sale: res[0].Price.sale,
-                                subTotal: res[0].Price.sale,
+                                sale: res[0].sale,
+                                subTotal: res[0].sale,
                                 salesRoomStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 discount: 0,
@@ -59,8 +59,8 @@ export default function ProductCodeFinder(props) {
                                 id: res[0].id,
                                 name: res[0].name,
                                 quanty: 1,
-                                sale: res[0].Price.sale,
-                                subTotal: res[0].Price.sale,
+                                sale: res[0].sale,
+                                subTotal: res[0].sale,
                                 salesRoomStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 discount: 0,
@@ -177,8 +177,8 @@ export default function ProductCodeFinder(props) {
                                                 id: product.id,
                                                 name: product.name,
                                                 quanty: 1,
-                                                sale: product.Price.sale,
-                                                subTotal: product.Price.sale,
+                                                sale: product.sale,
+                                                subTotal: product.sale,
                                                 salesRoomStock: product.Stocks.find(item => (item.storage_id == 1001)).stock,
                                                 virtualStock: product.Stocks.find(item => (item.storage_id == 1001)).stock,
                                                 discount: 0,
@@ -190,7 +190,7 @@ export default function ProductCodeFinder(props) {
                                         </IconButton>
                                     </Box>
                                     <Box sx={{ padding: 1 }}>
-                                        <Typography> {utils.renderMoneystr(product.Price.sale)}</Typography>
+                                        <Typography> {utils.renderMoneystr(product.sale)}</Typography>
                                         <Stack direction="row" spacing={1} alignItems={'center'} justifyContent={'space-between'}>
                                             <Typography>{'Stock en sala: ' + product.Stocks.find(item => (item.storage_id == 1001)).stock}</Typography>
                                             {renderStockControl(product)}

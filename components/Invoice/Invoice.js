@@ -11,15 +11,22 @@ import electron, { BrowserWindow } from 'electron'
 import moment from 'moment'
 const ipcRenderer = electron.ipcRenderer || false
 const lioren = require('../../promises/lioren')
+const sales = require('../../promises/sales')
+const salesDetails = require('../../promises/salesDetails')
 const utils = require('../../utils')
 const https = require('https');
 const PDF417 = require("pdf417-generator")
+const custumers = require('../../promises/customers')
+import SaveIcon from '@mui/icons-material/Save'
+
+
+
 
 
 
 export default function Invoice(props) {
     const { open, setOpen, setOpenChangeDialog, setOpenPayDialog } = props
-    const { dispatch, cart } = useAppContext()
+    const { dispatch, cart, movements, user } = useAppContext()
     const [findCustomerDialog, setFindCustomerDialog] = useState(false)
     const [customerData, setCustomerData] = useState(customerDataDefault())
     const [requestData, setRequestData] = useState({ rut: '', razon_social: '', actividades: [{ giro: '' }] })
@@ -40,6 +47,9 @@ export default function Invoice(props) {
     const [payData, setPayData] = useState(payDataDefault())
     const [paymentMethodsOptions, setPaymentMethodsOptions] = useState([])
     const [paymentMethodsInput, setPaymentMethodsInput] = useState('')
+    const [customerInput, setCustomerInput] = useState('')
+    const [customerOptions, setCustomerOptions] = useState([])
+    const [customer, setCustomer] = useState({ key: 0, id:0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' })
 
     useEffect(() => {
         let printer = ipcRenderer.sendSync('get-printer', 'sync')
@@ -54,7 +64,6 @@ export default function Invoice(props) {
         let token = ipcRenderer.sendSync('get-lioren', 'sync').token
         lioren.comunas(token)
             .then(res => {
-                // console.log(res) 
                 let data = res.map((item) => ({
                     label: item.nombre,
                     id: item.id,
@@ -64,6 +73,24 @@ export default function Invoice(props) {
                 setComunasOptions(data)
             })
             .catch(err => { console.log(err) })
+        custumers.findAll()
+            .then(res =>{
+                let data = res.map((item) => ({
+                    label: item.name,
+                    key: item.id,
+                    rut: item.rut,
+                    id: item.id,
+                    activity: item.activity,
+                    district: item.district,
+                    city: item.city,
+                    address: item.address
+                }))
+
+                console.log(data)
+               
+                setCustomerOptions(data)
+            })
+            .catch(err => console.log(err))
     }, [])
 
     useEffect(() => {
@@ -78,19 +105,20 @@ export default function Invoice(props) {
                 setPaymentMethodsOptions(data)
             })
             .catch(err => { console.log(err) })
+        
     }, [])
 
     useEffect(() => {
         let token = ipcRenderer.sendSync('get-lioren', 'sync').token
         lioren.ciudades(token)
             .then(res => {
+                console.log(res)
                 let data = res.map((item) => ({
                     label: item.nombre,
                     id: item.id,
                     key: item.id,
                     region_id: item.region_id,
                 }))
-                console.log('region', customerData.comuna)
                 data = data.filter((item) => item.region_id === customerData.comuna.region_id)
                 setCiudadesOptions(data)
             })
@@ -168,7 +196,7 @@ export default function Invoice(props) {
         let cartForTotal = cart.map((item) => ({ value: ((item.sale / 1.19) * item.quanty) * 1.19 }))
         let sumProducts = cartForTotal.reduce((a, b) => a + b.value, 0)
         let total = sumProducts
-        console.log('Total',parseInt(total))
+        console.log('Total', parseInt(total))
         return total
     }
 
@@ -205,12 +233,14 @@ export default function Invoice(props) {
                     const pdfData = Buffer.from(factura.pdf, 'base64')
                     const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
                     window.open(pdfUrl)
-                    // setOpenPayDialog(false)
-                    // setOpen(false)
-                    // setCustomerData(customerDataDefault())
-                    //setReferenceData(referenceDataDefault())
-                    //setPayData(payDataDefault())
-                    // setOpenChangeDialog(true)
+                    const sale = await saleFactura(factura.folio, factura.montototal)
+                    await saleDetailAll(sale.id, cart)
+                    setOpenPayDialog(false)
+                    setOpen(false)
+                    setCustomerData(customerDataDefault())
+                    setReferenceData(referenceDataDefault())
+                    setPayData(payDataDefault())
+                    setOpenChangeDialog(true)
                     break
                 }
             case 1:
@@ -241,12 +271,14 @@ export default function Invoice(props) {
                         customer: customerData,
                     }
                     ipcRenderer.send('factura', printInfo)
-                    // setOpenPayDialog(false)
-                    // setOpen(false)
-                    // setCustomerData(customerDataDefault())
-                    //setReferenceData(referenceDataDefault())
-                    //setPayData(payDataDefault())
-                    // setOpenChangeDialog(true)
+                    const sale = await saleFactura(factura.folio, factura.montototal)
+                    await saleDetailAll(sale.id, cart)
+                    setOpenPayDialog(false)
+                    setOpen(false)
+                    setCustomerData(customerDataDefault())
+                    setReferenceData(referenceDataDefault())
+                    setPayData(payDataDefault())
+                    setOpenChangeDialog(true)
                     break
                 }
             case 2:
@@ -254,22 +286,26 @@ export default function Invoice(props) {
                 const pdfData = Buffer.from(factura.pdf, 'base64')
                 const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
                 window.open(pdfUrl)
-                // setOpenPayDialog(false)
-                // setOpen(false)
-                // setCustomerData(customerDataDefault())
-                //setReferenceData(referenceDataDefault())
-                //setPayData(payDataDefault())
-                // setOpenChangeDialog(true)
+                const sale = await saleFactura(factura.folio, factura.montototal)
+                    await saleDetailAll(sale.id, cart)
+                setOpenPayDialog(false)
+                setOpen(false)
+                setCustomerData(customerDataDefault())
+                setReferenceData(referenceDataDefault())
+                setPayData(payDataDefault())
+                setOpenChangeDialog(true)
 
                 break
             case 3:
                 factura = await lioren.factura(token, data)
-                // setOpenPayDialog(false)
-                // setOpen(false)
-                // setCustomerData(customerDataDefault())
-                //setReferenceData(referenceDataDefault())
-                //setPayData(payDataDefault())
-                // setOpenChangeDialog(true)
+                const sale_1 = await saleFactura(factura.folio, factura.montototal)
+                await saleDetailAll(sale_1.id, cart)
+                setOpenPayDialog(false)
+                setOpen(false)
+                setCustomerData(customerDataDefault())
+                setReferenceData(referenceDataDefault())
+                setPayData(payDataDefault())
+                setOpenChangeDialog(true)
                 console.log('factura', factura)
 
                 dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Factura enviada al Sii' } })
@@ -321,7 +357,7 @@ export default function Invoice(props) {
             "mediopago": payData.mediopago.id,
             "monto": total(),
             "glosa": "",
-            "cobrar": false
+            "cobrar": true
         }
 
         if (showPay == true) {
@@ -355,7 +391,7 @@ export default function Invoice(props) {
                                 }}
                                 disablePortal
                                 options={docsRefOptions}
-                                renderInput={(params) => <TextField {...params} label='Tipo Documento' size={'small'} fullWidth required />}
+                                renderInput={(params) => <TextField {...params} label='Documento' size={'small'} fullWidth required />}
                             />
                         </Grid>
                         <Grid item xs={6} sm={6} md={6} lg={6}>
@@ -461,6 +497,73 @@ export default function Invoice(props) {
         }
     }
 
+    const saveCustomer = () => {
+        custumers.create(customerData.rut, customerData.razon_social, customerData.giro, customerData.comuna.id, customerData.ciudad.id, customerData.direccion)
+        .then( () => {
+            custumers.findAll()
+            .then(res =>{
+                let data = res.map((item) => ({
+                    label: item.name,
+                    key: item.id,
+                    rut: item.rut,
+                    id: item.id,
+                    activity: item.activity,
+                    district: item.district,
+                    city: item.city,
+                    address: item.address
+                }))
+                console.log(data)
+                setCustomerOptions(data)
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Cliente guardado' } })
+            })
+            .catch(err => console.log(err))
+        })
+        .catch(err => console.log(err))
+    }
+
+    const saleDetailAll = (sale_id, cart) => {
+        let details = []
+        cart.map(product => {
+            console.log('product', product)
+            details.push(salesDetails.create(sale_id, product.id, product.quanty, product.sale, product.discount, product.subTotal))
+        })
+
+        return Promise.all(details)
+    }
+
+    const saleFactura = (dte_number, total) => {
+        const pr = new Promise((resolve, reject) => {
+            sales.create(total, 'Factura', 33, dte_number)
+                .then(res => {
+                    let movs = movements.movements
+                    movs.push({
+                        sale_id: res.id,
+                        user: user.name,
+                        type: 1004,
+                        amount: total,
+                        payment_method:'Factura',
+                        balance: movements.balance + total,
+                        dte_code: 33,
+                        dte_number: dte_number,
+                        date: new Date()
+                    })
+                    let newMov = {
+                        state: true,
+                        balance: movements.balance + total,
+                        movements: movs
+                    }
+                    ipcRenderer.send('update-movements', newMov)
+                    dispatch({ type: 'SET_MOVEMENTS', value: newMov })
+                    resolve(res)
+                })
+                .catch(err => {
+                    console.log(err)
+                    reject(err)
+                })
+        })
+        return pr
+    }
+
 
 
     return (
@@ -474,6 +577,28 @@ export default function Invoice(props) {
                                 <AppPaper title={'Receptor'}>
                                     <Grid container spacing={1} p={1}>
                                         <Grid item xs={12} sm={12} md={12} lg={12}>
+                                            <Autocomplete
+                                                inputValue={customerInput}
+                                                onInputChange={(e, newInputValue) => {
+                                                    setCustomerInput(newInputValue)
+                                                }}
+                                                isOptionEqualToValue={(option, value) => null || option.id === value.id}
+                                                value={customer}
+                                                onChange={(e, newValue) => {
+                                                    setCustomer(newValue)
+                                                    customerData.rut = utils.formatRut(newValue.rut)
+                                                    customerData.razon_social = newValue.label
+                                                    customerData.direccion = newValue.address
+                                                    // customerData.comuna = newValue.district
+                                                    // customerData.ciudad = newValue.city
+                                                    customerData.giro = newValue.activity
+                                                }}
+                                                disablePortal
+                                                options={customerOptions}
+                                                renderInput={(params) => <TextField {...params} label='Cliente' size={'small'} fullWidth required />}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={12} md={12} lg={12}>
                                             <Stack direction={'row'} spacing={1}>
                                                 <TextField
                                                     label='Rut'
@@ -486,6 +611,9 @@ export default function Invoice(props) {
                                                 />
                                                 <IconButton onClick={() => { findCustomer() }}>
                                                     <SearchIcon />
+                                                </IconButton>
+                                                <IconButton onClick={() => { saveCustomer() }}>
+                                                    <SaveIcon />
                                                 </IconButton>
                                             </Stack>
                                         </Grid>

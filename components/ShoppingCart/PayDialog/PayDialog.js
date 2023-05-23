@@ -220,6 +220,39 @@ export default function PayDialog(props) {
         return pr
     }
 
+    const saleBoleta = (dte_number) => {
+        const pr = new Promise((resolve, reject) => {
+            sales.create(total, paymentMethod, 39, dte_number)
+                .then(res => {
+                    let movs = movements.movements
+                    movs.push({
+                        sale_id: res.id,
+                        user: user.name,
+                        type: 1004,
+                        amount: total,
+                        payment_method: paymentMethod,
+                        balance: movements.balance + total,
+                        dte_code: 39,
+                        dte_number: dte_number,
+                        date: new Date()
+                    })
+                    let newMov = {
+                        state: true,
+                        balance: movements.balance + total,
+                        movements: movs
+                    }
+                    ipcRenderer.send('update-movements', newMov)
+                    dispatch({ type: 'SET_MOVEMENTS', value: newMov })
+                    resolve(res)
+                })
+                .catch(err => {
+                    console.log(err)
+                    reject(err)
+                })
+        })
+        return pr
+    }
+
     const stockControlPayTrue = () => {
         const pay = new Promise((resolve, reject) => {
             updateStocks(cart)
@@ -263,7 +296,8 @@ export default function PayDialog(props) {
                         await updateStocks(cart)
                         const stockAlertList = await stocks.findAllStockAlert()
                         dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
-                        await sale()
+                        const sale_1 = await sale()
+                        await saleDetailAll(sale_1.id, cart)
                         let date = moment(new Date()).format('DD-MM-yyyy')
                         let time = moment(new Date()).format('HH:mm')
                         let printInfo = {
@@ -280,7 +314,8 @@ export default function PayDialog(props) {
                         setOpenChangeDialog(true)
 
                     } else {
-                        await sale()
+                        const sale_1 = await sale()
+                        await saleDetailAll(sale_1.id, cart)
                         let date = moment(new Date()).format('DD-MM-yyyy')
                         let time = moment(new Date()).format('HH:mm')
                         let printInfo = {
@@ -361,9 +396,20 @@ export default function PayDialog(props) {
                                     invoiceNumber: data[2],
                                     cart: cart,
                                 }
-                                ipcRenderer.sendSync('boleta', printInfo)
-                                setOpen(false)
-                                setOpenChangeDialog(true)
+
+                                saleBoleta(data[2])
+                                    .then(res => {
+                                        saleDetailAll(res.id, cart)
+                                            .then(res => {
+                                                ipcRenderer.sendSync('boleta', printInfo)
+                                                setOpen(false)
+                                                setOpenChangeDialog(true)
+                                            })
+                                            .catch(err => { console.log(err) })
+
+
+                                    })
+                                    .catch(err => { console.log(err) })
                             })
                     }
                 } else {
@@ -382,11 +428,9 @@ export default function PayDialog(props) {
                         setOpenChangeDialog(true)
                     } else {
                         const sale_ = await sale()
-                        console.log(sale_)
                         await saleDetailAll(sale_.id, cart)
-
-                        // setOpen(false)
-                        // setOpenChangeDialog(true)
+                        setOpen(false)
+                        setOpenChangeDialog(true)
                     }
                 } catch (err) {
                     if (err === 'printer Error') {
