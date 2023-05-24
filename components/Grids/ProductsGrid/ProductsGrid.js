@@ -86,28 +86,14 @@ export default function ProductsGrid(props) {
     }
 
     const updateProduct = (e) => {
-        if (rowData.sale != rowData.oldSale || rowData.purchase != rowData.oldPurchase) {
-            let sale = typeof rowData.sale === 'string' ? utils.moneyToInt(rowData.sale) : rowData.sale
-            let purchase = typeof rowData.purchase === 'string' ? utils.moneyToInt(rowData.purchase) : rowData.purchase
-            prices.create(rowData.tax_id, sale, purchase)
-                .then(res => {
-                    products.updateFull(rowData.id, rowData.name, rowData.code, rowData.category_id, res.id)
-                        .then(() => {
-                            gridApiRef.current.updateRows([{
-                                id: rowData.rowId,
-                                name: rowData.name,
-                                code: rowData.code,
-                                category: rowData.category,
-                                sale: rowData.sale,
-                                purchase: rowData.purchase
-                            }])
-                            setOpenInfoDialog(false)
-                        })
-                        .catch(err => { console.error(err) })
-                })
-                .catch(err => { console.error(err) })
-        } else {
-            products.updateFull(rowData.id, rowData.name, rowData.code, rowData.category_id, rowData.price_id)
+            products.updateFull(
+                rowData.id, 
+                rowData.name, 
+                rowData.code, 
+                rowData.category_id, 
+                1001,
+                rowData.sale,
+                rowData.purchase,)
                 .then(() => {
                     stocks.updateByProductAndStorage(rowData.id, 1001, rowData.salesRoomStock)
                         .then(() => {
@@ -123,7 +109,8 @@ export default function ProductsGrid(props) {
                         })
                         .catch(err => { console.error(err) })
                 })
-        }
+                .catch(err => { console.error(err) })
+        
     }
 
     const destroy = () => {

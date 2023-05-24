@@ -589,8 +589,11 @@ export default function Invoice(props) {
                                                     customerData.rut = utils.formatRut(newValue.rut)
                                                     customerData.razon_social = newValue.label
                                                     customerData.direccion = newValue.address
-                                                    // customerData.comuna = newValue.district
-                                                    // customerData.ciudad = newValue.city
+                                                    //Tiene que pertenecer a la Region
+                                                    //customerData.ciudad = ciudadesOptions.find(item => item.id === newValue.city)
+                                                    //let comuna = comunasOptions.find(item => item.id === newValue.district)
+                                                    customerData.comuna = comunasOptions.find(item => item.id === newValue.district)
+                                                    //customerData.ciudad = ciudadesOptions.find(item => item.id === newValue.city)
                                                     customerData.giro = newValue.activity
                                                 }}
                                                 disablePortal

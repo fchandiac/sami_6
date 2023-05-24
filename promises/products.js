@@ -93,8 +93,8 @@ function updateFavorite(id, favorite) {
 }
 
 
-function updateFull(id, name, code, category_id, price_id) {
-    let data = { id, name, code, category_id, price_id }
+function updateFull(id, name, code, category_id, tax_id, sale, purchase) {
+    let data = {id, name, code, category_id, tax_id, sale, purchase }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/updateFull', {
