@@ -35,7 +35,8 @@ export default function Movements() {
       let obj = {name: item.name, sum: sum}
       paymentMethodsSum.push(obj)
     })
-    let openAmount = movements.movements.filter(item => item.type == 1001)[0].amount
+    let open = movements.movements.filter(item => item.type == 1001)[0]
+    let openAmount = open ? open.amount : 0
     paymentMethodsSum.unshift({name: 'Apertura', sum: openAmount})
 
     let incomes = movements.movements.filter(item => item.type == 1002)
@@ -45,6 +46,8 @@ export default function Movements() {
     let outcomes = movements.movements.filter(item => item.type == 1003)
     let outcomesTotal = outcomes.reduce((a, b) => a + b.amount, 0)
     paymentMethodsSum.push({name: 'Egresos', sum: outcomesTotal})
+
+
 
     setTotalsPaymentMethods(paymentMethodsSum)
 
