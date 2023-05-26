@@ -181,7 +181,7 @@ export default function PayDialog(props) {
         let details = []
         cart.map(product => {
             console.log('product', product)
-            details.push(salesDetails.create(sale_id, product.id, product.quanty, product.sale, product.discount, product.subTotal))
+            details.push(salesDetails.create(sale_id, product.id, product.quanty, product.sale, product.discount, product.subTotal, product.name))
         })
 
         return Promise.all(details)
@@ -286,11 +286,17 @@ export default function PayDialog(props) {
 
     const pay = async () => {
         console.log('Doc', documentType)
+        // dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
         switch (documentType) {
             case 'Ticket':
                 console.log('ticket')
+                const findPrinter = await ipcRenderer.invoke('find-printer', printer)
+                if (!findPrinter) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                    console.log('error de conexion con la impresora')
+                }
                 //const findPrinter = await ipcRenderer.invoke('find-printer', printer)
-                if (ipcRenderer.invoke('find-printer', printer)) {
+                if (findPrinter == true) {
                     console.log('testPrint', printer)
                     if (stockControl == true) {
                         await updateStocks(cart)
@@ -307,6 +313,7 @@ export default function PayDialog(props) {
                             ticketInfo: ticketInfo,
                             date: date, time: time,
                             paymentMethod: paymentMethod,
+                            sale_id: sale_1.id
                         }
                         console.log('printInfo', printInfo)
                         ipcRenderer.sendSync('print-ticket', printInfo)
@@ -325,18 +332,23 @@ export default function PayDialog(props) {
                             ticketInfo: ticketInfo,
                             date: date, time: time,
                             paymentMethod: paymentMethod,
+                            sale_id: sale_1.id
                         }
                         ipcRenderer.sendSync('print-ticket', printInfo)
                         setOpen(false)
                         setOpenChangeDialog(true)
                     }
-                } else {
-                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
                 }
                 break
             case 'Boleta':
                 console.log('Boleta')
-                if (await ipcRenderer.invoke('find-printer', printer) == true) {
+                const findPrinter_1 = await ipcRenderer.invoke('find-printer', printer)
+                if (!findPrinter_1) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                    console.log('error de conexion con la impresora')
+                }
+
+                if (findPrinter_1 == true) {
                     if (stockControl == true) {
                         await updateStocks(cart)
                         const stockAlertList = await stocks.findAllStockAlert()
@@ -365,13 +377,14 @@ export default function PayDialog(props) {
                                     iva: data[1],
                                     invoiceNumber: data[2],
                                     cart: cart,
+                                    paymentMethod: paymentMethod,
+                                    sale_id: sale.id
                                 }
                                 ipcRenderer.sendSync('boleta', printInfo)
                                 setOpen(false)
                                 setOpenChangeDialog(true)
                             })
                     } else {
-                        await sale()
                         let date = moment(new Date()).format('DD-MM-yyyy')
                         let time = moment(new Date()).format('HH:mm')
                         lioren.boleta(liorenConfig.token, total)
@@ -395,10 +408,12 @@ export default function PayDialog(props) {
                                     iva: data[1],
                                     invoiceNumber: data[2],
                                     cart: cart,
+                                    paymentMethod: paymentMethod,
+                                    sale_id: 0
                                 }
-
                                 saleBoleta(data[2])
                                     .then(res => {
+                                        printInfo.sale_id = res.id
                                         saleDetailAll(res.id, cart)
                                             .then(res => {
                                                 ipcRenderer.sendSync('boleta', printInfo)
@@ -406,14 +421,10 @@ export default function PayDialog(props) {
                                                 setOpenChangeDialog(true)
                                             })
                                             .catch(err => { console.log(err) })
-
-
                                     })
                                     .catch(err => { console.log(err) })
                             })
                     }
-                } else {
-                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
                 }
                 break
             case 'Sin impresora':
@@ -444,6 +455,7 @@ export default function PayDialog(props) {
                 break
             case 'Factura':
                 setOpenInvoiceDialog(true)
+                break
             default:
                 console.log('default')
                 break
@@ -650,7 +662,13 @@ export default function PayDialog(props) {
                 </DialogActions>
             </Dialog>
 
-            <Invoice open={openInvoiceDialog} setOpen={setOpenInvoiceDialog} setOpenChangeDialog={setOpenChangeDialog} setOpenPayDialog={setOpen} />
+            <Invoice
+                open={openInvoiceDialog}
+                setOpen={setOpenInvoiceDialog}
+                setOpenChangeDialog={setOpenChangeDialog}
+                setOpenPayDialog={setOpen}
+                paymentMethod={paymentMethod}
+            />
 
 
 

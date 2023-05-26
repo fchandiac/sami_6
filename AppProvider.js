@@ -21,7 +21,7 @@ const initialState = {
     movements: { balance: 0, movements: [] },
     user: { id: 0, name: 'UserVersion', profile: '', permissions: [] },
     webConnection: false,
-    lioren: {integration: false, token: '', mail: ''}
+    lioren: { integration: false, token: '', mail: '' }
 }
 
 const reducer = (state, action) => {
@@ -64,6 +64,23 @@ const reducer = (state, action) => {
                     },
                     actionType: 'NEW_ADD_TO_CART'
                 }
+            }
+            break
+        case 'ADD_SPECIAL_TO_CART':
+            state.cart = [...state.cart, action.value]
+            state.total = 0
+            state.cart.map((item) => state.total += item.subTotal)
+            return {
+                ...state,
+                cart: state.cart,
+                total: state.total,
+                cartChanged: !state.cartChanged,
+                product: {
+                    id: action.value.id,
+                    virtualStock: action.value.virtualStock,
+                    salesRoomStock: action.value.salesRoomStock
+                },
+                actionType: 'NEW_ADD_TO_CART'
             }
             break
         case 'REMOVE_FROM_CART':

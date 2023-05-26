@@ -44,11 +44,11 @@ export default function ProductsGrid(props) {
                 sale: item.sale,
                 purchase: item.purchase,
                 tax_id: item.tax_id,
-                category: item.Category != undefined? item.Category.name: '',
-                category_id: item.Category!= undefined? item.Category.id: '',
+                category: item.Category != undefined ? item.Category.name : '',
+                category_id: item.Category != undefined ? item.Category.id : '',
                 favorite: item.favorite,
                 stock: item.Stocks.reduce((accumulator, currentValue) => { return accumulator + currentValue.stock; }, 0),
-                salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001))  == undefined ?  0: item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)) == undefined ? 0 : item.Stocks.find(item => (item.storage_id == 1001)).stock,
                 stock_control: item.stock_control
             }))
             setProductsList(data)
@@ -86,31 +86,28 @@ export default function ProductsGrid(props) {
     }
 
     const updateProduct = (e) => {
-            products.updateFull(
-                rowData.id, 
-                rowData.name, 
-                rowData.code, 
-                rowData.category_id, 
-                1001,
-                rowData.sale,
-                rowData.purchase,)
-                .then(() => {
-                    stocks.updateByProductAndStorage(rowData.id, 1001, rowData.salesRoomStock)
-                        .then(() => {
-                            gridApiRef.current.updateRows([{
-                                id: rowData.rowId,
-                                name: rowData.name,
-                                code: rowData.code,
-                                category: rowData.category,
-                                sale: rowData.sale,
-                                purchase: rowData.purchase
-                            }])
-                            setOpenInfoDialog(false)
-                        })
-                        .catch(err => { console.error(err) })
-                })
-                .catch(err => { console.error(err) })
-        
+        products.updateFull(
+            rowData.id,
+            rowData.name,
+            rowData.code,
+            rowData.category.id,
+            1001,
+            rowData.sale,
+            rowData.purchase,
+            )
+            .then(() => {
+                gridApiRef.current.updateRows([{
+                    id: rowData.rowId,
+                    name: rowData.name,
+                    code: rowData.code,
+                    category: rowData.category.label,
+                    sale: rowData.sale,
+                    purchase: rowData.purchase
+                }])
+                setOpenInfoDialog(false)
+
+            })
+            .catch(err => { console.error(err) })
     }
 
     const destroy = () => {
@@ -193,7 +190,7 @@ export default function ProductsGrid(props) {
                 />,
                 <GridActionsCellItem
                     label='stock control'
-                    icon={params.row.stock_control? <WidgetsIcon /> : <WidgetsOutlinedIcon />}
+                    icon={params.row.stock_control ? <WidgetsIcon /> : <WidgetsOutlinedIcon />}
                     onClick={() => {
                         updateStockControl(params.id, !params.row.stock_control)
                     }}
@@ -235,7 +232,7 @@ export default function ProductsGrid(props) {
                                             <TextField
                                                 label="Precio de venta"
                                                 value={(rowData.sale == undefined) ? '' : utils.renderMoneystr(rowData.sale)}
-                                                onChange={(e) => { setRowData({ ...rowData, sale: e.target.value }) }}
+                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({...rowData, sale: 0 }) : setRowData({...rowData, sale: utils.moneyToInt(e.target.value)}) }}
                                                 variant="outlined"
                                                 size={'small'}
                                                 fullWidth
@@ -246,7 +243,7 @@ export default function ProductsGrid(props) {
                                             <TextField
                                                 label="Precio de compra"
                                                 value={(rowData.purchase == undefined) ? '' : utils.renderMoneystr(rowData.purchase)}
-                                                onChange={(e) => { setRowData({ ...rowData, purchase: e.target.value }) }}
+                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({...rowData, purchase: 0 }) : setRowData({...rowData, purchase: utils.moneyToInt(e.target.value)}) }}
                                                 variant="outlined"
                                                 size={'small'}
                                                 fullWidth
@@ -353,7 +350,7 @@ function rowDataDefault() {
         price_id: 0,
         tax: '',
         tax_id: 0,
-        category: '',
+        category: {key: 0, label: '', id: 0},
         category_id: 0,
         favorite: false,
         salesRoomStock: 0,

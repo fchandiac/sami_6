@@ -1,4 +1,5 @@
-PENDIENTE: key ç to procces pay, call event.click not funtion
+PENDIENTE: 
+    - Verificar destroy Sale cuando se elimina movimiento de venta
 
 test git
 
@@ -14,9 +15,6 @@ npm i exceljs --save
 npm i file-saver --save
 
 
-PENDIENTE: AGREGAR STOCK AL INFO DEL PRODUCTS
-PENDIENRE: AGREGAR CONTROL STOCK AL Productos
-PENDIENTE: AGREGAR IMPUESTOS AL INFOR DEL PRODUCTO
 
 
 --- CERADO PARA TRABAJAR CON APPS DE UNA PAGINA EN ERITORIO

@@ -264,7 +264,11 @@ ipcMain.on('get-movements', (e, arg) => {
 })
 
 ipcMain.on('update-movements', (e, arg) => {
-	data = JSON.stringify(arg)
+
+	let rawDataConfig = fs.readFileSync(filePathMovements)
+	let movs = JSON.parse(rawDataConfig)
+	movs = arg
+	data = JSON.stringify(movs)
 	fs.writeFileSync(filePathMovements, data)
 })
 
@@ -344,6 +348,9 @@ ipcMain.on('print-ticket', (e, printInfo) => {
 	let phone = printInfo.ticketInfo.phone
 	let cart = printInfo.cart
 	let paymentMethod = printInfo.paymentMethod
+	let sale_id = printInfo.sale_id
+
+	console.log('Imprimiendo ticket', printInfo)
 
 	device.open(function () {
 		printer.font('b').align('ct').style('NORMAL')
@@ -379,13 +386,36 @@ ipcMain.on('print-ticket', (e, printInfo) => {
 		printer.text('')
 		printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
 		printer.align('ct')
-
 		printer.text('Gracias por su compra')
 		printer.text('')
 		printer.cut()
-		printer.close()
+		if (paymentMethod != 'Efectivo') {
+			printer.font('b').align('ct').style('NORMAL')
+			printer.size(0, 0)
+			printer.text('_________________________________________________')
+			printer.size(1, 0)
+			printer.text('MEDIO DE PAGO ELECTRONICO')
+			printer.size(0, 0)
+			printer.text('_________________________________________________')
+			printer.size(1, 0)
+			printer.text('VENTA: ' + sale_id)
+			printer.text('Medio de pago: ' + paymentMethod)
+			printer.text('TOTAL: ' + renderMoneystr(total))
+			printer.size(0, 0)
+			printer.text('_________________________________________________')
+			printer.text('')
+			printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
+			printer.align('ct')
+			printer.text('')
+			printer.cut()
+			printer.close()
+
+		} else {
+			printer.close()
+		}
+
 	})
-	device.close()
+	// device.close()
 	e.returnValue = true
 
 })
@@ -405,6 +435,8 @@ ipcMain.on('boleta', (e, printInfo) => {
 	let address = printInfo.address
 	let phone = printInfo.phone
 	let cart = printInfo.cart
+	let paymentMethod = printInfo.paymentMethod
+	let sale_id = printInfo.sale_id
 
 	escpos.Image.load(stamp, function (image) {
 		device.open(function () {
@@ -449,15 +481,37 @@ ipcMain.on('boleta', (e, printInfo) => {
 					printer.text('Verifique Documento en www.lioren.cl/consultabe')
 					printer.text('')
 					printer.cut()
-					printer.close()
+					if (paymentMethod != 'Efectivo') {
+						printer.font('b').align('ct').style('NORMAL')
+						printer.size(0, 0)
+						printer.text('_________________________________________________')
+						printer.size(1, 0)
+						printer.text('MEDIO DE PAGO ELECTRONICO')
+						printer.size(0, 0)
+						printer.text('_________________________________________________')
+						printer.size(1, 0)
+						printer.text('VENTA: ' + sale_id)
+						printer.text('Medio de pago: ' + paymentMethod)
+						printer.text('TOTAL: ' + renderMoneystr(total))
+						printer.size(0, 0)
+						printer.text('_________________________________________________')
+						printer.text('')
+						printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
+						printer.align('ct')
+						printer.text('')
+						printer.cut()
+						printer.close()
+
+					} else {
+						printer.close()
+					}
 				})
 
 		})
-		device.close()
+		// device.close()
 	})
 	e.returnValue = true
 })
-
 
 ipcMain.on('factura', (e, printInfo) => {
 	const idVendor = parseInt(printInfo.printer.idVendor)
@@ -475,11 +529,11 @@ ipcMain.on('factura', (e, printInfo) => {
 	let address = printInfo.address
 	let phone = printInfo.phone
 	let cart = printInfo.cart
-	let customerRut  = printInfo.customer.rut
+	let customerRut = printInfo.customer.rut
 	let razonSocial = printInfo.customer.razon_social
 	let giro = printInfo.customer.giro
 	let direccion = printInfo.customer.direccion
-	
+
 
 	escpos.Image.load(stamp, function (image) {
 		device.open(function () {
@@ -536,9 +590,43 @@ ipcMain.on('factura', (e, printInfo) => {
 				})
 
 		})
-		device.close()
+		// device.close()
 	})
 	e.returnValue = true
+})
+
+ipcMain.on('external-pay', (e, printInfo) => {
+	const idVendor = parseInt(printInfo.printer.idVendor)
+	const idProduct = parseInt(printInfo.printer.idProduct)
+	const device = new escpos.USB(idVendor, idProduct)
+	const options = { encoding: "GB18030" /* delt */ }
+	const printer = new escpos.Printer(device, options)
+	let total = printInfo.total
+	let sale_id = printInfo.sale_id
+	let paymentMethod = printInfo.paymentMethod
+
+	device.open(function () {
+		printer.font('b').align('ct').style('NORMAL')
+		printer.size(0, 0)
+		printer.text('_________________________________________')
+		printer.size(1, 0)
+		printer.text('MEDIO DE PAGO ELECTRONICO')
+		printer.text('_________________________________________')
+		printer.text('Medio de pago: ' + paymentMethod)
+		printer.text('TOTAL: ' + renderMoneystr(total))
+		printer.text('VENTA: ' + sale_id)
+		printer.size(0, 0)
+		printer.text('_________________________________________')
+		printer.text('')
+		printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
+		printer.align('ct')
+		printer.text('')
+		printer.cut()
+		printer.close()
+	})
+	// device.close()
+	e.returnValue = true
+
 })
 
 

@@ -25,7 +25,7 @@ import SaveIcon from '@mui/icons-material/Save'
 
 
 export default function Invoice(props) {
-    const { open, setOpen, setOpenChangeDialog, setOpenPayDialog } = props
+    const { open, setOpen, setOpenChangeDialog, setOpenPayDialog, paymentMethod } = props
     const { dispatch, cart, movements, user } = useAppContext()
     const [findCustomerDialog, setFindCustomerDialog] = useState(false)
     const [customerData, setCustomerData] = useState(customerDataDefault())
@@ -49,7 +49,7 @@ export default function Invoice(props) {
     const [paymentMethodsInput, setPaymentMethodsInput] = useState('')
     const [customerInput, setCustomerInput] = useState('')
     const [customerOptions, setCustomerOptions] = useState([])
-    const [customer, setCustomer] = useState({ key: 0, id:0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' })
+    const [customer, setCustomer] = useState({ key: 0, id: 0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' })
 
     useEffect(() => {
         let printer = ipcRenderer.sendSync('get-printer', 'sync')
@@ -74,7 +74,7 @@ export default function Invoice(props) {
             })
             .catch(err => { console.log(err) })
         custumers.findAll()
-            .then(res =>{
+            .then(res => {
                 let data = res.map((item) => ({
                     label: item.name,
                     key: item.id,
@@ -86,8 +86,8 @@ export default function Invoice(props) {
                     address: item.address
                 }))
 
-                console.log(data)
-               
+                // console.log(data)
+
                 setCustomerOptions(data)
             })
             .catch(err => console.log(err))
@@ -105,24 +105,43 @@ export default function Invoice(props) {
                 setPaymentMethodsOptions(data)
             })
             .catch(err => { console.log(err) })
-        
+
     }, [])
 
     useEffect(() => {
         let token = ipcRenderer.sendSync('get-lioren', 'sync').token
         lioren.ciudades(token)
             .then(res => {
-                console.log(res)
+                // console.log(res)
                 let data = res.map((item) => ({
                     label: item.nombre,
                     id: item.id,
                     key: item.id,
                     region_id: item.region_id,
                 }))
-                data = data.filter((item) => item.region_id === customerData.comuna.region_id)
+
                 setCiudadesOptions(data)
             })
             .catch(err => { console.log(err) })
+    }, [])
+
+    useEffect(() => {
+        let token = ipcRenderer.sendSync('get-lioren', 'sync').token
+        if (customerData.direccion !== '') {
+            lioren.ciudades(token)
+                .then(res => {
+                    // console.log(res)
+                    let data = res.map((item) => ({
+                        label: item.nombre,
+                        id: item.id,
+                        key: item.id,
+                        region_id: item.region_id,
+                    }))
+                    data = data.filter((item) => item.region_id === customerData.comuna.region_id)
+                    setCiudadesOptions(data)
+                })
+                .catch(err => { console.log(err) })
+        }
     }, [customerData.comuna])
 
 
@@ -156,7 +175,11 @@ export default function Invoice(props) {
                         ...customerData,
                         razon_social: jsonObject.razon_social,
                         giro: jsonObject.actividades[0].giro,
+                        comuna: { label: '', id: 0, key: 0, region_id: 0 },
+                        ciudad: { label: '', id: 0, key: 0, region_id: 0 },
+                        direccion: '',
                     })
+
                     console.log(jsonObject)
                 }
             })
@@ -201,35 +224,91 @@ export default function Invoice(props) {
     }
 
     const printDocument = async (data) => {
-        switch (printMode()) {
-            case 0:
-                if (await ipcRenderer.invoke('find-printer', printer) == false) {
-                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                } else {
-                    factura = await lioren.factura(token, data)
+        if (customerData.direccion.length < 6) {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Dirección debe tener mas de 6 caracteres' } })
+        } else {
+            switch (printMode()) {
+                case 0:
+                    if (await ipcRenderer.invoke('find-printer', printer) == false) {
+                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                    } else {
+                        factura = await lioren.factura(token, data)
 
-                    let stamp_str = stamp(factura.xml)
-                    console.log(stamp_str)
-                    let canvas = document.createElement('canvas')
-                    PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
-                    let stamp_img = canvas.toDataURL('image/jpg')
-                    let date = moment(new Date()).format('DD-MM-yyyy')
-                    let time = moment(new Date()).format('HH:mm')
-                    let printInfo = {
-                        printer: printer,
-                        stamp: stamp_img,
-                        date: date, time: time,
-                        name: ticketInfo.name,
-                        rut: ticketInfo.rut,
-                        address: ticketInfo.address,
-                        phone: ticketInfo.phone,
-                        total: factura.montototal,
-                        iva: factura.montoiva,
-                        invoiceNumber: factura.folio,
-                        cart: cart,
-                        customer: customerData,
+                        let stamp_str = stamp(factura.xml)
+                        console.log(stamp_str)
+                        let canvas = document.createElement('canvas')
+                        PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
+                        let stamp_img = canvas.toDataURL('image/jpg')
+                        let date = moment(new Date()).format('DD-MM-yyyy')
+                        let time = moment(new Date()).format('HH:mm')
+                        let printInfo = {
+                            printer: printer,
+                            stamp: stamp_img,
+                            date: date, time: time,
+                            name: ticketInfo.name,
+                            rut: ticketInfo.rut,
+                            address: ticketInfo.address,
+                            phone: ticketInfo.phone,
+                            total: factura.montototal,
+                            iva: factura.montoiva,
+                            invoiceNumber: factura.folio,
+                            cart: cart,
+                            customer: customerData,
+                        }
+                        ipcRenderer.send('factura', printInfo)
+                        const pdfData = Buffer.from(factura.pdf, 'base64')
+                        const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
+                        window.open(pdfUrl)
+                        const sale = await saleFactura(factura.folio, factura.montototal)
+                        await saleDetailAll(sale.id, cart)
+                        setOpenPayDialog(false)
+                        setOpen(false)
+                        setCustomerData(customerDataDefault())
+                        setReferenceData(referenceDataDefault())
+                        setPayData(payDataDefault())
+                        setOpenChangeDialog(true)
+                        break
                     }
-                    ipcRenderer.send('factura', printInfo)
+                case 1:
+                    if (await ipcRenderer.invoke('find-printer', printer) == false) {
+                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                    } else {
+                        factura = await lioren.factura(token, data)
+
+                        let stamp_str = stamp(factura.xml)
+                        console.log(stamp_str)
+                        let canvas = document.createElement('canvas')
+                        PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
+                        let stamp_img = canvas.toDataURL('image/jpg')
+                        let date = moment(new Date()).format('DD-MM-yyyy')
+                        let time = moment(new Date()).format('HH:mm')
+                        let printInfo = {
+                            printer: printer,
+                            stamp: stamp_img,
+                            date: date, time: time,
+                            name: ticketInfo.name,
+                            rut: ticketInfo.rut,
+                            address: ticketInfo.address,
+                            phone: ticketInfo.phone,
+                            total: total(),
+                            iva: factura.montoiva,
+                            invoiceNumber: factura.folio,
+                            cart: cart,
+                            customer: customerData,
+                        }
+                        ipcRenderer.send('factura', printInfo)
+                        const sale = await saleFactura(factura.folio, factura.montototal)
+                        await saleDetailAll(sale.id, cart)
+                        setOpenPayDialog(false)
+                        setOpen(false)
+                        setCustomerData(customerDataDefault())
+                        setReferenceData(referenceDataDefault())
+                        setPayData(payDataDefault())
+                        setOpenChangeDialog(true)
+                        break
+                    }
+                case 2:
+                    factura = await lioren.factura(token, data)
                     const pdfData = Buffer.from(factura.pdf, 'base64')
                     const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
                     window.open(pdfUrl)
@@ -241,79 +320,29 @@ export default function Invoice(props) {
                     setReferenceData(referenceDataDefault())
                     setPayData(payDataDefault())
                     setOpenChangeDialog(true)
-                    break
-                }
-            case 1:
-                if (await ipcRenderer.invoke('find-printer', printer) == false) {
-                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                } else {
-                    factura = await lioren.factura(token, data)
 
-                    let stamp_str = stamp(factura.xml)
-                    console.log(stamp_str)
-                    let canvas = document.createElement('canvas')
-                    PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
-                    let stamp_img = canvas.toDataURL('image/jpg')
-                    let date = moment(new Date()).format('DD-MM-yyyy')
-                    let time = moment(new Date()).format('HH:mm')
-                    let printInfo = {
-                        printer: printer,
-                        stamp: stamp_img,
-                        date: date, time: time,
-                        name: ticketInfo.name,
-                        rut: ticketInfo.rut,
-                        address: ticketInfo.address,
-                        phone: ticketInfo.phone,
-                        total: total(),
-                        iva: factura.montoiva,
-                        invoiceNumber: factura.folio,
-                        cart: cart,
-                        customer: customerData,
-                    }
-                    ipcRenderer.send('factura', printInfo)
-                    const sale = await saleFactura(factura.folio, factura.montototal)
-                    await saleDetailAll(sale.id, cart)
+                    break
+                case 3:
+                    factura = await lioren.factura(token, data)
+                    const sale_1 = await saleFactura(factura.folio, factura.montototal)
+                    await saleDetailAll(sale_1.id, cart)
                     setOpenPayDialog(false)
                     setOpen(false)
                     setCustomerData(customerDataDefault())
                     setReferenceData(referenceDataDefault())
                     setPayData(payDataDefault())
                     setOpenChangeDialog(true)
+                    console.log('factura', factura)
+
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Factura enviada al Sii' } })
+
                     break
-                }
-            case 2:
-                factura = await lioren.factura(token, data)
-                const pdfData = Buffer.from(factura.pdf, 'base64')
-                const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
-                window.open(pdfUrl)
-                const sale = await saleFactura(factura.folio, factura.montototal)
-                    await saleDetailAll(sale.id, cart)
-                setOpenPayDialog(false)
-                setOpen(false)
-                setCustomerData(customerDataDefault())
-                setReferenceData(referenceDataDefault())
-                setPayData(payDataDefault())
-                setOpenChangeDialog(true)
+                default:
+                    break
+            }
 
-                break
-            case 3:
-                factura = await lioren.factura(token, data)
-                const sale_1 = await saleFactura(factura.folio, factura.montototal)
-                await saleDetailAll(sale_1.id, cart)
-                setOpenPayDialog(false)
-                setOpen(false)
-                setCustomerData(customerDataDefault())
-                setReferenceData(referenceDataDefault())
-                setPayData(payDataDefault())
-                setOpenChangeDialog(true)
-                console.log('factura', factura)
-
-                dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Factura enviada al Sii' } })
-
-                break
-            default:
-                break
         }
+
     }
 
     const factura = async () => {
@@ -412,6 +441,7 @@ export default function Invoice(props) {
                                 onChange={(e) => { setReferenceData({ ...referenceData, folio: e.target.value }) }}
                                 variant="outlined"
                                 size={'small'}
+                                inputProps={{ minLength: 6 }}
                                 fullWidth
                                 required
                             />
@@ -423,6 +453,7 @@ export default function Invoice(props) {
                                 onChange={(e) => { setReferenceData({ ...referenceData, glosa: e.target.value }) }}
                                 variant="outlined"
                                 size={'small'}
+                                inputProps={{ minLength: 6, maxWidth: 70 }}
                                 fullWidth
                                 required
                             />
@@ -434,7 +465,7 @@ export default function Invoice(props) {
     }
 
     const addDaysToPay = (quanty) => {
-        let date = moment(referenceData.date).add(quanty, 'days')
+        let date = moment(new Date()).add(quanty, 'days')
         setPayData({ ...payData, date: date })
 
     }
@@ -482,7 +513,7 @@ export default function Invoice(props) {
                                 />
                                 <Chip
                                     label='60 días'
-                                    onClick={() => { addDaysToPay(90) }}
+                                    onClick={() => { addDaysToPay(60) }}
                                 />
                                 <Chip
                                     label='90 días'
@@ -497,35 +528,42 @@ export default function Invoice(props) {
         }
     }
 
-    const saveCustomer = () => {
-        custumers.create(customerData.rut, customerData.razon_social, customerData.giro, customerData.comuna.id, customerData.ciudad.id, customerData.direccion)
-        .then( () => {
-            custumers.findAll()
-            .then(res =>{
-                let data = res.map((item) => ({
-                    label: item.name,
-                    key: item.id,
-                    rut: item.rut,
-                    id: item.id,
-                    activity: item.activity,
-                    district: item.district,
-                    city: item.city,
-                    address: item.address
-                }))
-                console.log(data)
-                setCustomerOptions(data)
-                dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Cliente guardado' } })
-            })
-            .catch(err => console.log(err))
-        })
-        .catch(err => console.log(err))
+    const saveCustomer = async () => {
+        const findCustomer = await custumers.findOneByRut(customerData.rut)
+        console.log('findCustomer', findCustomer)
+        if (findCustomer == undefined) {
+            custumers.create(customerData.rut, customerData.razon_social, customerData.giro, customerData.comuna.id, customerData.ciudad.id, customerData.direccion)
+                .then(() => {
+                    custumers.findAll()
+                        .then(res => {
+                            let data = res.map((item) => ({
+                                label: item.name,
+                                key: item.id,
+                                rut: item.rut,
+                                id: item.id,
+                                activity: item.activity,
+                                district: item.district,
+                                city: item.city,
+                                address: item.address
+                            }))
+                            console.log(data)
+                            setCustomerOptions(data)
+                            dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Cliente guardado' } })
+                        })
+                        .catch(err => console.log(err))
+                })
+                .catch(err => console.log(err))
+        } else {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Cliente ya existe' } })
+        }
+
     }
 
     const saleDetailAll = (sale_id, cart) => {
         let details = []
         cart.map(product => {
             console.log('product', product)
-            details.push(salesDetails.create(sale_id, product.id, product.quanty, product.sale, product.discount, product.subTotal))
+            details.push(salesDetails.create(sale_id, product.id, product.quanty, product.sale, product.discount, product.subTotal, product.name))
         })
 
         return Promise.all(details)
@@ -533,7 +571,7 @@ export default function Invoice(props) {
 
     const saleFactura = (dte_number, total) => {
         const pr = new Promise((resolve, reject) => {
-            sales.create(total, 'Factura', 33, dte_number)
+            sales.create(total, paymentMethod, 33, dte_number)
                 .then(res => {
                     let movs = movements.movements
                     movs.push({
@@ -541,7 +579,7 @@ export default function Invoice(props) {
                         user: user.name,
                         type: 1004,
                         amount: total,
-                        payment_method:'Factura',
+                        payment_method: paymentMethod,
                         balance: movements.balance + total,
                         dte_code: 33,
                         dte_number: dte_number,
@@ -586,15 +624,16 @@ export default function Invoice(props) {
                                                 value={customer}
                                                 onChange={(e, newValue) => {
                                                     setCustomer(newValue)
-                                                    customerData.rut = utils.formatRut(newValue.rut)
-                                                    customerData.razon_social = newValue.label
-                                                    customerData.direccion = newValue.address
-                                                    //Tiene que pertenecer a la Region
-                                                    //customerData.ciudad = ciudadesOptions.find(item => item.id === newValue.city)
-                                                    //let comuna = comunasOptions.find(item => item.id === newValue.district)
-                                                    customerData.comuna = comunasOptions.find(item => item.id === newValue.district)
-                                                    //customerData.ciudad = ciudadesOptions.find(item => item.id === newValue.city)
-                                                    customerData.giro = newValue.activity
+                                                    console.log('newValue', newValue)
+                                                    if (newValue !== null) {
+                                                        customerData.rut = utils.formatRut(newValue.rut)
+                                                        customerData.razon_social = newValue.label
+                                                        customerData.direccion = newValue.address
+                                                        customerData.ciudad = ciudadesOptions.find(item => item.id === newValue.city)
+                                                        customerData.comuna = comunasOptions.find(item => item.id === newValue.district)
+                                                        customerData.giro = newValue.activity
+                                                    }
+
                                                 }}
                                                 disablePortal
                                                 options={customerOptions}
@@ -624,8 +663,10 @@ export default function Invoice(props) {
                                             <TextField
                                                 label='Razon social'
                                                 value={customerData.razon_social}
+                                                onChange={(e) => { setCustomerData({ ...customerData, razon_social: e.target.value }) }}
                                                 variant="outlined"
                                                 size={'small'}
+                                                inputProps={{ minLength: 6 }}
                                                 fullWidth
                                                 required
                                             />
@@ -636,6 +677,7 @@ export default function Invoice(props) {
                                                 value={customerData.giro}
                                                 variant="outlined"
                                                 size={'small'}
+                                                inputProps={{ minLength: 6 }}
                                                 fullWidth
                                                 required
                                             />
@@ -679,6 +721,8 @@ export default function Invoice(props) {
                                                 label='Dirección'
                                                 value={customerData.direccion}
                                                 onChange={(e) => { setCustomerData({ ...customerData, direccion: e.target.value }) }}
+                                                type='text'
+                                                inputProps={{ minLength: 6 }}
                                                 variant="outlined"
                                                 size={'small'}
                                                 fullWidth
@@ -758,11 +802,10 @@ export default function Invoice(props) {
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
                         <Button variant={'contained'} type='submit'>enviar</Button>
-                        <Button variant={'outlined'} onClick={() => { setOpen(false); setCustomerData(customerDataDefault()) }}>Cerrar</Button>
+                        <Button variant={'outlined'} onClick={() => { setOpen(false); setCustomerData(customerDataDefault()); setCustomer({ key: 0, id: 0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' }) }}>Cerrar</Button>
                     </DialogActions>
                 </form>
             </Dialog>
-
             <Dialog open={findCustomerDialog} fullWidth maxWidth={'xs'}>
                 <DialogTitle sx={{ p: 2 }}>Factura</DialogTitle>
                 <DialogContent sx={{ p: 2 }}>

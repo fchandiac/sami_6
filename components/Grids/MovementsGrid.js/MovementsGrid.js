@@ -297,7 +297,6 @@ export default function MovementsGrid() {
 
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
-                        <Button variant={'contained'} type={'submit'}>Eliminar</Button>
                         <Button variant={'outlined'} onClick={() => setOpenDetailDialog(false)}>Cerrar</Button>
                     </DialogActions>
                 </form>

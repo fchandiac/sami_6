@@ -23,9 +23,32 @@ export default function Movements() {
   const [displayOpenForm, setDisplayOpenForm] = useState(false)
   const [openCloseDialog, setOpenCloseDialog] = useState(false)
   const [closeData, setCloseData] = useState(closeDataDefault())
+  const [totalsPaymentMethods, setTotalsPaymentMethods] = useState([])
 
 
+  useEffect(() => {
+    let paymentMethods = ipcRenderer.sendSync('get-payment-methods')
+    paymentMethods.unshift({ name: 'Efectivo'})
+    let paymentMethodsSum = []
+    paymentMethods.map(item => {
+      let sum = movements.movements.filter(mov => mov.payment_method == item.name).reduce((a, b) => a + b.amount, 0)
+      let obj = {name: item.name, sum: sum}
+      paymentMethodsSum.push(obj)
+    })
+    let openAmount = movements.movements.filter(item => item.type == 1001)[0].amount
+    paymentMethodsSum.unshift({name: 'Apertura', sum: openAmount})
 
+    let incomes = movements.movements.filter(item => item.type == 1002)
+    let incomesTotal = incomes.reduce((a, b) => a + b.amount, 0)
+    paymentMethodsSum.push({name: 'Ingresos', sum: incomesTotal})
+
+    let outcomes = movements.movements.filter(item => item.type == 1003)
+    let outcomesTotal = outcomes.reduce((a, b) => a + b.amount, 0)
+    paymentMethodsSum.push({name: 'Egresos', sum: outcomesTotal})
+
+    setTotalsPaymentMethods(paymentMethodsSum)
+
+  }, [movements])
 
 
   const renderOpenCloseButton = () => {
@@ -122,55 +145,31 @@ export default function Movements() {
   }
 
   const newMovement = () => {
-    switch (newMovementData.type.id) {
-      case 1002:
-        let movs = movements.movements
+
+    let amount = newMovementData.type.id == 1002 ? newMovementData.amount : newMovementData.amount * -1
+
+    let movs = movements.movements
         movs.push({
           sale_id: 0,
           user: user.name,
-          type: 1002,
-          amount: newMovementData.amount,
+          type: newMovementData.type.id,
+          amount: amount,
           payment_method: '-',
-          balance: movements.balance + newMovementData.amount,
+          balance: movements.balance + amount,
           dte_code: 0,
           dte_number: 0,
           date: new Date()
         })
         let newMov = {
           state: true,
-          balance: movements.balance + newMovementData.amount,
+          balance: movements.balance + amount,
           movements: movs
         }
         ipcRenderer.send('update-movements', newMov)
         dispatch({ type: 'SET_MOVEMENTS', value: newMov })
         setNewMovementData(newMovementDataDefault())
-        break
-      case 1003:
-        let movs2 = movements.movements
-        movs2.push({
-          sale_id: 0,
-          user: user.name,
-          type: 1003,
-          amount: newMovementData.amount * -1,
-          payment_method: '-',
-          balance: movements.balance - newMovementData.amount,
-          dte_code: 0,
-          dte_number: 0,
-          date: new Date()
-        })
-        let newMov2 = {
-          state: true,
-          balance: movements.balance - newMovementData.amount,
-          movements: movs2
-        }
-        ipcRenderer.send('update-movements', newMov)
-        dispatch({ type: 'SET_MOVEMENTS', value: newMov2 })
-        setNewMovementData(newMovementDataDefault())
-        break
-      default:
-        console.log('default')
-        break
-    }
+
+
   }
 
 
@@ -183,7 +182,7 @@ export default function Movements() {
             <Grid item>
               <AppPaper title={'Balance de Caja'}>
                 <Typography variant={'h4'} sx={{ padding: 1 }} textAlign={'center'}>
-                  {utils.renderMoneystr(movements.balance)}
+                  {utils.renderMoneystr(movements.balance == null ? 0: movements.balance)}
                 </Typography>
                 <Stack justifyContent={'center'} direction={'row'} p={1} alignItems={'center'}>
                   <Typography variant={'caption'} sx={{ padding: 1 }} color={movements.state ? theme.palette.success.main : theme.palette.error.main}>
@@ -191,6 +190,16 @@ export default function Movements() {
                   </Typography>
                   {renderOpenCloseButton()}
                 </Stack>
+
+                <Grid container spacing={1} direction={'column'} p={1}>
+                  {totalsPaymentMethods.map((item, index) => (
+                    <Grid item key={index}>
+                      <Typography variant={'caption'} sx={{ padding: 1 }}>
+                        {item.name}: {utils.renderMoneystr(item.sum)}
+                      </Typography>
+                    </Grid>
+                  ))}
+                </Grid>
 
                 <Box sx={{ display: displayOpenForm ? 'block' : 'none', p: 1 }}>
                   <AppPaper title={'Apertura de caja'}>

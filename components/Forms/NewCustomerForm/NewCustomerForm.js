@@ -44,7 +44,7 @@ export default function NewCategoryForm(props) {
                     key: item.id,
                     region_id: item.region_id,
                 }))
-                data = data.filter((item) => item.region_id === customerData.comuna.region_id)
+                data = data.filter((item) => item.region_id === customerData.district.region_id)
                 setCiudadesOptions(data)
             })
             .catch(err => { console.log(err) })
@@ -53,7 +53,14 @@ export default function NewCategoryForm(props) {
 
     const submit = (e) => {
         e.preventDefault()
-        customers.create(customerData.rut, customerData.name, customerData.activity, customerData.comuna.id, customerData.ciudad.id, customerData.address)
+        console.log(customerData)
+        customers.create(
+            customerData.rut, 
+            customerData.name, 
+            customerData.activity, 
+            customerData.district.id, 
+            customerData.city.id, 
+            customerData.address)
         .then((res) => {
             updateCustomersGridState()
             setCustomerData(customerDataDefault())
@@ -102,9 +109,9 @@ export default function NewCategoryForm(props) {
                                 setComunasInput(newInputValue)
                             }}
                             isOptionEqualToValue={(option, value) => null || option.id === value.id}
-                            value={customerData.comuna}
+                            value={customerData.district}
                             onChange={(e, newValue) => {
-                                setCustomerData({ ...customerData, comuna: newValue })
+                                setCustomerData({ ...customerData, district: newValue })
                                 //setCiudadesInput('')
                                 // setCustomerData({ ...customerData, ciudad: { key: 0, label: '', id: 0, region_id: 0 } })
                             }}
@@ -120,9 +127,9 @@ export default function NewCategoryForm(props) {
                                 setCiudadesInput(newInputValue)
                             }}
                             isOptionEqualToValue={(option, value) => null || option.id === value.id}
-                            value={customerData.ciudad}
+                            value={customerData.city}
                             onChange={(e, newValue) => {
-                                setCustomerData({ ...customerData, ciudad: newValue })
+                                setCustomerData({ ...customerData, city: newValue })
                             }}
                             disablePortal
                             options={ciudadesOptions}

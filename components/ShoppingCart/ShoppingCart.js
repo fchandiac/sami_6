@@ -16,6 +16,7 @@ import React, { useState, useEffect, useRef, forwardRef } from 'react'
 
 import AddCircleIcon from '@mui/icons-material/AddCircle'
 import DeleteIcon from '@mui/icons-material/Delete'
+import LibraryAddIcon from '@mui/icons-material/LibraryAdd'
 import LockOpenTwoToneIcon from '@mui/icons-material/LockOpenTwoTone'
 import LockTwoToneIcon from '@mui/icons-material/LockTwoTone'
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle'
@@ -50,6 +51,8 @@ export default function ShoppingCart(props) {
     const [discount, setDiscount] = useState(0)
     const [printerInfo, setPrinterInfo] = useState({ idProduct: 0, idVendor: 0 })
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
+    const [openSpecialProductDialog, setOpenSpecialProductDialog] = useState(false)
+    const [specialProduct, setSpecialProduct] = useState(specialProductDefault())
 
 
 
@@ -148,6 +151,10 @@ export default function ShoppingCart(props) {
         }
     }
 
+    const openSpecialProductUI = () => {
+        setOpenSpecialProductDialog(true)
+    }
+
     const applyDiscount = (discount) => {
         dispatch({ type: 'GLOBAL_DISCOUNT', value: discount })
         setOpenDiscountDialog(false)
@@ -170,6 +177,29 @@ export default function ShoppingCart(props) {
 
 
         }
+
+    }
+
+    const addSpecialProduct = () => {
+        console.log(specialProduct.quanty * specialProduct.sale)
+        let id =  Math.floor(Math.random() * (99999 - 20000 + 1)) + 20000
+        let quanty = parseFloat(specialProduct.quanty)
+        let subTotal = quanty * specialProduct.sale
+        let specialPro = {
+            id: id,
+            name: specialProduct.name,
+            quanty: quanty,
+            sale: specialProduct.sale,
+            subTotal: subTotal,
+            salesRoomStock: 0,
+            virtualStock: 0,
+            discount: 0,
+            controlStock: false,
+            code: '0001' + Math.floor(Math.random() * 1000).toString()
+        }
+        dispatch({ type: 'ADD_SPECIAL_TO_CART', value:  specialPro })
+        setOpenSpecialProductDialog(false)
+        setSpecialProduct(specialProductDefault())
 
     }
 
@@ -272,6 +302,8 @@ export default function ShoppingCart(props) {
                             openDiscountUI: openDiscountUI,
                             clearCart: clearCart,
                             ordersMode: ordersMode,
+                            openSpecialProductUI: openSpecialProductUI
+
 
                         }
 
@@ -344,9 +376,74 @@ export default function ShoppingCart(props) {
                 </form>
             </Dialog>
 
+            <Dialog open={openSpecialProductDialog} maxWidth={'xs'} fullWidth>
+                <DialogTitle sx={{ p: 2 }}>
+                    Producto Espcecial
+                </DialogTitle>
+                <form onSubmit={(e) => { e.preventDefault(); addSpecialProduct() }}>
+                    <DialogContent sx={{ p: 2 }}>
+                        <Grid container spacing={1} direction={'column'}>
+
+                            <Grid item>
+                                <TextField
+                                    label="Nombre"
+                                    value={specialProduct.name}
+                                    onChange={(e) => { setSpecialProduct({ ...specialProduct, name: e.target.value }) }}
+                                    variant="outlined"
+                                    size={'small'}
+                                    fullWidth
+                                    autoFocus
+                                />
+                            </Grid>
+                            <Grid item>
+                                <TextField
+                                    label="Cantidad"
+                                    value={specialProduct.quanty}
+                                    onChange={(e) => { setSpecialProduct({ ...specialProduct, quanty: e.target.value }) }}
+                                    type="number"
+                                    inputProps={{ step: "0.01", min: 1 }}
+                                    variant="outlined"
+                                    size={'small'}
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid item>
+                                <TextField
+                                    label="Precio"
+                                    value={utils.renderMoneystr(specialProduct.sale)}
+                                    onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setSpecialProduct({ ...specialProduct, sale: 0 }) : setSpecialProduct({ ...specialProduct, sale: utils.moneyToInt(e.target.value) }) }}
+                                    variant="outlined"
+                                    size={'small'}
+                                    fullWidth
+                                />
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button variant={'contained'} type={'submit'}>Agregar</Button>
+                        <Button variant={'outlined'} onClick={() => setOpenSpecialProductDialog(false)}>Cerrar</Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
+
 
         </>
     )
+}
+
+function specialProductDefault() {
+    return ({
+        id: 0,
+        name: '',
+        quanty: 1,
+        sale: 0,
+        subTotal: 0,
+        salesRoomStock: 0,
+        virtualStock: 0,
+        discount: 0,
+        controlStock: false,
+        code: '0001' + Math.floor(Math.random() * 1000).toString()
+    })
 }
 
 
@@ -361,37 +458,47 @@ function CustomToolbar(props) {
 }
 
 function CustomFooter(props) {
-    const { lock, proccessPayment, openDiscountUI, clearCart, quote, printQuote, ordersMode } = props
+    const { lock, proccessPayment, openDiscountUI, clearCart, quote, printQuote, ordersMode, openSpecialProductUI } = props
+
+
+
 
     return (
-        <Grid container spacing={1} direction={'row'} justifyContent={'flex-end'} alignItems={'center'} paddingRight={1}>
-            <Grid item>
-                <Button
-                    sx={{ display: ordersMode ? 'none' : 'block' }}
-                    variant="contained"
-                    onClick={() => { proccessPayment() }}>
-                    Procesar Pago
-                </Button>
+        <>
+            <Grid container spacing={1} direction={'row'} justifyContent={'flex-end'} alignItems={'center'} paddingRight={1}>
+                <Grid item>
+                    <IconButton onClick={() => { openSpecialProductUI() }}>
+                        <LibraryAddIcon />
+                    </IconButton>
+                </Grid>
+                <Grid item>
+                    <Button
+                        sx={{ display: ordersMode ? 'none' : 'block' }}
+                        variant="contained"
+                        onClick={() => { proccessPayment() }}>
+                        Procesar Pago
+                    </Button>
+                </Grid>
+                <Grid item>
+                    <Button
+                        sx={{ display: ordersMode ? 'block' : 'none' }}
+                        variant="contained"
+                        onClick={() => { console.log('New order') }}>
+                        Nuevo Pedido
+                    </Button>
+                </Grid>
+                <Grid item>
+                    <Button variant={'outlined'} sx={{ display: quote ? 'block' : 'none' }} onClick={() => { printQuote() }}>Cotización</Button>
+                </Grid>
+                <Grid item>
+                    <Button variant={'outlined'} sx={{ display: lock ? 'none' : 'block' }} onClick={() => { openDiscountUI() }}>Descuento</Button>
+                </Grid>
+                <Grid item>
+                    <IconButton onClick={() => { clearCart() }}><RemoveShoppingCartIcon /></IconButton>
+                </Grid>
             </Grid>
-            <Grid item>
-                <Button
-                    sx={{ display: ordersMode ? 'block' : 'none' }}
-                    variant="contained"
-                    onClick={() => { console.log('New order') }}>
-                    Nuevo Pedido
-                </Button>
-            </Grid>
-            <Grid item>
-                <Button variant={'outlined'} sx={{ display: quote ? 'block' : 'none' }} onClick={() => { printQuote() }}>Cotización</Button>
-            </Grid>
-            <Grid item>
-                <Button variant={'outlined'} sx={{ display: lock ? 'none' : 'block' }} onClick={() => { openDiscountUI() }}>Descuento</Button>
-            </Grid>
-            <Grid item>
-                <IconButton onClick={() => { clearCart() }}><RemoveShoppingCartIcon /></IconButton>
-            </Grid>
-        </Grid>
 
+        </>
     )
 }
 

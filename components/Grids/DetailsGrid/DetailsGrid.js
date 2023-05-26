@@ -18,7 +18,7 @@ export default function DetailsGrid(props) {
                 console.log(res)
                 let data = res.map((item) => ({
                     id: item.id,
-                    name: item.Product.name,
+                    name: item.name,
                     quanty: item.quanty,
                     sale: item.sale,
                     discount: item.discount,
