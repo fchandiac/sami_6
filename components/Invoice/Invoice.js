@@ -290,15 +290,19 @@ export default function Invoice(props) {
                             rut: ticketInfo.rut,
                             address: ticketInfo.address,
                             phone: ticketInfo.phone,
-                            total: total(),
+                            total: factura.montototal,
                             iva: factura.montoiva,
                             invoiceNumber: factura.folio,
                             cart: cart,
                             customer: customerData,
+                            sale_id: 0,
+                            paymentMethod: paymentMethod
                         }
-                        ipcRenderer.send('factura', printInfo)
+                        
                         const sale = await saleFactura(factura.folio, factura.montototal)
                         await saleDetailAll(sale.id, cart)
+                        printInfo.sale_id = sale.id
+                        ipcRenderer.send('factura', printInfo)
                         setOpenPayDialog(false)
                         setOpen(false)
                         setCustomerData(customerDataDefault())

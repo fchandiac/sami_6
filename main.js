@@ -501,7 +501,6 @@ ipcMain.on('boleta', (e, printInfo) => {
 						printer.text('')
 						printer.cut()
 						printer.close()
-
 					} else {
 						printer.close()
 					}
@@ -533,7 +532,9 @@ ipcMain.on('factura', (e, printInfo) => {
 	let razonSocial = printInfo.customer.razon_social
 	let giro = printInfo.customer.giro
 	let direccion = printInfo.customer.direccion
-
+	let paymentMethod = printInfo.paymentMethod
+	let sale_id = printInfo.sale_id
+	
 
 	escpos.Image.load(stamp, function (image) {
 		device.open(function () {
@@ -586,7 +587,29 @@ ipcMain.on('factura', (e, printInfo) => {
 					printer.text('Verifique Documento en www.lioren.cl/consultabe')
 					printer.text('')
 					printer.cut()
-					printer.close()
+					if (paymentMethod != 'Efectivo') {
+						printer.font('b').align('ct').style('NORMAL')
+						printer.size(0, 0)
+						printer.text('_________________________________________________')
+						printer.size(1, 0)
+						printer.text('MEDIO DE PAGO ELECTRONICO')
+						printer.size(0, 0)
+						printer.text('_________________________________________________')
+						printer.size(1, 0)
+						printer.text('VENTA: ' + sale_id)
+						printer.text('Medio de pago: ' + paymentMethod)
+						printer.text('TOTAL: ' + renderMoneystr(total))
+						printer.size(0, 0)
+						printer.text('_________________________________________________')
+						printer.text('')
+						printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
+						printer.align('ct')
+						printer.text('')
+						printer.cut()
+						printer.close()
+					} else {
+						printer.close()
+					}
 				})
 
 		})
@@ -622,7 +645,7 @@ ipcMain.on('external-pay', (e, printInfo) => {
 		printer.align('ct')
 		printer.text('')
 		printer.cut()
-		printer.close()
+
 	})
 	// device.close()
 	e.returnValue = true
