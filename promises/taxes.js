@@ -1,6 +1,9 @@
-const config = require('../config.json')
-const url = config.api.url
+import electron from 'electron'
+const ipcRenderer = electron.ipcRenderer || false
+
+
 function findAll() {
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const tax = new Promise((resolve, reject) => {
         fetch(url + 'taxes/findAll', {
             method: 'GET',
