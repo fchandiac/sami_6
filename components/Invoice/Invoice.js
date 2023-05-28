@@ -21,13 +21,10 @@ import SaveIcon from '@mui/icons-material/Save'
 
 
 
-
-
-
 export default function Invoice(props) {
     const { open, setOpen, setOpenChangeDialog, setOpenPayDialog, paymentMethod } = props
     const { dispatch, cart, movements, user } = useAppContext()
-    const [findCustomerDialog, setFindCustomerDialog] = useState(false)
+    const [openFindCustomerDialog, setOpenFindCustomerDialog] = useState(false)
     const [customerData, setCustomerData] = useState(customerDataDefault())
     const [requestData, setRequestData] = useState({ rut: '', razon_social: '', actividades: [{ giro: '' }] })
     const [comunasOptions, setComunasOptions] = useState([])
@@ -50,6 +47,7 @@ export default function Invoice(props) {
     const [customerInput, setCustomerInput] = useState('')
     const [customerOptions, setCustomerOptions] = useState([])
     const [customer, setCustomer] = useState({ key: 0, id: 0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' })
+    const [findCustomerData, setFindCustomerData] = useState(findCustomerDataDefault())
 
     useEffect(() => {
         let printer = ipcRenderer.sendSync('get-printer', 'sync')
@@ -223,134 +221,73 @@ export default function Invoice(props) {
         return total
     }
 
-    const printDocument = async (data) => {
-        if (customerData.direccion.length < 6) {
-            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Dirección debe tener mas de 6 caracteres' } })
-        } else {
-            switch (printMode()) {
-                case 0:
-                    if (await ipcRenderer.invoke('find-printer', printer) == false) {
-                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                    } else {
-                        factura = await lioren.factura(token, data)
+    const printInfo = (factura, sale_id) => {
+        let stamp_str = stamp(factura.xml)
+        let canvas = document.createElement('canvas')
+        PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
+        let stamp_img = canvas.toDataURL('image/jpg')
+        let date = moment(new Date()).format('DD-MM-yyyy')
+        let time = moment(new Date()).format('HH:mm')
+        let printInfo = {
+            printer: printer,
+            stamp: stamp_img,
+            date: date, time: time,
+            name: ticketInfo.name,
+            rut: ticketInfo.rut,
+            address: ticketInfo.address,
+            phone: ticketInfo.phone,
+            total: factura.montototal,
+            iva: factura.montoiva,
+            invoiceNumber: factura.folio,
+            cart: cart,
+            customer: customerData,
+            paymentMethod: paymentMethod,
+	        sale_id: sale_id
+        }
 
-                        let stamp_str = stamp(factura.xml)
-                        console.log(stamp_str)
-                        let canvas = document.createElement('canvas')
-                        PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
-                        let stamp_img = canvas.toDataURL('image/jpg')
-                        let date = moment(new Date()).format('DD-MM-yyyy')
-                        let time = moment(new Date()).format('HH:mm')
-                        let printInfo = {
-                            printer: printer,
-                            stamp: stamp_img,
-                            date: date, time: time,
-                            name: ticketInfo.name,
-                            rut: ticketInfo.rut,
-                            address: ticketInfo.address,
-                            phone: ticketInfo.phone,
-                            total: factura.montototal,
-                            iva: factura.montoiva,
-                            invoiceNumber: factura.folio,
-                            cart: cart,
-                            customer: customerData,
-                        }
-                        ipcRenderer.send('factura', printInfo)
-                        const pdfData = Buffer.from(factura.pdf, 'base64')
-                        const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
-                        window.open(pdfUrl)
-                        const sale = await saleFactura(factura.folio, factura.montototal)
-                        await saleDetailAll(sale.id, cart)
-                        setOpenPayDialog(false)
-                        setOpen(false)
-                        setCustomerData(customerDataDefault())
-                        setReferenceData(referenceDataDefault())
-                        setPayData(payDataDefault())
-                        setOpenChangeDialog(true)
-                        break
-                    }
-                case 1:
-                    if (await ipcRenderer.invoke('find-printer', printer) == false) {
-                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                    } else {
-                        factura = await lioren.factura(token, data)
+        return printInfo
+    }
 
-                        let stamp_str = stamp(factura.xml)
-                        console.log(stamp_str)
-                        let canvas = document.createElement('canvas')
-                        PDF417.draw(stamp_str, canvas, 2, 2, 1.5)
-                        let stamp_img = canvas.toDataURL('image/jpg')
-                        let date = moment(new Date()).format('DD-MM-yyyy')
-                        let time = moment(new Date()).format('HH:mm')
-                        let printInfo = {
-                            printer: printer,
-                            stamp: stamp_img,
-                            date: date, time: time,
-                            name: ticketInfo.name,
-                            rut: ticketInfo.rut,
-                            address: ticketInfo.address,
-                            phone: ticketInfo.phone,
-                            total: factura.montototal,
-                            iva: factura.montoiva,
-                            invoiceNumber: factura.folio,
-                            cart: cart,
-                            customer: customerData,
-                            sale_id: 0,
-                            paymentMethod: paymentMethod
-                        }
-                        
-                        const sale = await saleFactura(factura.folio, factura.montototal)
-                        await saleDetailAll(sale.id, cart)
-                        printInfo.sale_id = sale.id
-                        ipcRenderer.send('factura', printInfo)
-                        setOpenPayDialog(false)
-                        setOpen(false)
-                        setCustomerData(customerDataDefault())
-                        setReferenceData(referenceDataDefault())
-                        setPayData(payDataDefault())
-                        setOpenChangeDialog(true)
-                        break
-                    }
-                case 2:
-                    factura = await lioren.factura(token, data)
-                    const pdfData = Buffer.from(factura.pdf, 'base64')
+    const printDocument = async (pdf, printInfo) => {
+        switch (printMode()) {
+            case 0:
+                //thermalPrinting && pdfView
+                if (await ipcRenderer.invoke('find-printer', printer) == false) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                } else {
+                    const pdfData = Buffer.from(pdf, 'base64')
                     const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
                     window.open(pdfUrl)
-                    const sale = await saleFactura(factura.folio, factura.montototal)
-                    await saleDetailAll(sale.id, cart)
-                    setOpenPayDialog(false)
-                    setOpen(false)
-                    setCustomerData(customerDataDefault())
-                    setReferenceData(referenceDataDefault())
-                    setPayData(payDataDefault())
-                    setOpenChangeDialog(true)
-
-                    break
-                case 3:
-                    factura = await lioren.factura(token, data)
-                    const sale_1 = await saleFactura(factura.folio, factura.montototal)
-                    await saleDetailAll(sale_1.id, cart)
-                    setOpenPayDialog(false)
-                    setOpen(false)
-                    setCustomerData(customerDataDefault())
-                    setReferenceData(referenceDataDefault())
-                    setPayData(payDataDefault())
-                    setOpenChangeDialog(true)
-                    console.log('factura', factura)
-
-                    dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Factura enviada al Sii' } })
-
-                    break
-                default:
-                    break
-            }
-
+                    ipcRenderer.send('factura', printInfo)
+                }
+                break
+            case 1:
+                //thermalPrinting && !pdfView
+                if (await ipcRenderer.invoke('find-printer', printer) == false) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                } else {
+                    ipcRenderer.send('factura', printInfo)
+                }
+                break
+            case 2:
+                //!thermalPrinting && pdfView
+                const pdfData = Buffer.from(pdf, 'base64')
+                const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
+                window.open(pdfUrl)
+                break
+            case 3:
+                //!thermalPrinting && !pdfView
+                console.log('factura no PDF no Thermal', factura)
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Factura enviada al Sii' } })
+                break
+            default:
+                break
         }
 
     }
 
-    const factura = async () => {
-        console.log('detalles', formatCart())
+    const facturaData = () => {
+        // console.log('detalles', formatCart())
         const data = {
             "emisor": {
                 "tipodoc": "33",
@@ -369,7 +306,6 @@ export default function Invoice(props) {
             "pagos": [],
             "expects": "all"
         }
-
 
 
         let ref = {
@@ -397,12 +333,7 @@ export default function Invoice(props) {
             data.pagos.push(pay)
         }
 
-        printDocument(data)
-            .then((res) => {
-                console.log(factura)
-            })
-            .catch((err) => { console.log(err) })
-
+        return data
 
     }
 
@@ -606,6 +537,48 @@ export default function Invoice(props) {
         return pr
     }
 
+    const proccessFactura = async () => {
+        try {
+            let token = ipcRenderer.sendSync('get-lioren', 'sync').token
+            let data = facturaData()
+            const factura = await lioren.factura(token, data)
+            const sale = await saleFactura(factura.folio, factura.montototal)
+            await saleDetailAll(sale.id, cart)
+            let print_info = printInfo(factura, sale.id)
+            printDocument(factura.pdf, print_info)
+            setOpenPayDialog(false)
+            setOpen(false)
+            setCustomerData(customerDataDefault())
+            setCustomer({ key: 0, id: 0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' })
+            setReferenceData(referenceDataDefault())
+            setPayData(payDataDefault())
+            setOpenChangeDialog(true)
+            console.log('factura', factura)
+        } catch (err) {
+            console.log(err)
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'err' } })
+        }
+
+    }
+
+    const factura = async () => {
+        try {
+            if (printMode() == 0 || printMode() == 1) {
+                const findPrinter = await ipcRenderer.invoke('find-printer', printer)
+                if (findPrinter) {
+                    proccessFactura()
+                } else {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                }
+            } else {
+                proccessFactura()
+            }
+
+        } catch (err) {
+            console.log(err)
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'err' } })
+        }
+    }
 
 
     return (
@@ -679,6 +652,7 @@ export default function Invoice(props) {
                                             <TextField
                                                 label='Giro'
                                                 value={customerData.giro}
+                                                onChange={(e) => { setCustomerData({ ...customerData, giro: e.target.value }) }}
                                                 variant="outlined"
                                                 size={'small'}
                                                 inputProps={{ minLength: 6 }}
@@ -810,46 +784,90 @@ export default function Invoice(props) {
                     </DialogActions>
                 </form>
             </Dialog>
-            <Dialog open={findCustomerDialog} fullWidth maxWidth={'xs'}>
-                <DialogTitle sx={{ p: 2 }}>Factura</DialogTitle>
+            <Dialog open={openFindCustomerDialog} fullWidth maxWidth={'xs'}>
+                <DialogTitle sx={{ p: 2 }}>Busqueda Receptor</DialogTitle>
                 <DialogContent sx={{ p: 2 }}>
                     <Grid container spacing={1} direction={'column'}>
-                        <Grid item marginTop={1}>
-                            <AppPaper title={'Receptor'}>
-                                <Grid container spacing={2} p={1}>
-                                    <Grid item>
-                                        {/* <TextField
-                                                label='Rut'
-                                                variant="outlined"
-                                                size={'small'}
-                                                fullWidth
-                                                required
-                                            /> */}
-                                        {/* <IconButton>
-                                                <SearchIcon />
-                                            </IconButton> */}
-
-                                    </Grid>
-                                </Grid>
-                            </AppPaper>
-                        </Grid>
-                        <Grid item marginTop={1}>
-                            <TextField
-                                label="Vuelto:"
-
-                                InputProps={{
-                                    readOnly: true,
-                                }}
+                        <Grid item>
+                            <TextField label="Rut"
+                                value={customerData.rut}
+                                onChange={(e) => { setCustomerData({ ...customerData, rut: utils.formatRut(e.target.value) }) }}
                                 variant="outlined"
                                 size={'small'}
                                 fullWidth
-
+                                required
                             />
                         </Grid>
+                        <Grid item>
+                            <TextField label="Nombre / Razón Social"
+                                value={customerData.name}
+                                onChange={(e) => { setCustomerData({ ...customerData, name: e.target.value }) }}
+                                variant="outlined"
+                                size={'small'}
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+                        <Grid item>
+                            <TextField label="Giro"
+                                value={customerData.activity}
+                                onChange={(e) => { setCustomerData({ ...customerData, activity: e.target.value }) }}
+                                variant="outlined"
+                                size={'small'}
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+                        <Grid item>
+                            <Autocomplete
+                                inputValue={comunasInput}
+                                onInputChange={(e, newInputValue) => {
+                                    setComunasInput(newInputValue)
+                                }}
+                                isOptionEqualToValue={(option, value) => null || option.id === value.id}
+                                value={customerData.district}
+                                onChange={(e, newValue) => {
+                                    setCustomerData({ ...customerData, district: newValue })
+                                    //setCiudadesInput('')
+                                    // setCustomerData({ ...customerData, ciudad: { key: 0, label: '', id: 0, region_id: 0 } })
+                                }}
+                                disablePortal
+                                options={comunasOptions}
+                                renderInput={(params) => <TextField {...params} label='Comuna' size={'small'} fullWidth required />}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <Autocomplete
+                                inputValue={ciudadesInput}
+                                onInputChange={(e, newInputValue) => {
+                                    setCiudadesInput(newInputValue)
+                                }}
+                                isOptionEqualToValue={(option, value) => null || option.id === value.id}
+                                value={customerData.city}
+                                onChange={(e, newValue) => {
+                                    setFindCustomerData({ ...findCustomerData, city: newValue })
+                                }}
+                                disablePortal
+                                options={ciudadesOptions}
+                                renderInput={(params) => <TextField {...params} label='Ciudad' size={'small'} fullWidth required />}
+                            />
+                        </Grid>
+                        <Grid item>
+                            <TextField label="Dirección"
+                                value={findCustomerData.address}
+                                onChange={(e) => { setFindCustomerData({ ...findCustomerData, address: e.target.value }) }}
+                                variant="outlined"
+                                size={'small'}
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+
+
                     </Grid>
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
-                    <Button variant={'outlined'} onClick={() => { setFindCustomerDialog(false) }}>Cerrar</Button>
+                    <Button variant={'outlined'} onClick={() => { setOpenFindCustomerDialog(false) }}>Cerrar</Button>
                 </DialogActions>
             </Dialog>
         </>
@@ -884,6 +902,17 @@ function payDataDefault() {
         mediopago: { key: 0, label: '', id: 0 },
     }
 
+}
+
+function findCustomerDataDefault() {
+    return ({
+        rut: '',
+        name: '',
+        activity: '',
+        district: { key: 0, id: '', label: '' },
+        city: { key: 0, id: '', label: '' },
+        address: ''
+    })
 }
 
 

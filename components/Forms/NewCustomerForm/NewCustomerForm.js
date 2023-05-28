@@ -48,7 +48,7 @@ export default function NewCategoryForm(props) {
                 setCiudadesOptions(data)
             })
             .catch(err => { console.log(err) })
-    }, [customerData.comuna])
+    }, [customerData.district])
 
 
     const submit = (e) => {

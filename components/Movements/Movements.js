@@ -28,7 +28,7 @@ export default function Movements() {
 
   useEffect(() => {
     let paymentMethods = ipcRenderer.sendSync('get-payment-methods')
-    paymentMethods.unshift({ name: 'Efectivo'})
+    
     let paymentMethodsSum = []
     paymentMethods.map(item => {
       let sum = movements.movements.filter(mov => mov.payment_method == item.name).reduce((a, b) => a + b.amount, 0)
@@ -37,15 +37,19 @@ export default function Movements() {
     })
     let open = movements.movements.filter(item => item.type == 1001)[0]
     let openAmount = open ? open.amount : 0
-    paymentMethodsSum.unshift({name: 'Apertura', sum: openAmount})
+    let cash = movements.movements.filter(mov => mov.payment_method == 'Efectivo').reduce((a, b) => a + b.amount, 0)
+    paymentMethodsSum.unshift({name: 'Efectivo', sum: openAmount + cash})
+    // let open = movements.movements.filter(item => item.type == 1001)[0]
+    // let openAmount = open ? open.amount : 0
+    // paymentMethodsSum.unshift({name: 'Apertura', sum: openAmount})
 
-    let incomes = movements.movements.filter(item => item.type == 1002)
-    let incomesTotal = incomes.reduce((a, b) => a + b.amount, 0)
-    paymentMethodsSum.push({name: 'Ingresos', sum: incomesTotal})
+    // let incomes = movements.movements.filter(item => item.type == 1002)
+    // let incomesTotal = incomes.reduce((a, b) => a + b.amount, 0)
+    // paymentMethodsSum.push({name: 'Ingresos', sum: incomesTotal})
 
-    let outcomes = movements.movements.filter(item => item.type == 1003)
-    let outcomesTotal = outcomes.reduce((a, b) => a + b.amount, 0)
-    paymentMethodsSum.push({name: 'Egresos', sum: outcomesTotal})
+    // let outcomes = movements.movements.filter(item => item.type == 1003)
+    // let outcomesTotal = outcomes.reduce((a, b) => a + b.amount, 0)
+    // paymentMethodsSum.push({name: 'Egresos', sum: outcomesTotal})
 
 
 

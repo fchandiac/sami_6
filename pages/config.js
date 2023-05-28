@@ -3,6 +3,7 @@ import Layout from '../components/Layout'
 import { Button, Grid, TextField, Table, TableHead, TableRow, TableCell, TableBody, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Switch, FormControlLabel, Stack } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddCircleIcon from '@mui/icons-material/AddCircle'
+import PaidIcon from '@mui/icons-material/Paid'
 import SaveIcon from '@mui/icons-material/Save'
 import electron from 'electron'
 import AppPaper from '../components/AppPaper/AppPaper'
@@ -412,7 +413,10 @@ export default function Home() {
                                     <TableBody>
                                         {paymentMethods.map((method, index) => (
                                             <TableRow key={index}>
-                                                <TableCell component="th" scope="row" sx={{ fontSize: '14px', py: 0 }}>
+                                                <TableCell align="left" sx={{paddingRight: 0, paddingLeft:0}}>
+                                                    <PaidIcon sx={{ color: method.pay? 'green': 'red', fontSize: '22px' }} />
+                                                </TableCell>
+                                                <TableCell component="th" scope="row" sx={{ fontSize: '14px', py: 0 , paddingRight: 1, paddingLeft:1}}>
                                                     {method.name}
                                                 </TableCell>
                                                 <TableCell align="right">

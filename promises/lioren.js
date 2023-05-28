@@ -225,9 +225,7 @@ const data = {
 }
 
 function factura(token, data) {
-
     const dte = new Promise((resolve, reject) => {
-
         fetch('https://www.lioren.cl/api/dtes', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -294,7 +292,7 @@ function tipodocs(token) {
 
 function mediosDePago(token) {
     const dte = new Promise((resolve, reject) => {
-        fetch('	https://www.lioren.cl/api/mediopagos', {
+        fetch('https://www.lioren.cl/api/mediopagos', {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -313,6 +311,51 @@ function mediosDePago(token) {
 }
 
 
+
+function consultaDte(token, tipodoc, folio) {
+    const url = `https://www.lioren.cl/api/dtes?tipodoc=${tipodoc}&folio=${folio}&expects=all`
+    const dte = new Promise((resolve, reject) => {
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            }
+        }).then(res => {
+            res.json().then(res => {
+                resolve(res)
+            }).catch(err => {
+                reject(err)
+            })
+        })
+    })
+    return dte
+}
+
+
+
+function consultaBoleta(token,folio) {
+    const url = `https://www.lioren.cl/api/boletas?tipodoc=39&folio=${folio}&expects=all`
+    const dte = new Promise((resolve, reject) => {
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            }
+        }).then(res => {
+            res.json().then(res => {
+                resolve(res)
+            }).catch(err => {
+                reject(err)
+            })
+        })
+    })
+    return dte
+}
+
 export { 
     boleta, 
     miEmpresa, 
@@ -323,5 +366,7 @@ export {
     factura, 
     razonesRef, 
     tipodocs,
-    mediosDePago
+    mediosDePago,
+    consultaDte,
+    consultaBoleta
 }
