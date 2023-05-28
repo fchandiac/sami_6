@@ -13,6 +13,8 @@ const ipcRenderer = electron.ipcRenderer || false
 const lioren = require('../../promises/lioren')
 const sales = require('../../promises/sales')
 const salesDetails = require('../../promises/salesDetails')
+const pays = require('../../promises/pays')
+const stocks = require('../../promises/stocks')
 const utils = require('../../utils')
 const https = require('https');
 const PDF417 = require("pdf417-generator")
@@ -22,7 +24,7 @@ import SaveIcon from '@mui/icons-material/Save'
 
 
 export default function Invoice(props) {
-    const { open, setOpen, setOpenChangeDialog, setOpenPayDialog, paymentMethod } = props
+    const { open, setOpen, setOpenChangeDialog, setOpenPayDialog, paymentMethod, stockControl } = props
     const { dispatch, cart, movements, user } = useAppContext()
     const [openFindCustomerDialog, setOpenFindCustomerDialog] = useState(false)
     const [customerData, setCustomerData] = useState(customerDataDefault())
@@ -497,7 +499,6 @@ export default function Invoice(props) {
     const saleDetailAll = (sale_id, cart) => {
         let details = []
         cart.map(product => {
-            console.log('product', product)
             details.push(salesDetails.create(sale_id, product.id, product.quanty, product.sale, product.discount, product.subTotal, product.name))
         })
 
@@ -536,6 +537,31 @@ export default function Invoice(props) {
         })
         return pr
     }
+    const updateStocks = (cart) => {
+        let newStocks = []
+        cart.map(product => {
+            newStocks.push(stocks.updateByProductAndStorage(product.id, 1001, product.virtualStock))
+        })
+        return Promise.all(newStocks)
+    }
+
+    const savePay = async ( paymentMethod, sale_id, amount, client_id) => {
+        const pay = new Promise((resolve, reject) => {
+            let paymentMethods = ipcRenderer.sendSync('get-payment-methods', 'sync')
+            paymentMethods.unshift({ name: 'Efectivo', pay: true })
+            let state = paymentMethods.find(method => method.name == paymentMethod).pay
+            let date = showPay ? payData.date : new Date()
+            pays.create(sale_id, client_id, amount, paymentMethod, state, date)
+                .then(res => {
+                    resolve(res)
+                })
+                .catch(err => {
+                    console.log(err)
+                    reject(err)
+                })
+        })
+        return pay
+    }
 
     const proccessFactura = async () => {
         try {
@@ -545,6 +571,14 @@ export default function Invoice(props) {
             const sale = await saleFactura(factura.folio, factura.montototal)
             await saleDetailAll(sale.id, cart)
             let print_info = printInfo(factura, sale.id)
+            if (stockControl){
+                await updateStocks(cart)
+                const alerts = await stocks.findAllStockAlert()
+                console.log('alerts', alerts)
+                dispatch({ type: 'SET_STOCK_ALERT_LIST', value: alerts })
+               
+            }
+            savePay(paymentMethod, sale.id, factura.montototal, customer.id)
             printDocument(factura.pdf, print_info)
             setOpenPayDialog(false)
             setOpen(false)
@@ -556,7 +590,7 @@ export default function Invoice(props) {
             console.log('factura', factura)
         } catch (err) {
             console.log(err)
-            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'err' } })
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error durante el proceso' } })
         }
 
     }

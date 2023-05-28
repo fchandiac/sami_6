@@ -4,10 +4,20 @@
     },
     "payment_methods": [
         {
-            "name": "Debito", "pay": true
+            "name": "Targeta Debito",
+            "pay": true
         },
         {
-            "name": "otro", "pay": false
+            "name": "Transferencia",
+            "pay": true
+        },
+        {
+            "name": "Targeta Credito",
+            "pay": false
+        },
+        {
+            "name": "Transferencia posterior",
+            "pay": false
         }
     ],
     "customer_credit": {

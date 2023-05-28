@@ -212,7 +212,7 @@ export default function Layout(props) {
               />
             </ListItemButton>
           </ListItem>
-          {/* <ListItem disablePadding>
+          <ListItem disablePadding>
             <ListItemButton>
               <ListItemText primary='Contabilidad'
                 onClick={() => {
@@ -225,7 +225,7 @@ export default function Layout(props) {
                 }}
               />
             </ListItemButton>
-          </ListItem> */}
+          </ListItem>
           <ListItem disablePadding>
             <ListItemButton>
               <ListItemText primary='Clientes'

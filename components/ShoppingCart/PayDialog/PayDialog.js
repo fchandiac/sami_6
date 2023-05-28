@@ -21,6 +21,7 @@ const stocks = require('../../../promises/stocks')
 const sales = require('../../../promises/sales')
 const lioren = require('../../../promises/lioren')
 const salesDetails = require('../../../promises/salesDetails')
+const pays = require('../../../promises/pays')
 
 
 
@@ -87,12 +88,14 @@ export default function PayDialog(props) {
         let lioren = ipcRenderer.sendSync('get-lioren', 'sync')
         let config = ipcRenderer.sendSync('read-config', 'sync')
         paymentMethods = paymentMethods.map((method) => {
-            return { name: method.name, label: method.name }
+            return { name: method.name, label: method.name, pay: method.pay }
         })
         customerCredit.state === true ? paymentMethods.unshift({ name: 'customerCredit', label: customerCredit.name }) : null
-        paymentMethods.unshift({ name: 'Efectivo', label: 'Efectivo' })
+        paymentMethods.unshift({ name: 'Efectivo', label: 'Efectivo', pay: true })
+        console.log('payment methods', paymentMethods)
         setConfigDocs(docs)
         setPaymentMethodsList(paymentMethods)
+        console.log('payment methods', paymentMethods)
         setPrinter(printer)
         setTicketInfo(ticket_info)
         setLiorenConfig(lioren)
@@ -283,6 +286,21 @@ export default function PayDialog(props) {
         return pay
     }
 
+    const savePay = async (methodsList, paymentMethod, sale_id, amount) => {
+        const pay = new Promise((resolve, reject) => {
+            let state = methodsList.find(method => method.name == paymentMethod).pay
+            pays.create(sale_id, null, amount, paymentMethod, state, new Date())
+                .then(res => {
+                    resolve(res)
+                })
+                .catch(err => {
+                    console.log(err)
+                    reject(err)
+                })
+        })
+        return pay
+    }
+
 
     const pay = async () => {
         console.log('Doc', documentType)
@@ -304,6 +322,7 @@ export default function PayDialog(props) {
                         dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
                         const sale_1 = await sale()
                         await saleDetailAll(sale_1.id, cart)
+                        await savePay(paymentMethodsList, paymentMethod, sale_1.id, total)
                         let date = moment(new Date()).format('DD-MM-yyyy')
                         let time = moment(new Date()).format('HH:mm')
                         let printInfo = {
@@ -323,6 +342,7 @@ export default function PayDialog(props) {
                     } else {
                         const sale_1 = await sale()
                         await saleDetailAll(sale_1.id, cart)
+                        await savePay(paymentMethodsList, paymentMethod, sale_1.id, total)
                         let date = moment(new Date()).format('DD-MM-yyyy')
                         let time = moment(new Date()).format('HH:mm')
                         let printInfo = {
@@ -353,7 +373,10 @@ export default function PayDialog(props) {
                         await updateStocks(cart)
                         const stockAlertList = await stocks.findAllStockAlert()
                         dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
-                        await sale()
+                        const sale_3 = await sale()
+                       
+                        await saleDetailAll(sale_3.id, cart)
+                        await savePay(paymentMethodsList, paymentMethod, sale_3.id, total)
                         let date = moment(new Date()).format('DD-MM-yyyy')
                         let time = moment(new Date()).format('HH:mm')
                         lioren.boleta(liorenConfig.token, total)
@@ -414,6 +437,8 @@ export default function PayDialog(props) {
                                 saleBoleta(data[2])
                                     .then(res => {
                                         printInfo.sale_id = res.id
+                                        savePay(paymentMethodsList, paymentMethod, res.id, total)
+                                        //savePay(paymentMethodsList, paymentMethod, res.id, total)
                                         saleDetailAll(res.id, cart)
                                             .then(res => {
                                                 ipcRenderer.sendSync('boleta', printInfo)
@@ -435,11 +460,13 @@ export default function PayDialog(props) {
                         dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
                         const sale_ = await sale()
                         await saleDetailAll(sale_.id, cart)
+                        await savePay(paymentMethodsList, paymentMethod, sale_.id, total)
                         setOpen(false)
                         setOpenChangeDialog(true)
                     } else {
                         const sale_ = await sale()
                         await saleDetailAll(sale_.id, cart)
+                        await savePay(paymentMethodsList, paymentMethod, sale_.id, total)
                         setOpen(false)
                         setOpenChangeDialog(true)
                     }
@@ -668,6 +695,7 @@ export default function PayDialog(props) {
                 setOpenChangeDialog={setOpenChangeDialog}
                 setOpenPayDialog={setOpen}
                 paymentMethod={paymentMethod}
+                stockControl={stockControl}
             />
 
 
