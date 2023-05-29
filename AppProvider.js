@@ -3,6 +3,13 @@ import React, { useReducer } from 'react'
 const AppContext = React.createContext()
 const useAppContext = () => React.useContext(AppContext)
 
+import electron from 'electron'
+const ipcRenderer = electron.ipcRenderer || false
+
+
+
+
+
 
 const initialState = {
     cart: [],
@@ -75,12 +82,12 @@ const reducer = (state, action) => {
                 cart: state.cart,
                 total: state.total,
                 cartChanged: !state.cartChanged,
-                product: {
-                    id: action.value.id,
-                    virtualStock: action.value.virtualStock,
-                    salesRoomStock: action.value.salesRoomStock
-                },
-                actionType: 'NEW_ADD_TO_CART'
+                // product: {
+                //     id: action.value.id,
+                //     virtualStock: action.value.virtualStock,
+                //     salesRoomStock: action.value.salesRoomStock
+                // },
+                actionType: 'NONE_TYPE'
             }
             break
         case 'REMOVE_FROM_CART':
@@ -98,8 +105,10 @@ const reducer = (state, action) => {
                 },
                 actionType: 'REMOVE_FROM_CART'
             }
+            break
         case 'CLEAR_CART':
             return { ...state, cart: [], total: 0, cartChanged: !state.cartChanged, actionType: 'CLEAR_CART' }
+            break
         case 'SUBSTRACT_QUANTY':
             let quanty = state.cart.find((item) => item.id === action.value.id).quanty
             if (quanty === 1) {
@@ -139,7 +148,9 @@ const reducer = (state, action) => {
             }
             break
         case 'ADD_QUANTY':
+            const stockControl = ipcRenderer.sendSync('get-cash-register-UI', 'sync').stock_control
             let productIndex = state.cart.findIndex((item) => item.id === action.value.id)
+            if (stockControl == false){state.cart[productIndex].virtualStock += 1}
             state.cart[productIndex].quanty += 1
             state.cart[productIndex].stockControl ? state.cart[productIndex].virtualStock -= 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
             state.cart[productIndex].subTotal = (state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
@@ -157,6 +168,7 @@ const reducer = (state, action) => {
                     salesRoomStock: state.cart[productIndex].salesRoomStock
                 }, actionType: 'ADD_QUANTY'
             }
+            break
         case 'EDIT_QUANTY':
             let productIndx = state.cart.findIndex((item) => item.id === action.value.id)
             let editQuanty = isNaN(parseFloat(action.value.quanty)) ? action.value.id : parseFloat(action.value.quanty)
@@ -180,10 +192,13 @@ const reducer = (state, action) => {
                 },
                 actionType: 'EDIT_QUANTY'
             }
+            break
         case 'LOCK':
             return { ...state, lock: true }
+            break
         case 'UNLOCK':
             return { ...state, lock: false }
+            break
         case 'ADD_DISCOUNT':
             let productInd = state.cart.findIndex((item) => item.id === action.value)
             let disc = parseInt(state.cart[productInd].discount)
@@ -193,6 +208,7 @@ const reducer = (state, action) => {
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
             return { ...state, cart: state.cart, total: state.total }
+            break
         case 'SUBSTRACT_DISCOUNT':
             let productI = state.cart.findIndex((item) => item.id === action.value)
             if (state.cart[productI].discount <= 1) {
@@ -209,6 +225,7 @@ const reducer = (state, action) => {
                 state.cart.map((item) => state.total += item.subTotal)
             }
             return { ...state, cart: state.cart, total: state.total }
+            break
         case 'GLOBAL_DISCOUNT':
             state.cart.map((item) => {
                 item.discount = action.value
@@ -218,6 +235,7 @@ const reducer = (state, action) => {
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
             return { ...state, cart: state.cart, total: state.total }
+            break
         case 'OPEN_SNACK':
             return { ...state, snackState: true, snackType: action.value.type, snackMessage: action.value.message }
         case 'CLOSE_SNACK':

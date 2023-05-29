@@ -37,8 +37,12 @@ export default function Movements() {
     })
     let open = movements.movements.filter(item => item.type == 1001)[0]
     let openAmount = open ? open.amount : 0
+
+    let outcomes = movements.movements.filter(item => item.type == 1003)
+    let outcomesTotal = outcomes.reduce((a, b) => a + b.amount, 0)
+
     let cash = movements.movements.filter(mov => mov.payment_method == 'Efectivo').reduce((a, b) => a + b.amount, 0)
-    paymentMethodsSum.unshift({name: 'Efectivo', sum: openAmount + cash})
+    paymentMethodsSum.unshift({name: 'Efectivo', sum: openAmount + cash + outcomesTotal})
     // let open = movements.movements.filter(item => item.type == 1001)[0]
     // let openAmount = open ? open.amount : 0
     // paymentMethodsSum.unshift({name: 'Apertura', sum: openAmount})
@@ -47,9 +51,7 @@ export default function Movements() {
     // let incomesTotal = incomes.reduce((a, b) => a + b.amount, 0)
     // paymentMethodsSum.push({name: 'Ingresos', sum: incomesTotal})
 
-    // let outcomes = movements.movements.filter(item => item.type == 1003)
-    // let outcomesTotal = outcomes.reduce((a, b) => a + b.amount, 0)
-    // paymentMethodsSum.push({name: 'Egresos', sum: outcomesTotal})
+    
 
 
 
@@ -231,8 +233,6 @@ export default function Movements() {
                     </form>
                   </AppPaper>
                 </Box>
-
-
               </AppPaper>
             </Grid>
             <Grid item sx={{ display: lock ? 'none' : 'block' }}>

@@ -391,7 +391,7 @@ export default function MovementsGrid() {
                             </Grid>
                             <Grid item>
                                 <TextField
-                                    label="Moento"
+                                    label="Monto"
                                     value={utils.renderMoneystr(rowData.amount)}
                                     inputProps={{ readOnly: true }}
                                     variant="outlined"
