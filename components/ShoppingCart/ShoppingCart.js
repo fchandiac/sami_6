@@ -191,11 +191,12 @@ export default function ShoppingCart(props) {
             quanty: quanty,
             sale: specialProduct.sale,
             subTotal: subTotal,
-            salesRoomStock: 0,
-            virtualStock: 0,
+            salesRoomStock: 1,
+            virtualStock: 1,
             discount: 0,
             controlStock: false,
-            code: '0001' + Math.floor(Math.random() * 1000).toString()
+            code: '0001' + Math.floor(Math.random() * 1000).toString(),
+            specialProduct: true
         }
         dispatch({ type: 'ADD_SPECIAL_TO_CART', value:  specialPro })
         setOpenSpecialProductDialog(false)
@@ -378,7 +379,7 @@ export default function ShoppingCart(props) {
 
             <Dialog open={openSpecialProductDialog} maxWidth={'xs'} fullWidth>
                 <DialogTitle sx={{ p: 2 }}>
-                    Producto Espcecial
+                    Producto Especial
                 </DialogTitle>
                 <form onSubmit={(e) => { e.preventDefault(); addSpecialProduct() }}>
                     <DialogContent sx={{ p: 2 }}>

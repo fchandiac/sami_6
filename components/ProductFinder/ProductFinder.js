@@ -43,13 +43,20 @@ export default function ProductFinder(props) {
                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: product.salesRoomStock }])
                 break
             case 'SUBSTRACT_QUANTY':
-                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                console.log('SUBSTRACT_QUANTY', product)
+                if (product.specialProduct == false) {
+                    gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                }
                 break
             case 'ADD_QUANTY':
+                if (product.specialProduct == false) {
                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                }
                 break
             case 'EDIT_QUANTY':
+                if (product.specialProduct == false) {
                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                }
                 break
             case 'CLEAR_CART':
                 products.findAll()
@@ -59,7 +66,7 @@ export default function ProductFinder(props) {
                             name: item.name,
                             code: item.code,
                             sale: item.sale,
-                            salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001))  == undefined ?  0: item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                            salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)) == undefined ? 0 : item.Stocks.find(item => (item.storage_id == 1001)).stock,
                             stockControl: item.stock_control
                         }))
                         setProductsList(data)
@@ -77,30 +84,30 @@ export default function ProductFinder(props) {
     useEffect(() => {
         products.findAll()
             .then(res => {
-                    let data = res.map((item) => ({
-                        id: item.id,
-                        name: item.name,
-                        code: item.code,
-                        sale: item.sale,
-                        salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001))  == undefined ?  0: item.Stocks.find(item => (item.storage_id == 1001)).stock,
-                        stockControl: item.stock_control
-                    }))
-                    setProductsList(data)
+                let data = res.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    code: item.code,
+                    sale: item.sale,
+                    salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)) == undefined ? 0 : item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                    stockControl: item.stock_control
+                }))
+                setProductsList(data)
             })
             .catch(err => { console.log(err) })
     }, [])
 
     const addToCart = (product) => {
-            if (product.stockControl == false){
-                dispatch({ type: 'ADD_TO_CART', value: product })
-            } else if (stockControl == true && product.salesRoomStock <= 0) {
-                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
-            } else {
-                dispatch({ type: 'ADD_TO_CART', value: product })
-    
-            }
-     }
-    
+        if (product.stockControl == false) {
+            dispatch({ type: 'ADD_TO_CART', value: product })
+        } else if (stockControl == true && product.salesRoomStock <= 0) {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
+        } else {
+            dispatch({ type: 'ADD_TO_CART', value: product })
+
+        }
+    }
+
 
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
@@ -108,11 +115,11 @@ export default function ProductFinder(props) {
         { field: 'name', headerName: 'Nombre', flex: 1 },
         {
             field: 'salesRoomStock',
-            headerName: 'Stock sala', 
-            flex: .7, 
+            headerName: 'Stock sala',
+            flex: .7,
             hide: !stockControl,
             renderCell: (params) => (
-                params.row.stockControl? params.value : '-'
+                params.row.stockControl ? params.value : '-'
                 //params.value
             )
         },
@@ -136,7 +143,8 @@ export default function ProductFinder(props) {
                             salesRoomStock: params.row.salesRoomStock,
                             virtualStock: params.row.salesRoomStock,
                             stockControl: params.row.stockControl,
-                            code: params.row.code
+                            code: params.row.code,
+                            specialProduct: false
                         })
                     }}
                 />

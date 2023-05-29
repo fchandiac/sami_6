@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import {
   Grid, Stack, Typography, TextField, Chip, Button, Autocomplete, Box,
   Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText
@@ -9,6 +9,7 @@ import { useTheme } from '@mui/material/styles'
 
 import electron from 'electron'
 import MovementsGrid from '../Grids/MovementsGrid.js/MovementsGrid'
+import e from 'cors'
 const ipcRenderer = electron.ipcRenderer || false
 
 const utils = require('../../utils')
@@ -24,6 +25,8 @@ export default function Movements() {
   const [openCloseDialog, setOpenCloseDialog] = useState(false)
   const [closeData, setCloseData] = useState(closeDataDefault())
   const [totalsPaymentMethods, setTotalsPaymentMethods] = useState([])
+  const openAmountInputRef = React.useRef(null)
+
 
 
   useEffect(() => {
@@ -51,9 +54,7 @@ export default function Movements() {
     // let incomesTotal = incomes.reduce((a, b) => a + b.amount, 0)
     // paymentMethodsSum.push({name: 'Ingresos', sum: incomesTotal})
 
-    
-
-
+  
 
     setTotalsPaymentMethods(paymentMethodsSum)
 
@@ -71,7 +72,9 @@ export default function Movements() {
       return (
         <Chip
           label={'Abrir caja'}
-          onClick={() => { openCashRegisterButton() }}
+          onClick={() => { 
+            openCashRegisterButton() 
+           }}
         />)
     }
   }
@@ -106,11 +109,8 @@ export default function Movements() {
   const openCashRegisterButton = () => {
 
     setDisplayOpenForm(true)
-    // if (lock == false) {
-    //   setDisplayOpenForm(true)
-    // } else {
-    //   dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Caja bloqueada, solicita desbloqueo al administrador' } })
-    // }
+    setTimeout(() => {openAmountInputRef.current.focus()}, 100)
+     
   }
 
   const closeCashRegisterButton = () => {
@@ -181,6 +181,18 @@ export default function Movements() {
 
   }
 
+  const displayNewMovement = () => {
+    if (movements.state == false){
+      return false
+    } else {
+      if (!lock) {
+        return true
+      } else {
+        return false
+      }
+    }
+  }
+
 
 
   return (
@@ -222,7 +234,7 @@ export default function Movements() {
                             variant="outlined"
                             size={'small'}
                             fullWidth
-                            autoFocus
+                            inputRef={openAmountInputRef}
                             required
                           />
                         </Grid>
@@ -235,7 +247,7 @@ export default function Movements() {
                 </Box>
               </AppPaper>
             </Grid>
-            <Grid item sx={{ display: lock ? 'none' : 'block' }}>
+            <Grid item sx={{ display: displayNewMovement() ? 'block' : 'none' }}>
               <AppPaper title={'Nuevo movimiento'}>
                 <form onSubmit={(e) => { e.preventDefault(); newMovement() }}>
                   <Grid container spacing={1} direction={'column'} p={1}>

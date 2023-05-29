@@ -18,7 +18,7 @@ export default function Home() {
     const [openNewPaymentMethod, setOpenNewPaymentMethod] = useState(false)
     const [paymentMethods, setPaymentMethods] = useState([])
     const [customerCredit, setCustomerCredit] = useState({ name: '', state: true })
-    const [newPaymentMethod, setNewPaymentMethod] = useState('')
+    const [newPaymentMethod, setNewPaymentMethod] = useState({ name: '', pay: true })
     const [adminPass, setAdminPass] = useState('')
     const [cashRegisterUI, setCashRegisterUI] = useState({ stock_control: true, quote: true, orders_mode: false, orders_loader: false, orders_priority: true, favorites: false, orders: true })
     const [printer, setPrinter] = useState({ idProduct: 0, idVendor: 0 })
@@ -56,7 +56,7 @@ export default function Home() {
 
     const AddPaymentMethod = () => {
         const newMethods = [...paymentMethods]
-        newMethods.push({ name: newPaymentMethod })
+        newMethods.push({ name: newPaymentMethod.name, pay: newPaymentMethod.pay })
         setPaymentMethods(newMethods)
         setNewPaymentMethod('')
         setOpenNewPaymentMethod(false)
@@ -413,10 +413,10 @@ export default function Home() {
                                     <TableBody>
                                         {paymentMethods.map((method, index) => (
                                             <TableRow key={index}>
-                                                <TableCell align="left" sx={{paddingRight: 0, paddingLeft:0}}>
-                                                    <PaidIcon sx={{ color: method.pay? 'green': 'red', fontSize: '22px' }} />
+                                                <TableCell align="left" sx={{ paddingRight: 0, paddingLeft: 0 }}>
+                                                    <PaidIcon sx={{ color: method.pay ? 'green' : 'red', fontSize: '22px' }} />
                                                 </TableCell>
-                                                <TableCell component="th" scope="row" sx={{ fontSize: '14px', py: 0 , paddingRight: 1, paddingLeft:1}}>
+                                                <TableCell component="th" scope="row" sx={{ fontSize: '14px', py: 0, paddingRight: 1, paddingLeft: 1 }}>
                                                     {method.name}
                                                 </TableCell>
                                                 <TableCell align="right">
@@ -501,7 +501,7 @@ export default function Home() {
                     <AppPaper title='Integración Lioren'>
                         <form onSubmit={(e) => { e.preventDefault(); updateLioren() }}>
                             <Grid container spacing={1} direction={'column'} p={1}>
-                            <Grid item>
+                                <Grid item>
                                     <FormControlLabel
                                         control={
                                             <Switch
@@ -527,7 +527,7 @@ export default function Home() {
                                     <TextField
                                         label='Mail'
                                         value={lioren.mail}
-                                        inputProps={{readOnly: true}}
+                                        inputProps={{ readOnly: true }}
                                         variant="outlined"
                                         size={'small'}
                                         fullWidth
@@ -536,9 +536,9 @@ export default function Home() {
                                 </Grid>
 
                                 <Grid item textAlign={'right'}>
-                                        <IconButton color='primary' type='submit'>
-                                            <SaveIcon />
-                                        </IconButton>
+                                    <IconButton color='primary' type='submit'>
+                                        <SaveIcon />
+                                    </IconButton>
                                 </Grid>
                             </Grid>
                         </form>
@@ -556,12 +556,23 @@ export default function Home() {
                             <Grid item marginTop={1}>
                                 <TextField
                                     label="Nombre"
-                                    value={newPaymentMethod}
-                                    onChange={(e) => { setNewPaymentMethod(e.target.value) }}
+                                    value={newPaymentMethod.name}
+                                    onChange={(e) => { setNewPaymentMethod({ ...newPaymentMethod, name: e.target.value }) }}
                                     variant="outlined"
                                     size={'small'}
                                     fullWidth
                                     required
+                                />
+                            </Grid>
+                            <Grid item>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={newPaymentMethod.pay}
+                                            onChange={(e) => { setNewPaymentMethod({ ...newPaymentMethod, pay: e.target.checked }) }}
+                                        />
+                                    }
+                                    label="Pago inmediato"
                                 />
                             </Grid>
                         </Grid>

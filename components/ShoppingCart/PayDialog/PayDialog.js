@@ -301,6 +301,23 @@ export default function PayDialog(props) {
         return pay
     }
 
+    const printDoc = async () => {
+        switch (documentType) {
+            case 'Ticket':
+                const findPrinter = await ipcRenderer.invoke('find-printer', printer)
+                if (!findPrinter) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                } else {
+                    
+                }
+                return 'tickt'
+            case 'Boleta':
+                return 'boleta'
+            default:
+                return 'default'
+        }
+    }
+
 
     const pay = async () => {
         console.log('Doc', documentType)

@@ -141,7 +141,8 @@ const reducer = (state, action) => {
                     product: {
                         id: action.value.id,
                         virtualStock: state.cart[productIndex].virtualStock,
-                        salesRoomStock: state.cart[productIndex].salesRoomStock
+                        salesRoomStock: state.cart[productIndex].salesRoomStock,
+                        specialProduct: state.cart[productIndex].specialProduct
                     },
                     actionType: 'SUBSTRACT_QUANTY'
                 }

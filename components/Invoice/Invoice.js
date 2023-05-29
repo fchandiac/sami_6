@@ -610,7 +610,7 @@ export default function Invoice(props) {
 
         } catch (err) {
             console.log(err)
-            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'err' } })
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error en el proceso' } })
         }
     }
 
