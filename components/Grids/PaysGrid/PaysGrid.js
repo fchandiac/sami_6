@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import AppDataGrid from '../../AppDataGrid'
 import { GridActionsCellItem } from '@mui/x-data-grid'
 import DeleteIcon from '@mui/icons-material/Delete'
 import InfoIcon from '@mui/icons-material/Info'
@@ -14,7 +13,7 @@ const utils = require('../../../utils')
 const customers = require('../../../promises/customers')
 const sales = require('../../../promises/sales')
 
-export default function CategoriesGrid(props) {
+export default function PaysGrid(props) {
     const { filterDates } = props
     const [gridApiRef, setGridApiRef] = useState(null)
     const [rowData, setRowData] = useState([])
