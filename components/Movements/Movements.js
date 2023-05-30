@@ -45,7 +45,10 @@ export default function Movements() {
     let outcomesTotal = outcomes.reduce((a, b) => a + b.amount, 0)
 
     let cash = movements.movements.filter(mov => mov.payment_method == 'Efectivo').reduce((a, b) => a + b.amount, 0)
-    paymentMethodsSum.unshift({name: 'Efectivo', sum: openAmount + cash + outcomesTotal})
+    let efectivo =  movements.movements.filter(mov => mov.payment_method == 'Efectivo').reduce((a, b) => a + b.amount, 0)
+    paymentMethodsSum.unshift({name: 'Ventas en efectivo', sum: cash})
+    paymentMethodsSum.unshift({name: 'Efectivo en caja', sum: openAmount + cash + outcomesTotal})
+
     // let open = movements.movements.filter(item => item.type == 1001)[0]
     // let openAmount = open ? open.amount : 0
     // paymentMethodsSum.unshift({name: 'Apertura', sum: openAmount})

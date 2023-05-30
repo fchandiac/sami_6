@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
 import AppDataGrid from '../../AppDataGrid'
 import { GridActionsCellItem } from '@mui/x-data-grid'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -13,29 +13,29 @@ export default function CategoriesGrid(props) {
     const [rowData, setRowData] = useState([])
     const [categoriesList, setCategoriesList] = useState([])
     const [openDestroyDialog, setOpenDestroyDialog] = useState(false)
-  
+
 
     useEffect(() => {
         categories.findAll()
-        .then((res) => {
-            setCategoriesList(res)
-        })
-        .catch((err) => {})
+            .then((res) => {
+                setCategoriesList(res)
+            })
+            .catch((err) => { })
     },
-    [update])
+        [update])
 
     const destroy = () => {
-            categories.destroy(rowData.id)
-                .then(() => {
-                    gridApiRef.current.updateRows([{ id: rowData.rowId, _action: 'delete' }])
-                    setOpenDestroyDialog(false)
-                })
-                .catch(err => { console.error(err) })
+        categories.destroy(rowData.id)
+            .then(() => {
+                gridApiRef.current.updateRows([{ id: rowData.rowId, _action: 'delete' }])
+                setOpenDestroyDialog(false)
+            })
+            .catch(err => { console.error(err) })
     }
 
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
-        { field: 'name', headerName: 'Name', flex: 1},
+        { field: 'name', headerName: 'Name', flex: 1 },
         {
             field: 'actions',
             headerName: '',
@@ -56,10 +56,10 @@ export default function CategoriesGrid(props) {
         }
     ]
 
-  return (
-    <>
-        <AppDataGrid title='Categorias' rows={categoriesList} columns={columns} height='80vh' setGridApiRef={setGridApiRef} />
-        <Dialog open={openDestroyDialog} maxWidth={'xs'} fullWidth>
+    return (
+        <>
+            <AppDataGrid title='Categorias' rows={categoriesList} columns={columns} height='80vh' setGridApiRef={setGridApiRef} />
+            <Dialog open={openDestroyDialog} maxWidth={'xs'} fullWidth>
                 <DialogTitle sx={{ p: 2 }}>
                     Eliminar categoría
                 </DialogTitle>
@@ -95,6 +95,6 @@ export default function CategoriesGrid(props) {
                     </DialogActions>
                 </form>
             </Dialog>
-    </>
-  )
+        </>
+    )
 }

@@ -86,4 +86,25 @@ function update(id, rut, name, activity,  district, city, address) {
     return customer
 }
 
-export {create, findAll, findOneByRut, update}
+function findOneById(id) {
+    let data = { id }
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
+    const customer = new Promise((resolve, reject) => {
+        fetch(url + 'customers/findOneById', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return customer
+}
+
+export {create, findAll, findOneByRut, update, findOneById}

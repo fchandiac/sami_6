@@ -1,8 +1,9 @@
 import React from 'react'
-import PaysGrid from '../components/Grids/PaysGrid'
+import AccountingTab from '../components/Tabs/AccountigTab'
+
 
 export default function accounting() {
   return (
-    <PaysGrid />
+   <AccountingTab />
   )
 }

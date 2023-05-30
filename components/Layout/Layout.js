@@ -16,17 +16,9 @@ import { useTheme } from '@mui/material/styles'
 import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 
-
-
-
-
 import styles from './Layout.module.css'
 import AppSnack from '../AppSnack/AppSnack'
 import { DataGrid } from '@mui/x-data-grid'
-
-
-
-
 
 const health = require('../../promises/health')
 const stocks = require('../../promises/stocks')
@@ -193,7 +185,7 @@ export default function Layout(props) {
                   })
                   dispatch({ type: 'SET_PAGE_TITLE', value: ordersMode ? 'Pedidos' : 'Caja' })
                   setDrawerState(false)
-                  dispatch({ type: 'CLEAR_CART' })
+                  // dispatch({ type: 'CLEAR_CART' })
                 }}
               />
             </ListItemButton>
@@ -207,7 +199,7 @@ export default function Layout(props) {
                   })
                   dispatch({ type: 'SET_PAGE_TITLE', value: 'Productos' })
                   setDrawerState(false)
-                  dispatch({ type: 'CLEAR_CART' })
+                  // dispatch({ type: 'CLEAR_CART' })
                 }}
               />
             </ListItemButton>
@@ -221,7 +213,7 @@ export default function Layout(props) {
                   })
                   dispatch({ type: 'SET_PAGE_TITLE', value: 'Contabilidad' })
                   setDrawerState(false)
-                  dispatch({ type: 'CLEAR_CART' })
+                  // dispatch({ type: 'CLEAR_CART' })
                 }}
               />
             </ListItemButton>
@@ -235,7 +227,7 @@ export default function Layout(props) {
                   })
                   dispatch({ type: 'SET_PAGE_TITLE', value: 'Clientes' })
                   setDrawerState(false)
-                  dispatch({ type: 'CLEAR_CART' })
+                  // dispatch({ type: 'CLEAR_CART' })
                 }}
               />
             </ListItemButton>
@@ -263,7 +255,7 @@ export default function Layout(props) {
                   })
                   dispatch({ type: 'SET_PAGE_TITLE', value: 'Configuración' })
                   setDrawerState(false)
-                  dispatch({ type: 'CLEAR_CART' })
+                  // dispatch({ type: 'CLEAR_CART' })
                 }}
               />
             </ListItemButton>
