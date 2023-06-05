@@ -13,7 +13,7 @@ const utils = require('../../../utils')
 export default function SalesGrid(props) {
     const { filterDates } = props
     const [gridApiRef, setGridApiRef] = useState(null)
-    const [rowData, setRowData] = useState([])
+    const [rowData, setRowData] = useState(rowDataDefault())
     const [salesList, setSalesList] = useState([])
     const [openDestroyDialog, setOpenDestroyDialog] = useState(false)
 
@@ -27,7 +27,9 @@ export default function SalesGrid(props) {
                     date: item.createdAt,
                     dte_code: dteString(item.dte_code),
                     dte_number: item.dte_number,
-                    payment_method: item.payment_method
+                    payment_method: item.payment_method,
+                    stock_control: item.stock_control
+
                 }))
                 setSalesList(data)
             })
@@ -36,7 +38,7 @@ export default function SalesGrid(props) {
     }, [filterDates])
 
     const destroy = () => {
-        categories.destroy(rowData.id)
+        sales.destroy(rowData.id)
             .then(() => {
                 gridApiRef.current.updateRows([{ id: rowData.rowId, _action: 'delete' }])
                 setOpenDestroyDialog(false)
@@ -51,24 +53,24 @@ export default function SalesGrid(props) {
         { field: 'dte_code', headerName: 'DTE', flex: 1 },
         { field: 'dte_number', headerName: 'N° DTE', flex: 1 },
         { field: 'date', headerName: 'Fecha', flex: 1, type: 'dateTime', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY HH:mm') },
-        // {
-        //     field: 'actions',
-        //     headerName: '',
-        //     headerClassName: 'data-grid-last-column-header',
-        //     type: 'actions', flex: .2, getActions: (params) => [
-        //         <GridActionsCellItem
-        //             label='delete'
-        //             icon={<DeleteIcon />}
-        //             onClick={() => {
-        //                 setRowData({
-        //                     rowId: params.id,
-        //                     id: params.row.id,
-        //                     name: params.row.name,
-        //                 })
-        //                 setOpenDestroyDialog(true)
-        //             }}
-        //         />]
-        // }
+        {
+            field: 'actions',
+            headerName: '',
+            headerClassName: 'data-grid-last-column-header',
+            type: 'actions', flex: .2, getActions: (params) => [
+                <GridActionsCellItem
+                    label='delete'
+                    icon={<DeleteIcon />}
+                    onClick={() => {
+                        setRowData({
+                            rowId: params.id,
+                            id: params.row.id,
+                            amount: params.row.amount,
+                        })
+                        setOpenDestroyDialog(true)
+                    }}
+                />]
+        }
     ]
 
     return (
@@ -85,9 +87,9 @@ export default function SalesGrid(props) {
                 money={true}
             />
 
-            {/* <Dialog open={openDestroyDialog} maxWidth={'xs'} fullWidth>
+            <Dialog open={openDestroyDialog} maxWidth={'xs'} fullWidth>
                 <DialogTitle sx={{ p: 2 }}>
-                    Eliminar categoría
+                    Eliminar venta
                 </DialogTitle>
                 <form onSubmit={(e) => { e.preventDefault(); destroy() }}>
                     <DialogContent sx={{ p: 2 }}>
@@ -104,8 +106,8 @@ export default function SalesGrid(props) {
                             </Grid>
                             <Grid item>
                                 <TextField
-                                    label="Nombre"
-                                    value={rowData.name}
+                                    label='Monto'
+                                    value={utils.renderMoneystr(rowData.amount)}
                                     inputProps={{ readOnly: true }}
                                     variant="outlined"
                                     size={'small'}
@@ -120,17 +122,29 @@ export default function SalesGrid(props) {
                         <Button variant={'outlined'} onClick={() => setOpenDestroyDialog(false)}>Cerrar</Button>
                     </DialogActions>
                 </form>
-            </Dialog> */}
+            </Dialog>
         </>
     )
 }
 
-function dteString(value){
-    if(value === 33){
+function dteString(value) {
+    if (value === 33) {
         return 'Factura'
-    } else if (value === 39){
+    } else if (value === 39) {
         return 'Boleta'
     } else {
         return 'Sin DTE'
+    }
+}
+
+function rowDataDefault() {
+    return {
+        id: 0,
+        amount: 0,
+        date: '',
+        dte_code: 0,
+        dte_number: 0,
+        payment_method: 0,
+        stock_control: false
     }
 }

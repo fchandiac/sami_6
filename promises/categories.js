@@ -25,6 +25,8 @@ function create(name) {
     })
     return category
 }
+
+
 function findAll() {
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const category = new Promise((resolve, reject) => {

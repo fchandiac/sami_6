@@ -152,6 +152,7 @@ export default function Movements() {
       ]
     }
     ipcRenderer.send('update-movements', newMov)
+    setNewMovementData(newMovementDataDefault())
     dispatch({ type: 'SET_MOVEMENTS', value: newMov })
     setDisplayOpenForm(false)
   }

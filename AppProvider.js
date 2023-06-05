@@ -91,6 +91,8 @@ const reducer = (state, action) => {
             }
             break
         case 'REMOVE_FROM_CART':
+            let proIndex = state.cart.findIndex((item) => item.id === action.value.id)
+            let specialProduct = state.cart[proIndex].specialProduct
             state.cart = state.cart.filter((item) => item.id !== action.value.id)
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
@@ -103,7 +105,7 @@ const reducer = (state, action) => {
                     id: action.value.id,
                     salesRoomStock: action.value.salesRoomStock
                 },
-                actionType: 'REMOVE_FROM_CART'
+                actionType: specialProduct ? 'NONE_TYPE': 'REMOVE_FROM_CART'
             }
             break
         case 'CLEAR_CART':

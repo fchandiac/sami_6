@@ -5,6 +5,7 @@ const url = require('url')
 const port = 3001
 
 
+
 const hddSerial = require('hddserial');
 
 hddSerial.one(1, function (err, serial) {
@@ -85,6 +86,7 @@ const createWindow = () => {
 
 // Verifica si hay otra instancia de la aplicación
 // Si hay otra instancia de la aplicación, cierra esta instancia
+
 const gotTheLock = app.requestSingleInstanceLock()
 if (!gotTheLock) {
 	app.quit()

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import AppDataGrid from '../../AppDataGrid'
 import { GridActionsCellItem } from '@mui/x-data-grid'
 import DeleteIcon from '@mui/icons-material/Delete'
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField, Autocomplete } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField} from '@mui/material'
 
 
 const categories = require('../../../promises/categories')

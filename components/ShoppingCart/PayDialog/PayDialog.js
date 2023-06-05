@@ -12,6 +12,8 @@ import moment from 'moment'
 const PDF417 = require("pdf417-generator")
 
 import Invoice from '../../Invoice'
+import NewCustomerDialog from '../../Forms/NewCustomerDialog/NewCustomerDialog'
+
 
 const ipcRenderer = electron.ipcRenderer || false
 
@@ -22,7 +24,7 @@ const sales = require('../../../promises/sales')
 const lioren = require('../../../promises/lioren')
 const salesDetails = require('../../../promises/salesDetails')
 const pays = require('../../../promises/pays')
-
+const customers = require('../../../promises/customers')
 
 
 export default function PayDialog(props) {
@@ -39,13 +41,16 @@ export default function PayDialog(props) {
     const [showCustomerFinder, setShowCustomerFinder] = useState(false)
     const [customersOptions, setCustomersOptions] = useState([])
     const [customerInput, setCustomerInput] = useState('')
-    const [customer, setCustomer] = useState(null)
+    const [customer, setCustomer] = useState({ id: 0, label: '', key: 0 })
     const [documentType, setDocumentType] = useState('Ticket')
     const [documentTypesList, setDocumentTypesList] = useState([])
     const [configDocs, setConfigDocs] = useState({})
     const [liorenConfig, setLiorenConfig] = useState({})
     const [numeric_pad, setNumeric_pad] = useState(false)
     const [openInvoiceDialog, setOpenInvoiceDialog] = useState(false)
+    const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
+   
+
 
 
 
@@ -61,7 +66,6 @@ export default function PayDialog(props) {
         docs.push({ name: 'Sin impresora', label: 'Sin impresora' })
         setDocumentTypesList(docs)
     }
-
 
     useEffect(() => {
         if (openChangeDialog === true) {
@@ -92,10 +96,8 @@ export default function PayDialog(props) {
         })
         customerCredit.state === true ? paymentMethods.unshift({ name: 'customerCredit', label: customerCredit.name }) : null
         paymentMethods.unshift({ name: 'Efectivo', label: 'Efectivo', pay: true })
-        console.log('payment methods', paymentMethods)
         setConfigDocs(docs)
         setPaymentMethodsList(paymentMethods)
-        console.log('payment methods', paymentMethods)
         setPrinter(printer)
         setTicketInfo(ticket_info)
         setLiorenConfig(lioren)
@@ -103,6 +105,35 @@ export default function PayDialog(props) {
         setNumeric_pad(config.numeric_pad)
     }, [])
 
+    useEffect(() => {
+        customers.findAll()
+            .then((res) => {
+                let data = res.map(item => ({
+                    id: item.id,
+                    key: item.id,
+                    label: item.name
+                }))
+                setCustomersOptions(data)
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }, [])
+
+    const updateCustomers = () => {
+        customers.findAll()
+            .then((res) => {
+                let data = res.map(item => ({
+                    id: item.id,
+                    key: item.id,
+                    label: item.name
+                }))
+                setCustomersOptions(data)
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }
 
     useEffect(() => {
         if (payAmount == 0) {
@@ -167,19 +198,6 @@ export default function PayDialog(props) {
         return Promise.all(newStocks)
     }
 
-    const printTicket = () => {
-        const pr = new Promise((resolve, reject) => {
-            print.ticket(total, cart, ticketInfo, printer)
-                .then(() => { resolve() })
-                .catch(err => {
-                    console.log(err)
-                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                    reject(err)
-                })
-        })
-        return pr
-    }
-
     const saleDetailAll = (sale_id, cart) => {
         let details = []
         cart.map(product => {
@@ -192,7 +210,7 @@ export default function PayDialog(props) {
 
     const sale = () => {
         const pr = new Promise((resolve, reject) => {
-            sales.create(total, paymentMethod, 0, 0)
+            sales.create(total, paymentMethod, 0, 0, stockControl)
                 .then(res => {
                     let movs = movements.movements
                     movs.push({
@@ -225,7 +243,7 @@ export default function PayDialog(props) {
 
     const saleBoleta = (dte_number) => {
         const pr = new Promise((resolve, reject) => {
-            sales.create(total, paymentMethod, 39, dte_number)
+            sales.create(total, paymentMethod, 39, dte_number, stockControl)
                 .then(res => {
                     let movs = movements.movements
                     movs.push({
@@ -256,42 +274,18 @@ export default function PayDialog(props) {
         return pr
     }
 
-    const stockControlPayTrue = () => {
-        const pay = new Promise((resolve, reject) => {
-            updateStocks(cart)
-                .then(() => {
-                    stocks.findAllStockAlert()
-                        .then(res => {
-                            dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res })
-                            resolve()
-                        })
-                        .catch(err => {
-                            console.log(err)
-                            reject(err)
-                        })
-                })
-                .catch(err => {
-                    console.log(err)
-                    reject(err)
-                })
-        })
-        return pay
-    }
-
-    const stockControlPayFalse = () => {
-        const pay = new Promise((resolve, reject) => {
-            console.log('sin stock')
-            resolve()
-        })
-        return pay
-    }
-
     const savePay = async (methodsList, paymentMethod, sale_id, amount) => {
         const pay = new Promise((resolve, reject) => {
             let state = methodsList.find(method => method.name == paymentMethod).pay
-            pays.create(sale_id, null, amount, paymentMethod, state, new Date())
+            let customer_id = null
+
+            if (customer.id != 0) {
+                customer_id = customer.id
+            }
+            pays.create(sale_id, customer_id, amount, paymentMethod, state, new Date())
                 .then(res => {
                     resolve(res)
+                    setCustomer({ id: 0, label: '', key: 0 })
                 })
                 .catch(err => {
                     console.log(err)
@@ -301,208 +295,128 @@ export default function PayDialog(props) {
         return pay
     }
 
-    const printDoc = async () => {
-        switch (documentType) {
-            case 'Ticket':
-                const findPrinter = await ipcRenderer.invoke('find-printer', printer)
-                if (!findPrinter) {
-                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                } else {
-                    
-                }
-                return 'tickt'
-            case 'Boleta':
-                return 'boleta'
-            default:
-                return 'default'
+    const boletaPrintInfo = (timbre, iva, invoiceNumber) => {
+        let canvas = document.createElement('canvas')
+        PDF417.draw(timbre, canvas, 2, 2, 1.5)
+        let stamp_img = canvas.toDataURL('image/jpg')
+        let date = moment(new Date()).format('DD-MM-yyyy')
+        let time = moment(new Date()).format('HH:mm')
+        let printInfo = {
+            printer: printer,
+            stamp: stamp_img,
+            date: date, time: time,
+            name: ticketInfo.name,
+            rut: ticketInfo.rut,
+            address: ticketInfo.address,
+            phone: ticketInfo.phone,
+            total: total,
+            iva: iva,
+            invoiceNumber: invoiceNumber,
+            cart: cart,
+            paymentMethod: paymentMethod,
+            sale_id: 0
+        }
+        return printInfo
+    }
+
+    const renderCustomerFinder = () => {
+        if (showCustomerFinder == true) {
+            return (
+                <>
+                    <Grid item xs={10} sm={10} md={10} lg={10}>
+                        <Autocomplete
+                            inputValue={customerInput}
+                            onInputChange={(e, newInputValue) => {
+                                setCustomerInput(newInputValue)
+                            }}
+                            value={customer}
+                            onChange={(e, newValue) => {
+                                setCustomer(newValue)
+                            }}
+                            isOptionEqualToValue={(option, value) => value === null || option.id === value.id}
+                            disablePortal
+                            noOptionsText="Cliente no encontrado"
+                            options={customersOptions}
+                            renderInput={(params) => <TextField {...params} label='Cliente' size={'small'} fullWidth required />}
+                        />
+
+
+                    </Grid>
+                    <Grid item xs={2} sm={2} md={2} lg={2}>
+                        <IconButton onClick={() => { setOpenNewCustomerDialog(true) }}><AddCircleIcon /> </IconButton>
+                    </Grid>
+                </>
+
+            )
         }
     }
 
-
-    const pay = async () => {
-        console.log('Doc', documentType)
-        // dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-        switch (documentType) {
-            case 'Ticket':
-                console.log('ticket')
-                const findPrinter = await ipcRenderer.invoke('find-printer', printer)
-                if (!findPrinter) {
-                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                    console.log('error de conexion con la impresora')
+    const proccessPayment = async () => {
+        if (documentType === 'Factura') {
+            setOpenInvoiceDialog(true)
+        } else {
+            if (documentType === 'Sin impresora') {
+                if (stockControl == true) {
+                    await updateStocks(cart)
+                    await stocks.findAllStockAlert()
                 }
-                //const findPrinter = await ipcRenderer.invoke('find-printer', printer)
-                if (findPrinter == true) {
-                    console.log('testPrint', printer)
-                    if (stockControl == true) {
-                        await updateStocks(cart)
-                        const stockAlertList = await stocks.findAllStockAlert()
-                        dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
-                        const sale_1 = await sale()
-                        await saleDetailAll(sale_1.id, cart)
-                        await savePay(paymentMethodsList, paymentMethod, sale_1.id, total)
-                        let date = moment(new Date()).format('DD-MM-yyyy')
-                        let time = moment(new Date()).format('HH:mm')
-                        let printInfo = {
-                            total: total,
-                            cart: cart,
-                            printer: printer,
-                            ticketInfo: ticketInfo,
-                            date: date, time: time,
-                            paymentMethod: paymentMethod,
-                            sale_id: sale_1.id
-                        }
-                        console.log('printInfo', printInfo)
-                        ipcRenderer.sendSync('print-ticket', printInfo)
-                        setOpen(false)
-                        setOpenChangeDialog(true)
-
-                    } else {
-                        const sale_1 = await sale()
-                        await saleDetailAll(sale_1.id, cart)
-                        await savePay(paymentMethodsList, paymentMethod, sale_1.id, total)
-                        let date = moment(new Date()).format('DD-MM-yyyy')
-                        let time = moment(new Date()).format('HH:mm')
-                        let printInfo = {
-                            total: total,
-                            cart: cart,
-                            printer: printer,
-                            ticketInfo: ticketInfo,
-                            date: date, time: time,
-                            paymentMethod: paymentMethod,
-                            sale_id: sale_1.id
-                        }
-                        ipcRenderer.sendSync('print-ticket', printInfo)
-                        setOpen(false)
-                        setOpenChangeDialog(true)
-                    }
-                }
-                break
-            case 'Boleta':
-                console.log('Boleta')
+                const sale_ = await sale()
+                await saleDetailAll(sale_.id, cart)
+                console.log(paymentMethodsList)
+                await savePay(paymentMethodsList, paymentMethod, sale_.id, total)
+                setOpen(false)
+                setOpenChangeDialog(true)
+            } else if (documentType === 'Boleta') {
+                setDisablePay(true)
                 const findPrinter_1 = await ipcRenderer.invoke('find-printer', printer)
                 if (!findPrinter_1) {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                    console.log('error de conexion con la impresora')
-                }
-
-                if (findPrinter_1 == true) {
+                } else {
                     if (stockControl == true) {
                         await updateStocks(cart)
-                        const stockAlertList = await stocks.findAllStockAlert()
-                        dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
-                        const sale_3 = await sale()
-                       
-                        await saleDetailAll(sale_3.id, cart)
-                        await savePay(paymentMethodsList, paymentMethod, sale_3.id, total)
-                        let date = moment(new Date()).format('DD-MM-yyyy')
-                        let time = moment(new Date()).format('HH:mm')
-                        lioren.boleta(liorenConfig.token, total)
-                            .catch(err => { dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con Lioren' } }) })
-                            .then(data => {
-                                let timbre = data[0]
-                                let canvas = document.createElement('canvas')
-                                PDF417.draw(timbre, canvas, 2, 2, 1.5)
-                                let stamp_img = canvas.toDataURL('image/jpg')
-                                let date = moment(new Date()).format('DD-MM-yyyy')
-                                let time = moment(new Date()).format('HH:mm')
-                                let printInfo = {
-                                    printer: printer,
-                                    stamp: stamp_img,
-                                    date: date, time: time,
-                                    name: ticketInfo.name,
-                                    rut: ticketInfo.rut,
-                                    address: ticketInfo.address,
-                                    phone: ticketInfo.phone,
-                                    total: total,
-                                    iva: data[1],
-                                    invoiceNumber: data[2],
-                                    cart: cart,
-                                    paymentMethod: paymentMethod,
-                                    sale_id: sale.id
-                                }
-                                ipcRenderer.sendSync('boleta', printInfo)
-                                setOpen(false)
-                                setOpenChangeDialog(true)
-                            })
-                    } else {
-                        let date = moment(new Date()).format('DD-MM-yyyy')
-                        let time = moment(new Date()).format('HH:mm')
-                        lioren.boleta(liorenConfig.token, total)
-                            .catch(err => { dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con Lioren' } }) })
-                            .then(data => {
-                                let timbre = data[0]
-                                let canvas = document.createElement('canvas')
-                                PDF417.draw(timbre, canvas, 2, 2, 1.5)
-                                let stamp_img = canvas.toDataURL('image/jpg')
-                                let date = moment(new Date()).format('DD-MM-yyyy')
-                                let time = moment(new Date()).format('HH:mm')
-                                let printInfo = {
-                                    printer: printer,
-                                    stamp: stamp_img,
-                                    date: date, time: time,
-                                    name: ticketInfo.name,
-                                    rut: ticketInfo.rut,
-                                    address: ticketInfo.address,
-                                    phone: ticketInfo.phone,
-                                    total: total,
-                                    iva: data[1],
-                                    invoiceNumber: data[2],
-                                    cart: cart,
-                                    paymentMethod: paymentMethod,
-                                    sale_id: 0
-                                }
-                                saleBoleta(data[2])
-                                    .then(res => {
-                                        printInfo.sale_id = res.id
-                                        savePay(paymentMethodsList, paymentMethod, res.id, total)
-                                        //savePay(paymentMethodsList, paymentMethod, res.id, total)
-                                        saleDetailAll(res.id, cart)
-                                            .then(res => {
-                                                ipcRenderer.sendSync('boleta', printInfo)
-                                                setOpen(false)
-                                                setOpenChangeDialog(true)
-                                            })
-                                            .catch(err => { console.log(err) })
-                                    })
-                                    .catch(err => { console.log(err) })
-                            })
+                        await stocks.findAllStockAlert()
                     }
+                    const boleta = await lioren.boleta(liorenConfig.token, total)
+                    const sale = await saleBoleta(boleta[2])
+                    await saleDetailAll(sale.id, cart)
+                    await savePay(paymentMethodsList, paymentMethod, sale.id, total)
+                    ipcRenderer.sendSync('boleta', boletaPrintInfo(boleta[0], boleta[1], boleta[2]))
+                    setOpen(false)
+                    setOpenChangeDialog(true)
                 }
-                break
-            case 'Sin impresora':
-                try {
+            } else if (documentType === 'Ticket') {
+                const findPrinter_2 = await ipcRenderer.invoke('find-printer', printer)
+                if (!findPrinter_2) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                } else {
                     if (stockControl == true) {
                         await updateStocks(cart)
-                        const stockAlertList = await stocks.findAllStockAlert()
-                        dispatch({ type: 'SET_STOCK_ALERT_LIST', value: stockAlertList })
-                        const sale_ = await sale()
-                        await saleDetailAll(sale_.id, cart)
-                        await savePay(paymentMethodsList, paymentMethod, sale_.id, total)
-                        setOpen(false)
-                        setOpenChangeDialog(true)
-                    } else {
-                        const sale_ = await sale()
-                        await saleDetailAll(sale_.id, cart)
-                        await savePay(paymentMethodsList, paymentMethod, sale_.id, total)
-                        setOpen(false)
-                        setOpenChangeDialog(true)
+                        await stocks.findAllStockAlert()
                     }
-                } catch (err) {
-                    if (err === 'printer Error') {
-                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                    } else {
-                        console.log(err)
-                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error durante el proceso' } })
+                    const sale_ = await sale()
+                    await saleDetailAll(sale_.id, cart)
+                    await savePay(paymentMethodsList, paymentMethod, sale_.id, total)
+                    let date = moment(new Date()).format('DD-MM-yyyy')
+                    let time = moment(new Date()).format('HH:mm')
+                    let printInfo = {
+                        total: total,
+                        cart: cart,
+                        printer: printer,
+                        ticketInfo: ticketInfo,
+                        date: date, time: time,
+                        paymentMethod: paymentMethod,
+                        sale_id: sale_.id
                     }
-
+                    ipcRenderer.sendSync('print-ticket', printInfo)
+                    setOpen(false)
+                    setOpenChangeDialog(true)
                 }
-                break
-            case 'Factura':
-                setOpenInvoiceDialog(true)
-                break
-            default:
-                console.log('default')
-                break
+            }
+
+
+
+
+
         }
 
     }
@@ -510,7 +424,7 @@ export default function PayDialog(props) {
     return (
         <>
             <Dialog open={open} maxWidth={'lg'}>
-                <form onSubmit={(e) => { e.preventDefault(); pay() }}>
+                <form onSubmit={(e) => { e.preventDefault(); proccessPayment() }}>
                     <DialogTitle sx={{ p: 2 }}>
                         Proceso de pago
                     </DialogTitle>
@@ -632,31 +546,10 @@ export default function PayDialog(props) {
                                             </FormGroup>
                                         </AppPaper>
                                     </Grid>
+
+                                    {renderCustomerFinder()}
                                 </Grid>
-                                <Grid item sx={{ display: showCustomerFinder ? 'block' : 'none', }} paddingTop={2}>
-                                    <Grid container spacing={1} >
-                                        <Grid item xs={10} sm={10} md={10} lg={10}>
-                                            {/* <Autocomplete
-                                                inputValue={customerInput}
-                                                onInputChange={(e, newInputValue) => {
-                                                    setCustomerInput(newInputValue)
-                                                }}
-                                                value={customer}
-                                                onChange={(e, newValue) => {
-                                                    setCustomer(newValue)
-                                                }}
-                                                isOptionEqualToValue={(option, value) => value === null || option.id === value.id}
-                                                disablePortal
-                                                noOptionsText="Cliente no encontrado"
-                                                options={customersOptions}
-                                                renderInput={(params) => <TextField {...params} label='Cliente' size={'small'} fullWidth required name='customer'/>}
-                                            /> */}
-                                        </Grid>
-                                        <Grid item xs={2} sm={2} md={2} lg={2}>
-                                            <IconButton onClick={() => { setOpenNewCustomerDialog(true) }}><AddCircleIcon /> </IconButton>
-                                        </Grid>
-                                    </Grid>
-                                </Grid>
+
                             </Grid>
                         </Grid>
 
@@ -715,12 +608,17 @@ export default function PayDialog(props) {
                 stockControl={stockControl}
             />
 
-
+            <NewCustomerDialog
+                open={openNewCustomerDialog}
+                setOpen={setOpenNewCustomerDialog}
+                finallyCallback={updateCustomers}
+            />
 
         </>
 
     )
 }
+
 
 
 
@@ -749,3 +647,5 @@ function invoiceDoc(webConnection, docs, liorenIntegration) {
         return true
     }
 }
+
+

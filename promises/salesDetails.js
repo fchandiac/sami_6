@@ -45,4 +45,25 @@ function findAllBySale(sale_id) {
 }
 
 
-export { create, findAllBySale }
+
+function findAllBetweenDateGroupByProduct(start, end) {
+    let data = {start, end }
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
+    const detail = new Promise((resolve, reject) => {
+        fetch(url + 'salesDetails/findAllBetweenDateGroupByProduct', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return  detail
+}
+export { create, findAllBySale, findAllBetweenDateGroupByProduct }

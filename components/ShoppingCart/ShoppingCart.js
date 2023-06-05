@@ -36,6 +36,10 @@ const ipcRenderer = electron.ipcRenderer || false
 
 const utils = require('../../utils')
 const print = require('../../promises/print')
+const ordersPr = require('../../promises/orders')
+const ordersDetails = require('../../promises/ordersDetails')
+
+
 
 
 
@@ -53,21 +57,24 @@ export default function ShoppingCart(props) {
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
     const [openSpecialProductDialog, setOpenSpecialProductDialog] = useState(false)
     const [specialProduct, setSpecialProduct] = useState(specialProductDefault())
+    const [orders, setOrders] = useState(false)
 
 
 
     useEffect(() => {
         let print_info = ipcRenderer.sendSync('get-printer', 'sync')
         let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
+        let UI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
         setPrinterInfo(print_info)
         setTicketInfo(ticket_info)
+        setOrders(UI.orders)
     }, [])
 
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.key === "ç") {
                 if (ordersMode === true) {
-                    alert('Nuevo pedido')
+                    console.log('ordersMode')
                 } else {
                     if (cart.length === 0) {
                         dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
@@ -82,6 +89,18 @@ export default function ShoppingCart(props) {
             document.removeEventListener("keydown", handleKeyDown);
         }
     }, [cart])
+
+    const showNewOrderButton = () => {
+        if (orders === true && ordersMode === true) {
+            return true
+        } else if (orders === true && ordersMode === false) {
+            return true
+        } else if (orders === false && ordersMode === false) {
+            return false
+        } else if (orders === false && ordersMode === true) {
+            return true
+        }
+    }
 
 
     const removeProduct = (id, salesRoomStock) => {
@@ -182,7 +201,7 @@ export default function ShoppingCart(props) {
 
     const addSpecialProduct = () => {
         console.log(specialProduct.quanty * specialProduct.sale)
-        let id =  Math.floor(Math.random() * (99999 - 20000 + 1)) + 20000
+        let id = Math.floor(Math.random() * (99999 - 20000 + 1)) + 20000
         let quanty = parseFloat(specialProduct.quanty)
         let subTotal = quanty * specialProduct.sale
         let specialPro = {
@@ -198,10 +217,50 @@ export default function ShoppingCart(props) {
             code: '0001' + Math.floor(Math.random() * 1000).toString(),
             specialProduct: true
         }
-        dispatch({ type: 'ADD_SPECIAL_TO_CART', value:  specialPro })
+        dispatch({ type: 'ADD_SPECIAL_TO_CART', value: specialPro })
         setOpenSpecialProductDialog(false)
         setSpecialProduct(specialProductDefault())
 
+    }
+
+    const orderDetailsPrAll = (order_id) => {
+        let details = []
+        console.log(cart)
+        cart.map((product) => {
+            details.push(
+                ordersDetails.create(
+                    order_id,
+                    product.id,
+                    product.quanty,
+                    product.sale,
+                    product.discount,
+                    product.subTotal,
+                    product.name
+                ))
+        })
+
+        return Promise.all(details)
+    }
+
+    const newOrder = () => {
+        if (cart.length === 0) {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
+        } else {
+            ordersPr.create()
+                .then( (res) => {
+                    console.log(res)
+                    orderDetailsPrAll(res.id)
+                        .then(() => {
+                            dispatch({ type: 'CLEAR_CART' })
+                            dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Pedido creado' } })
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error al crear el pedido' } })
+                        })
+                })
+                .catch((err) => {console.log(err)})
+        }
     }
 
     const columns = [
@@ -303,7 +362,9 @@ export default function ShoppingCart(props) {
                             openDiscountUI: openDiscountUI,
                             clearCart: clearCart,
                             ordersMode: ordersMode,
-                            openSpecialProductUI: openSpecialProductUI
+                            openSpecialProductUI: openSpecialProductUI,
+                            showNewOrderButton: showNewOrderButton,
+                            newOrder: newOrder
 
 
                         }
@@ -459,7 +520,18 @@ function CustomToolbar(props) {
 }
 
 function CustomFooter(props) {
-    const { lock, proccessPayment, openDiscountUI, clearCart, quote, printQuote, ordersMode, openSpecialProductUI } = props
+    const {
+        lock,
+        proccessPayment,
+        openDiscountUI,
+        clearCart,
+        quote,
+        printQuote,
+        ordersMode,
+        openSpecialProductUI,
+        showNewOrderButton,
+        newOrder
+    } = props
 
 
 
@@ -482,9 +554,9 @@ function CustomFooter(props) {
                 </Grid>
                 <Grid item>
                     <Button
-                        sx={{ display: ordersMode ? 'block' : 'none' }}
-                        variant="contained"
-                        onClick={() => { console.log('New order') }}>
+                        sx={{ display: showNewOrderButton ? 'block' : 'none' }}
+                        variant={ordersMode ? 'contained' : 'outlined'}
+                        onClick={() => { newOrder() }}>
                         Nuevo Pedido
                     </Button>
                 </Grid>

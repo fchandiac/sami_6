@@ -25,7 +25,7 @@ export default function Sales() {
                             </Grid>
                             <Grid item >
                                 <DesktopDatePicker
-                                    label="Fecha incial"
+                                    label="Fecha final"
                                     inputFormat='DD-MM-YYYY'
                                     value={filterDates.end}
                                     onChange={(e) => { setFilterDates({ ...filterDates, end: e }) }}

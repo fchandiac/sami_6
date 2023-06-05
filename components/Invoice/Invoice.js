@@ -41,7 +41,6 @@ export default function Invoice(props) {
     const [printer, setPrinter] = useState({ idVendor: 0, idProduct: 0 })
     const [ticketInfo, setTicketInfo] = useState({ name: '', address: '', phone: '', rut: '' })
     const [thermalPrinting, setThermalPrinting] = useState(true)
-    const [token, setToken] = useState('')
     const [showPay, setShowPay] = useState(false)
     const [payData, setPayData] = useState(payDataDefault())
     const [paymentMethodsOptions, setPaymentMethodsOptions] = useState([])
@@ -50,6 +49,7 @@ export default function Invoice(props) {
     const [customerOptions, setCustomerOptions] = useState([])
     const [customer, setCustomer] = useState({ key: 0, id: 0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' })
     const [findCustomerData, setFindCustomerData] = useState(findCustomerDataDefault())
+    const [token, setToken] = useState('')
 
     useEffect(() => {
         let printer = ipcRenderer.sendSync('get-printer', 'sync')
@@ -119,7 +119,6 @@ export default function Invoice(props) {
                     key: item.id,
                     region_id: item.region_id,
                 }))
-
                 setCiudadesOptions(data)
             })
             .catch(err => { console.log(err) })
@@ -507,7 +506,7 @@ export default function Invoice(props) {
 
     const saleFactura = (dte_number, total) => {
         const pr = new Promise((resolve, reject) => {
-            sales.create(total, paymentMethod, 33, dte_number)
+            sales.create(total, paymentMethod, 33, dte_number, stockControl)
                 .then(res => {
                     let movs = movements.movements
                     movs.push({

@@ -70,12 +70,13 @@ export default function PaysGrid(props) {
 
     const info = async (sale_id) => {
         const sale = await sales.findOneById(sale_id)
+        console.log(sale)
         setSaleData({
             id: sale.id,
             amount: sale.amount,
             dte_code: sale.dte_code,
             dte_number: sale.dte_number,
-            date: sale.createAt,
+            date: sale.createdAt,
             payment_method: sale.payment_method,
         })
         setOpenInfoDialog(true)
@@ -94,7 +95,7 @@ export default function PaysGrid(props) {
                 return params.row.state === 'Pagado' ? <PaidIcon sx={{ color: 'green' }} /> : <PaidIcon sx={{ color: 'red' }} />
             }
         },
-        { field: 'date', headerName: 'Fecha', flex: 1, type: 'date', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY') },
+        { field: 'date', headerName: 'Fecha', flex: 1, type: 'date', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY HH:mm') },
         {
             field: 'actions',
             headerName: '',
@@ -137,9 +138,8 @@ export default function PaysGrid(props) {
                 <DialogTitle sx={{ p: 2 }}>
                     Información venta asociada
                 </DialogTitle>
-                <form onSubmit={(e) => { e.preventDefault(); destroy() }}>
                     <DialogContent sx={{ p: 2 }}>
-                        <Grid container spacing={1}>
+                        <Grid container spacing={1} pt={1}>
                             <Grid item xs={6} md={6} sm={6} lg={6}>
                                 <TextField
                                     label="Id"
@@ -207,10 +207,8 @@ export default function PaysGrid(props) {
                         </Grid>
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
-                        <Button variant={'contained'} type={'submit'}>Eliminar</Button>
                         <Button variant={'outlined'} onClick={() => setOpenInfoDialog(false)}>Cerrar</Button>
                     </DialogActions>
-                </form>
             </Dialog>
 
         </>

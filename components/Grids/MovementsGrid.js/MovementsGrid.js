@@ -83,6 +83,7 @@ export default function MovementsGrid() {
         let mov = movements.movements.find((item, index) => index == (rowData.id - 1000))
         let movs = movements.movements
         movs[rowData.id - 1000].type = 1007
+        let saleId = movs[rowData.id - 1000].sale_id
         let newMov = {
             sale_id: 0,
             user: user.name,
@@ -102,12 +103,15 @@ export default function MovementsGrid() {
             movements: movs
         }
 
-
-        ipcRenderer.send('update-movements', newMovs)
+        sales.destroy(saleId)
+        .then(res => {
+            ipcRenderer.send('update-movements', newMovs)
         dispatch({ type: 'SET_MOVEMENTS', value: newMovs })
         setOpenDestroyDialog(false)
-
-
+        })
+        .catch(err => {
+            console.log(err)
+        })
     }
 
     const displayDestroy = (type) => {
@@ -381,7 +385,7 @@ export default function MovementsGrid() {
                         <Grid container spacing={1} direction={'column'}>
                             <Grid item marginTop={1}>
                                 <TextField
-                                    label="Id"
+                                    label="Id movimiento"
                                     value={rowData.id}
                                     inputProps={{ readOnly: true }}
                                     variant="outlined"

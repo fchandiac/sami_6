@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -9,6 +9,7 @@ import CashRegister from '../../CashRegister'
 import { useAppContext } from '../../../AppProvider'
 
 import electron from 'electron'
+import Orders from '../../Orders/Orders';
 const ipcRenderer = electron.ipcRenderer || false
 
 function TabPanel(props) {
@@ -47,119 +48,49 @@ function a11yProps(index) {
 export default function BasicTabs() {
   const [value, setValue] = React.useState(0)
   const { ordersMode, movements, dispatch, orders } = useAppContext()
+  const [hiddenOrders, setHiddenOrders] = useState(false)
+  const [hiddenMovements, setHiddenMovements] = useState(false)
 
+  useEffect(() => {
+    let UI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
+    setHiddenOrders(!UI.orders)
+    setHiddenMovements(ordersMode)
+  }, [])
 
- 
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
   }
 
   const renderCashRegister = () => {
-    if (ordersMode == true && movements.state == true){
-      return (<Tab label={'Gestión de pedidos'} {...a11yProps(0)} />)
-    } else if (ordersMode == false && movements.state == true){
-      return (<Tab label={'Caja registradora'} {...a11yProps(0)} />)
-    } else if (ordersMode == false && movements.state == false){
-      return null
-    } else if (ordersMode == true && movements.state == false){
-      return (<Tab label={'Gestión de pedidos'} {...a11yProps(0)} />)
+    if (ordersMode == true) {
+      return true
+    } else if (movements.state == false) {
+      return false
+    } else if (movements.state == true) {
+      return true
     }
   }
 
-
-  const cashRegisterindex = () => {
-    if (ordersMode == true && movements.state == true){
-      return 0
-    } else if (ordersMode == false && movements.state == true){
-      return 0
-    } else if (ordersMode == false && movements.state == false){
-      return null
-    } else if (ordersMode == true && movements.state == false){
-      return 0
-    }
-  }
-
-  const renderMovenments = () => {
-    if (ordersMode == true && movements.state == true){
-       return null
-    } else if (ordersMode == false && movements.state == true){
-      return (<Tab label={'Movimientos'} {...a11yProps(1)} />)
-    } else if (ordersMode == false && movements.state == false){
-      return (<Tab label={'Movimientos'} {...a11yProps(0)} />)
-    } else if (ordersMode == true && movements.state == false){
-      return null
-    }
-  }
-
-
-  const movenmentsindex = () => {
-    if (ordersMode == true && movements.state == true){
-      return null
-    } else if (ordersMode == false && movements.state == true){
-      return 1
-    } else if (ordersMode == false && movements.state == false){
-      return 0
-    } else if (ordersMode == true && movements.state == false){
-      return null
-    }
-  }
-
-  const renderOrders = () => {
-    if(orders == false){
-      null
-    } else if (ordersMode == true && movements.state == true){
-      return (<Tab label={'Pedidos'} {...a11yProps(1)} />)
-    } else if (ordersMode == false && movements.state == true){
-      return (<Tab label={'Pedidos'} {...a11yProps(2)} />)
-    } else if (ordersMode == false && movements.state == false){
-      return <Tab label="Pedidos" {...a11yProps(1)} />
-    } else if (ordersMode == true && movements.state == false){
-      return (<Tab label={'Pedidos'} {...a11yProps(1)} />)
-    } 
-
-  }
-
-  const ordersIndex = () => {
-    if (ordersMode == true && movements.state == true){
-      return 1
-    } else if (ordersMode == false && movements.state == true){
-      return 2
-    } else if (ordersMode == false && movements.state == false){
-      return 1
-    } else if (ordersMode == true && movements.state == false){
-      return 1
-    } else if (ordersMode == true && movements.state == true && orders == false){
-      return null
-    } else if (ordersMode == false && movements.state == true && orders == false){
-      return null
-    } else if (ordersMode == false && movements.state == false && orders == false){
-      return null
-    } else if (ordersMode == true && movements.state == false && orders == false){
-      return null
-    }
-  }
-
-
-
+  //sx={{display: hiddenOrders? 'none': 'inline-flex'}}
 
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-          {renderCashRegister()}
-          {renderMovenments()}
-          {renderOrders()}
+          <Tab label={ordersMode? 'Gestión de pedidos': 'Caja registradora'} {...a11yProps(0)} sx={{display: renderCashRegister()? 'inline-flex': 'none'}}/>
+          <Tab label="Movimientos" {...a11yProps(1)} sx={{display: hiddenMovements? 'none': 'inline-flex'}}/>
+          <Tab label="Pedidos" {...a11yProps(2)}  sx={{display: hiddenOrders? 'none': 'inline-flex'}}/>
         </Tabs>
       </Box>
-      <TabPanel value={value} index={cashRegisterindex()}>
+      <TabPanel value={value} index={0}>
         <CashRegister></CashRegister>
       </TabPanel>
-      <TabPanel value={value} index={movenmentsindex()}>
+      <TabPanel value={value} index={1}>
         <Movements></Movements>
       </TabPanel>
-      <TabPanel value={value} index={ordersIndex()}>
-        Pedidos
+      <TabPanel value={value} index={2}>
+        <Orders />
       </TabPanel>
     </Box>
   )

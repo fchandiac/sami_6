@@ -21,7 +21,7 @@ export default function OrdersLoader(props) {
                         <Grid item xs>
                             <TextField
                                 inputRef={inputOrderRef}
-                                label="pedido"
+                                label="Pedido"
                                 value={orderId}
                                 onChange={(e) => setOrderId(e.target.value)}
                                 variant="outlined"
