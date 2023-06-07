@@ -33,6 +33,7 @@ export default function PayDialog(props) {
     const [payAmount, setPayAmount] = useState(0)
     const [change, setChange] = useState(0)
     const [disablePay, setDisablePay] = useState(true)
+    const [insufficientMoney, setInsufficientMoney] = useState(true)
     const [openChangeDialog, setOpenChangeDialog] = useState(false)
     const [paymentMethod, setPaymentMethod] = useState('Efectivo')
     const [paymentMethodsList, setPaymentMethodsList] = useState([])
@@ -138,11 +139,15 @@ export default function PayDialog(props) {
     useEffect(() => {
         if (payAmount == 0) {
             setDisablePay(true)
+            setInsufficientMoney(true)
         } else {
             if (payAmount < total) {
                 setDisablePay(true)
+                setInsufficientMoney(true)
+
             } else {
                 setDisablePay(false)
+                setInsufficientMoney(false)
                 setChange(payAmount - total)
             }
         }
@@ -381,8 +386,9 @@ export default function PayDialog(props) {
                     await saleDetailAll(sale.id, cart)
                     await savePay(paymentMethodsList, paymentMethod, sale.id, total)
                     ipcRenderer.sendSync('boleta', boletaPrintInfo(boleta[0], boleta[1], boleta[2]))
-                    setOpen(false)
                     setOpenChangeDialog(true)
+                    setOpen(false)
+                    
                 }
             } else if (documentType === 'Ticket') {
                 const findPrinter_2 = await ipcRenderer.invoke('find-printer', printer)
@@ -408,8 +414,9 @@ export default function PayDialog(props) {
                         sale_id: sale_.id
                     }
                     ipcRenderer.sendSync('print-ticket', printInfo)
-                    setOpen(false)
                     setOpenChangeDialog(true)
+                    setOpen(false)
+                    
                 }
             }
 
@@ -454,10 +461,10 @@ export default function PayDialog(props) {
                                     autoFocus
                                 />
                             </Grid>
-                            <Grid item textAlign={'right'} sx={{ display: disablePay ? 'block' : 'none' }}>
+                            <Grid item textAlign={'right'} sx={{ display: insufficientMoney ? 'block' : 'none' }}>
                                 <Typography color={'error'}>{'Monto de pago insuficiente'}</Typography>
                             </Grid>
-                            <Grid item textAlign={'right'} sx={{ display: disablePay ? 'none' : 'block' }}>
+                            <Grid item textAlign={'right'} sx={{ display: insufficientMoney ? 'none' : 'block' }}>
                                 <Typography color={'pimary'}>{'Vuelto: ' + utils.renderMoneystr(change)}</Typography>
                             </Grid>
                             <Grid item sx={{ display: numeric_pad ? 'block' : 'none' }}>

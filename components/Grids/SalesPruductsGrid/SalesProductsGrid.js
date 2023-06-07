@@ -1,33 +1,42 @@
-import React, {useEffect, useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import AppInfoDataGrid from '../../AppInfoDataGrid/AppInfoDataGrid'
+import moment from 'moment'
 
 const salesDetails = require('../../../promises/salesDetails')
 const utils = require('../../../utils')
 
 export default function SalesProductsGrid(props) {
-    const {filterDates} = props
+    const { filterDates } = props
     const [gridApiRef, setGridApiRef] = useState(null)
     const [rowData, setRowData] = useState(rowDataDefault())
+    const [title, setTitle] = useState('Ventas por producto')
     const [productsList, setProductsList] = useState([])
     const [openDestroyDialog, setOpenDestroyDialog] = useState(false)
 
+    useEffect(() => {
+        if (moment(filterDates.start).format('DD-MM-YYYY') == moment(filterDates.end).format('DD-MM-YYYY')){
+            setTitle('Ventas por producto del ' + moment(filterDates.start).format('DD-MM-YYYY'))
+        } else {
+            setTitle('Ventas por producto del ' + moment(filterDates.start).format('DD-MM-YYYY') + ' al ' + moment(filterDates.end).format('DD-MM-YYYY'))
+        }
 
-      
+    }, [filterDates])
+
     useEffect(() => {
         salesDetails.findAllBetweenDateGroupByProduct(filterDates.start, filterDates.end)
-        .then(res => {
-            let data = res.filter(item => item.Product!= null)
-            data = data.map(item => ({
-                id: item.ProductId,
-                name: item.Product.name,
-                code: item.Product.code,
-                category: item.Product.Category.name,
-                amount: parseInt(item.total_amount),
-                quanty: item.total_quanty
-            }))
-            setProductsList(data)
-        })
-        .catch(err => console.log(err))
+            .then(res => {
+                let data = res.filter(item => item.Product != null)
+                data = data.map(item => ({
+                    id: item.ProductId,
+                    name: item.Product.name,
+                    code: item.Product.code,
+                    category: item.Product.Category.name,
+                    amount: parseInt(item.total_amount),
+                    quanty: item.total_quanty
+                }))
+                setProductsList(data)
+            })
+            .catch(err => console.log(err))
     }, [])
 
     const columns = [
@@ -60,10 +69,10 @@ export default function SalesProductsGrid(props) {
 
 
 
-  return (
-    <>
-    <AppInfoDataGrid 
-    title='Ventas por producto'
+    return (
+        <>
+            <AppInfoDataGrid
+                title={title}
                 rows={productsList}
                 columns={columns}
                 height='80vh'
@@ -71,9 +80,9 @@ export default function SalesProductsGrid(props) {
                 infoField={'amount'}
                 infoTitle={'Total ventas: '}
                 money={true}
-                />
-    </>
-  )
+            />
+        </>
+    )
 }
 
 

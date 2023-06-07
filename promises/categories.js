@@ -1,7 +1,3 @@
-
-// const config = require('../config.json')
-// const url = config.api.url
-
 import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 

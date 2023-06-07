@@ -620,6 +620,97 @@ ipcMain.on('factura', (e, printInfo) => {
 	e.returnValue = true
 })
 
+ipcMain.on('simple-order', (e, printInfo) => {
+	console.log(printInfo)
+	const idVendor = parseInt(printInfo.printer.idVendor)
+	const idProduct = parseInt(printInfo.printer.idProduct)
+	const device = new escpos.USB(idVendor, idProduct)
+	const options = { encoding: "GB18030" /* delt */ }
+	const printer = new escpos.Printer(device, options)
+	let total = printInfo.total
+	let order_id = printInfo.order_id
+
+	device.open(function () {
+		printer.font('b').align('ct').style('NORMAL')
+		printer.size(0, 0)
+		printer.text('_________________________________________')
+		printer.size(1, 0)
+		printer.text('PEDIDO')
+		printer.size(0, 0)
+		printer.text('Nro: ' + order_id)
+		printer.text('_________________________________________')
+		printer.text('')
+		printer.size(1, 0)
+		printer.text('TOTAL: ' + renderMoneystr(total))
+		printer.text('')
+		printer.size(0, 0)
+		printer.barcode(order_id, "CODE39")
+		printer.text('')
+		printer.text('_________________________________________')
+		printer.text('')
+		printer.size(0, 0)
+		printer.align('ct')
+		printer.text('')
+		printer.cut()
+		printer.close()
+
+	})
+	// device.close()
+	e.returnValue = true
+
+})
+
+ipcMain.on('complete-order', (e, printInfo) => {
+	// console.log(printInfo)
+	const idVendor = parseInt(printInfo.printer.idVendor)
+	const idProduct = parseInt(printInfo.printer.idProduct)
+	const device = new escpos.USB(idVendor, idProduct)
+	const options = { encoding: "GB18030" /* delt */ }
+	const printer = new escpos.Printer(device, options)
+	let total = printInfo.total
+	let order_id = printInfo.order_id
+	let cart = printInfo.cart
+
+	device.open(function () {
+		printer.font('b').align('ct').style('NORMAL')
+		printer.size(0, 0)
+		printer.text('_________________________________________')
+		printer.size(1, 0)
+		printer.text('PEDIDO')
+		printer.size(0, 0)
+		printer.text('Nro: ' + order_id)
+		printer.text('_________________________________________')
+		printer.tableCustom([
+			{ text: '#', align: "LEFT", width: 0.1 },
+			{ text: 'Producto', align: "LEFT", width: 0.8 },
+			{ text: 'Subtotal', align: "LEFT", width: 0.2 }
+		])
+		cart.map(product => {
+			printer.tableCustom([
+				{ text: product.quanty, align: "LEFT", width: 0.1 },
+				{ text: product.name, align: "LEFT", width: 0.8 },
+				{ text: renderMoneystr(product.subtotal), align: "LEFT", width: 0.2 }
+			])
+		})
+		printer.size(1, 0)
+		printer.text('')
+		printer.text('TOTAL: ' + renderMoneystr(total))
+		printer.text('')
+		printer.size(0, 0)
+		printer.barcode(order_id, "CODE39")
+		printer.text('')
+		printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
+		printer.align('ct')
+		printer.text('')
+		printer.cut()
+		printer.close()
+
+	})
+	// device.close()
+	e.returnValue = true
+
+})
+
 ipcMain.on('external-pay', (e, printInfo) => {
 	const idVendor = parseInt(printInfo.printer.idVendor)
 	const idProduct = parseInt(printInfo.printer.idProduct)

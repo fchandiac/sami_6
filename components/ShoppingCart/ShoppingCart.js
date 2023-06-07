@@ -19,8 +19,10 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd'
 import LockOpenTwoToneIcon from '@mui/icons-material/LockOpenTwoTone'
 import LockTwoToneIcon from '@mui/icons-material/LockTwoTone'
+import ReceiptIcon from '@mui/icons-material/Receipt'
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle'
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined'
 import EditIcon from '@mui/icons-material/Edit'
 import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart'
@@ -38,15 +40,12 @@ const utils = require('../../utils')
 const print = require('../../promises/print')
 const ordersPr = require('../../promises/orders')
 const ordersDetails = require('../../promises/ordersDetails')
-
-
-
-
+const products = require('../../promises/products')
 
 
 export default function ShoppingCart(props) {
     const { stockControl, quote } = props
-    const { cart, total, lock, dispatch, ordersMode } = useAppContext()
+    const { cart, total, lock, dispatch, ordersMode, ordersInCart } = useAppContext()
     const [rowData, setRowData] = useState([])
     const [openPayDialog, setOpenPayDialog] = useState(false)
     const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
@@ -102,7 +101,6 @@ export default function ShoppingCart(props) {
         }
     }
 
-
     const removeProduct = (id, salesRoomStock) => {
         dispatch({ type: 'REMOVE_FROM_CART', value: { id, salesRoomStock } })
     }
@@ -113,11 +111,16 @@ export default function ShoppingCart(props) {
 
     const addProduct = (id, salesRoomStock) => {
         let product = cart.find((product) => product.id === id)
-        if (product.virtualStock <= 0) {
-            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
-        } else {
+        if (product.stockControl === false) {
             dispatch({ type: 'ADD_QUANTY', value: { id, salesRoomStock } })
+        } else {
+            if (product.virtualStock <= 0) {
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
+            } else {
+                dispatch({ type: 'ADD_QUANTY', value: { id, salesRoomStock } })
+            }
         }
+
 
     }
 
@@ -143,6 +146,7 @@ export default function ShoppingCart(props) {
 
     const clearCart = () => {
         dispatch({ type: 'CLEAR_CART' })
+        dispatch({ type: 'SET_ORDERS_IN_CART', value: [] })
     }
 
     const addDiscount = (id) => {
@@ -201,7 +205,7 @@ export default function ShoppingCart(props) {
 
     const addSpecialProduct = () => {
         console.log(specialProduct.quanty * specialProduct.sale)
-        let id = Math.floor(Math.random() * (99999 - 20000 + 1)) + 20000
+        let id = Math.floor(Math.random() * (99999 - 20000 + 1)) + 900000
         let quanty = parseFloat(specialProduct.quanty)
         let subTotal = quanty * specialProduct.sale
         let specialPro = {
@@ -214,7 +218,7 @@ export default function ShoppingCart(props) {
             virtualStock: 1,
             discount: 0,
             controlStock: false,
-            code: '0001' + Math.floor(Math.random() * 1000).toString(),
+            code: '0001SP' + Math.floor(Math.random() * 1000).toString(),
             specialProduct: true
         }
         dispatch({ type: 'ADD_SPECIAL_TO_CART', value: specialPro })
@@ -243,30 +247,75 @@ export default function ShoppingCart(props) {
     }
 
     const newOrder = () => {
+        console.log(cart)
         if (cart.length === 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
         } else {
             ordersPr.create()
-                .then( (res) => {
-                    console.log(res)
+                .then((res) => {
+                    let order_id = res.id
                     orderDetailsPrAll(res.id)
                         .then(() => {
                             dispatch({ type: 'CLEAR_CART' })
                             dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Pedido creado' } })
+                            ipcRenderer.invoke('find-printer', printerInfo)
+                                .then((findPrinter) => {
+                                    if (!findPrinter) {
+                                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                                    } else {
+                                        let printinfo = {
+                                            printer: printerInfo,
+                                            total: total,
+                                            order_id: order_id,
+                                        }
+                                        ipcRenderer.send('simple-order', printinfo)
+                                    }
+                                })
                         })
                         .catch((err) => {
                             console.log(err)
                             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error al crear el pedido' } })
                         })
                 })
-                .catch((err) => {console.log(err)})
+                .catch((err) => { console.log(err) })
         }
     }
 
+    const removeOrder = async (id) => {
+        const orderToRemove = await ordersPr.findOneById(id)
+        let details = orderToRemove.ordersdetails
+        console.log('Details')
+        console.log(details)
+        // console.log('Cart')
+        for (const item of details) {
+            const product = await products.findOneById(item.product_id);
+            if (product == null) {
+                let findProduct = cart.find(product => product.name === item.name)
+                let id = findProduct.id
+                let st = 0
+                dispatch({ type: 'REMOVE_FROM_CART', value: { id, st } })
+            } else {
+                let cartProduct = cart.find(product => product.id === item.product_id)
+                let quanty = cartProduct.quanty - item.quanty
+                if (quanty == 0) {
+                    dispatch({ type: 'REMOVE_FROM_CART', value: { id: cartProduct.id, salesRoomStock: cartProduct.salesRoomStock } })
+                } else {
+                    dispatch({ type: 'EDIT_QUANTY', value: { id: cartProduct.id, quanty: quanty } })
+                }
+            }
+        }
+
+        let newOrders = ordersInCart.filter(item => item.order_id != orderToRemove.id)
+        console.log('ORDERS_IN_CART', newOrders)
+        dispatch({ type: 'SET_ORDERS_IN_CART', value: newOrders })
+
+
+    }
+
     const columns = [
-        { field: 'quanty', headerName: '#', flex: .5 },
-        { field: 'name', headerName: 'Producto', flex: 1.8 },
-        { field: 'sale', headerName: 'Precio', flex: 1, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'quanty', headerName: '#', flex: .3 },
+        { field: 'name', headerName: 'Producto', flex: 1.5 },
+        { field: 'sale', headerName: 'Precio', flex: .8, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'discount',
             headerName: 'Descuento',
@@ -284,15 +333,15 @@ export default function ShoppingCart(props) {
             ),
             hide: lock ? true : false
         },
-        { field: 'subTotal', headerName: 'Subtotal', flex: 1, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'subTotal', headerName: 'Subtotal', flex: .8, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
             headerName: '',
-            flex: 1,
+            flex: 1.2,
             headerClassName: 'data-grid-last-column-header',
             type: 'actions', getActions: (params) => [
                 <GridActionsCellItem
-                    sx={{ paddingLeft: 0, paddingRight: 0 }}
+                    sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
                     label='delete'
                     icon={<DeleteIcon />}
                     onClick={() => {
@@ -300,7 +349,7 @@ export default function ShoppingCart(props) {
                     }}
                 />,
                 <GridActionsCellItem
-                    sx={{ paddingLeft: 0, paddingRight: 0 }}
+                    sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
                     label='substract'
                     icon={<RemoveCircleIcon />}
                     onClick={() => {
@@ -308,13 +357,13 @@ export default function ShoppingCart(props) {
                     }}
                 />,
                 <GridActionsCellItem
-                    sx={{ paddingLeft: 0, paddingRight: 0 }}
+                    sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
                     label='edit'
                     icon={<EditIcon />}
                     onClick={() => {
                         setRowData({
                             id: params.row.id,
-                            quanty: params.row.quanty,
+                            quanty: '',
                             salesRoomStock: params.row.salesRoomStock,
                             name: params.row.name,
                             stockControl: params.row.stockControl
@@ -324,11 +373,11 @@ export default function ShoppingCart(props) {
                     }}
                 />,
                 <GridActionsCellItem
-                    sx={{ paddingLeft: 0, paddingRight: 0 }}
+                    sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
                     label='add'
                     icon={<AddCircleIcon />}
                     onClick={() => {
-                        addProduct(params.row.id)
+                        addProduct(params.row.id, params.row.salesRoomStock)
                     }}
                 />,
 
@@ -351,7 +400,9 @@ export default function ShoppingCart(props) {
                     components={{ Toolbar: CustomToolbar, Pagination: CustomFooter }}
                     componentsProps={{
                         toolbar: {
-                            total: utils.renderMoneystr(total)
+                            total: utils.renderMoneystr(total),
+                            ordersInCart: ordersInCart,
+                            removeOrder: removeOrder
 
                         },
                         pagination: {
@@ -398,7 +449,9 @@ export default function ShoppingCart(props) {
                                     inputProps={{ step: "0.01", min: 0 }}
                                     variant="outlined"
                                     size={'small'}
+                                    autoFocus
                                     fullWidth
+                                    required
                                 />
                             </Grid>
                         </Grid>
@@ -510,11 +563,28 @@ function specialProductDefault() {
 
 
 function CustomToolbar(props) {
-    const { total } = props
+    const { total, ordersInCart, removeOrder } = props
+
+
 
     return (
         <Box sx={{ p: 2, m: 1 }}>
             <Typography variant="h5" gutterBottom component="div">{'Total: ' + total}</Typography>
+            {ordersInCart.map((order, index) => (
+                <Button
+                    key={index}
+                    variant={'outlined'}
+                    startIcon={<ReceiptIcon />}
+                    endIcon={<DeleteIcon />}
+                    onClick={() => { removeOrder(order.order_id) }}
+                    size={'small'}
+                    sx={{ mr: .5, mt: .5 }}
+
+                >
+                    {order.order_id}
+                </Button>
+
+            ))}
         </Box>
     )
 }
@@ -538,7 +608,7 @@ function CustomFooter(props) {
 
     return (
         <>
-            <Grid container spacing={1} direction={'row'} justifyContent={'flex-end'} alignItems={'center'} paddingRight={1}>
+            <Grid container spacing={1} direction={'row'} justifyContent={'flex-end'} paddingRight={1}>
                 <Grid item>
                     <IconButton onClick={() => { openSpecialProductUI() }}>
                         <LibraryAddIcon />
@@ -546,7 +616,7 @@ function CustomFooter(props) {
                 </Grid>
                 <Grid item>
                     <Button
-                        sx={{ display: ordersMode ? 'none' : 'block' }}
+                        sx={{ display: ordersMode ? 'none' : 'inline-flex' }}
                         variant="contained"
                         onClick={() => { proccessPayment() }}>
                         Procesar Pago
@@ -554,17 +624,18 @@ function CustomFooter(props) {
                 </Grid>
                 <Grid item>
                     <Button
-                        sx={{ display: showNewOrderButton ? 'block' : 'none' }}
+                        sx={{ display: showNewOrderButton ? 'inline-flex' : 'none' }}
                         variant={ordersMode ? 'contained' : 'outlined'}
+                        startIcon={<AddCircleOutlineIcon />}
                         onClick={() => { newOrder() }}>
-                        Nuevo Pedido
+                        Pedido
                     </Button>
                 </Grid>
                 <Grid item>
-                    <Button variant={'outlined'} sx={{ display: quote ? 'block' : 'none' }} onClick={() => { printQuote() }}>Cotización</Button>
+                    <Button variant={'outlined'} sx={{ display: quote ? 'inline-flex' : 'none' }} onClick={() => { printQuote() }}>Cotización</Button>
                 </Grid>
                 <Grid item>
-                    <Button variant={'outlined'} sx={{ display: lock ? 'none' : 'block' }} onClick={() => { openDiscountUI() }}>Descuento</Button>
+                    <Button variant={'outlined'} sx={{ display: lock ? 'none' : 'inline-flex' }} onClick={() => { openDiscountUI() }}>Descuento</Button>
                 </Grid>
                 <Grid item>
                     <IconButton onClick={() => { clearCart() }}><RemoveShoppingCartIcon /></IconButton>

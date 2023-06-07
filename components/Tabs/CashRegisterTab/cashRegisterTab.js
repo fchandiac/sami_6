@@ -46,8 +46,7 @@ function a11yProps(index) {
 }
 
 export default function BasicTabs() {
-  const [value, setValue] = React.useState(0)
-  const { ordersMode, movements, dispatch, orders } = useAppContext()
+  const { ordersMode, movements, dispatch, orders, cashRegisterTab } = useAppContext()
   const [hiddenOrders, setHiddenOrders] = useState(false)
   const [hiddenMovements, setHiddenMovements] = useState(false)
 
@@ -55,11 +54,12 @@ export default function BasicTabs() {
     let UI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
     setHiddenOrders(!UI.orders)
     setHiddenMovements(ordersMode)
+  
   }, [])
 
 
   const handleChange = (event, newValue) => {
-    setValue(newValue);
+    dispatch({ type: 'SET_CASH_REGISTER_TAB', value: newValue })
   }
 
   const renderCashRegister = () => {
@@ -77,19 +77,19 @@ export default function BasicTabs() {
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+        <Tabs value={cashRegisterTab} onChange={handleChange} aria-label="basic tabs example">
           <Tab label={ordersMode? 'Gestión de pedidos': 'Caja registradora'} {...a11yProps(0)} sx={{display: renderCashRegister()? 'inline-flex': 'none'}}/>
           <Tab label="Movimientos" {...a11yProps(1)} sx={{display: hiddenMovements? 'none': 'inline-flex'}}/>
           <Tab label="Pedidos" {...a11yProps(2)}  sx={{display: hiddenOrders? 'none': 'inline-flex'}}/>
         </Tabs>
       </Box>
-      <TabPanel value={value} index={0}>
+      <TabPanel value={cashRegisterTab} index={0}>
         <CashRegister></CashRegister>
       </TabPanel>
-      <TabPanel value={value} index={1}>
+      <TabPanel value={cashRegisterTab} index={1}>
         <Movements></Movements>
       </TabPanel>
-      <TabPanel value={value} index={2}>
+      <TabPanel value={cashRegisterTab} index={2}>
         <Orders />
       </TabPanel>
     </Box>

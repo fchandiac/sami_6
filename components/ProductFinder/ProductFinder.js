@@ -26,6 +26,23 @@ export default function ProductFinder(props) {
     const [rowData, setRowData] = useState({})
     const [productsList, setProductsList] = useState([])
 
+    useEffect(() => {
+        console.log('ProductFinder')
+        products.findAll()
+            .then(res => {
+                let data = res.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    code: item.code,
+                    sale: item.sale == undefined ? 0 : item.sale,
+                    salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)) == undefined ? 0 : item.Stocks.find(item => (item.storage_id == 1001)).stock,
+                    stockControl: item.stock_control
+                }))
+                setProductsList(data)
+            })
+            .catch(err => { console.log(err) })
+    }, [])
+
 
 
     useEffect(() => {
@@ -34,10 +51,14 @@ export default function ProductFinder(props) {
                 console.log('NONE_TYPE')
                 break
             case 'NEW_ADD_TO_CART':
-                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                console.log('NEW_ADD_TO_CART', product)
+                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                //gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: 2}])
                 break
             case 'ADD_TO_CART':
-                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                console.log('ADD_TO_CART', product)
+                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                //gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: 2}])
                 break
             case 'REMOVE_FROM_CART':
                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: product.salesRoomStock }])
@@ -49,11 +70,13 @@ export default function ProductFinder(props) {
                 }
                 break
             case 'ADD_QUANTY':
+                console.log('ADD_QUANTY', product)
                 if (product.specialProduct == false) {
                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
                 }
                 break
             case 'EDIT_QUANTY':
+                console.log('EDIT_QUANTY', product)
                 if (product.specialProduct == false) {
                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
                 }
@@ -81,21 +104,7 @@ export default function ProductFinder(props) {
 
 
 
-    useEffect(() => {
-        products.findAll()
-            .then(res => {
-                let data = res.map((item) => ({
-                    id: item.id,
-                    name: item.name,
-                    code: item.code,
-                    sale: item.sale,
-                    salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)) == undefined ? 0 : item.Stocks.find(item => (item.storage_id == 1001)).stock,
-                    stockControl: item.stock_control
-                }))
-                setProductsList(data)
-            })
-            .catch(err => { console.log(err) })
-    }, [])
+    
 
     const addToCart = (product) => {
         if (product.stockControl == false) {
@@ -103,6 +112,7 @@ export default function ProductFinder(props) {
         } else if (stockControl == true && product.salesRoomStock <= 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay stock disponible' } })
         } else {
+            console.log('addToCart', product)
             dispatch({ type: 'ADD_TO_CART', value: product })
 
         }
@@ -122,8 +132,8 @@ export default function ProductFinder(props) {
                 params.row.stockControl ? params.value : '-'
                 //params.value
             )
-        },
-        { field: 'sale', headerName: 'Precio Venta', flex: .7, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        }, //valueFormatter: (params) => (utils.renderMoneystr(params.value))
+        { field: 'sale', headerName: 'Precio Venta', flex: .7,  valueFormatter: (params) => (utils.renderMoneystr(params.value))},
         {
             field: 'actions',
             headerName: '',

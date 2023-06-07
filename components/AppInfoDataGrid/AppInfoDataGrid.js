@@ -35,7 +35,7 @@ function CustomToolbar(props) {
                 spacing={2}
             >
                 <GridToolbarQuickFilter />
-                <Typography variant="h5" gutterBottom component="div">{gridHeader}</Typography>
+                <Typography variant="h6" gutterBottom component="div">{gridHeader}</Typography>
             </Stack>
         </Box>
     )

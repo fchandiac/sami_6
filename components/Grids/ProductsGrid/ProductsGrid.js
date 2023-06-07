@@ -94,7 +94,7 @@ export default function ProductsGrid(props) {
             1001,
             rowData.sale,
             rowData.purchase,
-            )
+        )
             .then(() => {
                 gridApiRef.current.updateRows([{
                     id: rowData.rowId,
@@ -123,18 +123,19 @@ export default function ProductsGrid(props) {
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
         { field: 'name', headerName: 'Nombre', flex: 1 },
-        { field: 'code', headerName: 'Código', flex: .6 },
+        { field: 'code', headerName: 'Código', flex: .5 },
         { field: 'category', headerName: 'Categoría', flex: .6 },
         { field: 'salesRoomStock', headerName: 'Stock sala', flex: .4 },
         { field: 'stock', headerName: 'Stock total', flex: .4 },
-        { field: 'sale', headerName: 'Precio Venta', type: 'number', flex: .45, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
-        { field: 'purchase', headerName: 'Precio Compra', flex: .47, type: 'number', valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'sale', headerName: '$ Venta', type: 'number', flex: .45, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'purchase', headerName: '$ Compra', flex: .4, type: 'number', valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
             headerName: '',
             headerClassName: 'data-grid-last-column-header',
             type: 'actions', flex: .6, getActions: (params) => [
                 <GridActionsCellItem
+                    sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
                     label='delete'
                     icon={<DeleteIcon />}
                     onClick={() => {
@@ -157,6 +158,7 @@ export default function ProductsGrid(props) {
                     }}
                 />,
                 <GridActionsCellItem
+                    sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
                     label='view'
                     icon={<InfoIcon />}
                     onClick={() => {
@@ -182,6 +184,7 @@ export default function ProductsGrid(props) {
                 />,
                 ,
                 <GridActionsCellItem
+                    sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
                     label='view'
                     icon={params.row.favorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                     onClick={() => {
@@ -189,6 +192,7 @@ export default function ProductsGrid(props) {
                     }}
                 />,
                 <GridActionsCellItem
+                    sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
                     label='stock control'
                     icon={params.row.stock_control ? <WidgetsIcon /> : <WidgetsOutlinedIcon />}
                     onClick={() => {
@@ -232,7 +236,7 @@ export default function ProductsGrid(props) {
                                             <TextField
                                                 label="Precio de venta"
                                                 value={(rowData.sale == undefined) ? '' : utils.renderMoneystr(rowData.sale)}
-                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({...rowData, sale: 0 }) : setRowData({...rowData, sale: utils.moneyToInt(e.target.value)}) }}
+                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({ ...rowData, sale: 0 }) : setRowData({ ...rowData, sale: utils.moneyToInt(e.target.value) }) }}
                                                 variant="outlined"
                                                 size={'small'}
                                                 fullWidth
@@ -243,7 +247,7 @@ export default function ProductsGrid(props) {
                                             <TextField
                                                 label="Precio de compra"
                                                 value={(rowData.purchase == undefined) ? '' : utils.renderMoneystr(rowData.purchase)}
-                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({...rowData, purchase: 0 }) : setRowData({...rowData, purchase: utils.moneyToInt(e.target.value)}) }}
+                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({ ...rowData, purchase: 0 }) : setRowData({ ...rowData, purchase: utils.moneyToInt(e.target.value) }) }}
                                                 variant="outlined"
                                                 size={'small'}
                                                 fullWidth
@@ -350,7 +354,7 @@ function rowDataDefault() {
         price_id: 0,
         tax: '',
         tax_id: 0,
-        category: {key: 0, label: '', id: 0},
+        category: { key: 0, label: '', id: 0 },
         category_id: 0,
         favorite: false,
         salesRoomStock: 0,

@@ -19,6 +19,9 @@ function yearsOld(date_of_birth) {
 }
 
 function renderMoneystr(value) {
+  if (value == null || value == undefined) {
+    value = 0
+  }
   if (value < 0) {
       value = value.toString()
       value = value.replace(/[^0-9]/g, '')

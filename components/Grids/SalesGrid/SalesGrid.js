@@ -16,6 +16,17 @@ export default function SalesGrid(props) {
     const [rowData, setRowData] = useState(rowDataDefault())
     const [salesList, setSalesList] = useState([])
     const [openDestroyDialog, setOpenDestroyDialog] = useState(false)
+    const [title, setTitle] = useState('Ventas')
+
+
+    useEffect(() => {
+        if (moment(filterDates.start).format('DD-MM-YYYY') == moment(filterDates.end).format('DD-MM-YYYY')){
+            setTitle('Ventas del ' + moment(filterDates.start).format('DD-MM-YYYY'))
+        } else {
+            setTitle('Ventas del ' + moment(filterDates.start).format('DD-MM-YYYY') + ' al ' + moment(filterDates.end).format('DD-MM-YYYY'))
+        }
+
+    }, [filterDates])
 
 
     useEffect(() => {
@@ -47,12 +58,12 @@ export default function SalesGrid(props) {
     }
 
     const columns = [
-        { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
+        { field: 'id', headerName: 'Id', flex: .5, type: 'number' },
         { field: 'amount', headerName: 'Monto', flex: 1, type: 'number', valueFormatter: (params) => utils.renderMoneystr(params.value) },
-        { field: 'payment_method', headerName: 'Método de pago', flex: 1 },
-        { field: 'dte_code', headerName: 'DTE', flex: 1 },
-        { field: 'dte_number', headerName: 'N° DTE', flex: 1 },
-        { field: 'date', headerName: 'Fecha', flex: 1, type: 'dateTime', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY HH:mm') },
+        { field: 'payment_method', headerName: 'Medio de pago', flex: 1 },
+        { field: 'dte_code', headerName: 'DTE', flex: .6 },
+        { field: 'dte_number', headerName: 'N° DTE', flex: .7 },
+        { field: 'date', headerName: 'Fecha - hora', flex: 1, type: 'dateTime', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY HH:mm') },
         {
             field: 'actions',
             headerName: '',
@@ -77,7 +88,7 @@ export default function SalesGrid(props) {
         <>
 
             <AppInfoDataGrid
-                title='Ventas'
+                title={title}
                 rows={salesList}
                 columns={columns}
                 height='80vh'

@@ -25,10 +25,12 @@ const initialState = {
     stockAlertList: [],
     ordersMode: false,
     orders: true,
+    ordersInCart: [],
     movements: { balance: 0, movements: [] },
     user: { id: 0, name: 'UserVersion', profile: '', permissions: [] },
     webConnection: false,
-    lioren: { integration: false, token: '', mail: '' }
+    lioren: { integration: false, token: '', mail: '' },
+    cashRegisterTab: 0,
 }
 
 const reducer = (state, action) => {
@@ -124,7 +126,8 @@ const reducer = (state, action) => {
                     cartChanged: !state.cartChanged,
                     product: {
                         id: action.value.id,
-                        salesRoomStock: action.value.salesRoomStock
+                        salesRoomStock: action.value.salesRoomStock,
+                        specialProduct: action.value.specialProduct
                     }, actionType: 'REMOVE_FROM_CART'
                 }
             } else {
@@ -168,7 +171,8 @@ const reducer = (state, action) => {
                 product: {
                     id: action.value.id,
                     virtualStock: state.cart[productIndex].virtualStock,
-                    salesRoomStock: state.cart[productIndex].salesRoomStock
+                    salesRoomStock: state.cart[productIndex].salesRoomStock,
+                    specialProduct: state.cart[productIndex].specialProduct
                 }, actionType: 'ADD_QUANTY'
             }
             break
@@ -191,7 +195,8 @@ const reducer = (state, action) => {
                 product: {
                     id: action.value.id,
                     virtualStock: vrStock,
-                    salesRoomStock: state.cart[productIndx].salesRoomStock
+                    salesRoomStock: state.cart[productIndx].salesRoomStock,
+                    specialProduct: state.cart[productIndx].specialProduct
                 },
                 actionType: 'EDIT_QUANTY'
             }
@@ -257,6 +262,10 @@ const reducer = (state, action) => {
             return { ...state, webConnection: action.value }
         case 'SET_LIOREN':
             return { ...state, lioren: action.value }
+        case 'SET_ORDERS_IN_CART':
+            return { ...state, ordersInCart: action.value }
+        case 'SET_CASH_REGISTER_TAB':
+            return { ...state, cashRegisterTab: action.value }
         default:
             console.log('No action type')
             break
@@ -284,6 +293,8 @@ const AppProvider = ({ children }) => {
             orders: state.orders,
             webConnection: state.webConnection,
             lioren: state.lioren,
+            ordersInCart: state.ordersInCart,
+            cashRegisterTab: state.cashRegisterTab,
             dispatch
         }}>
             {children}

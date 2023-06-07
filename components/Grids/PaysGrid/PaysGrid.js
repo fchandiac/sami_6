@@ -21,6 +21,16 @@ export default function PaysGrid(props) {
     const [openDestroyDialog, setOpenDestroyDialog] = useState(false)
     const [openInfoDialog, setOpenInfoDialog] = useState(false)
     const [saleData, setSaleData] = useState(saleDataDefault())
+    const [title, setTitle] = useState('Pagos')
+
+    useEffect(() => {
+        if (moment(filterDates.start).format('DD-MM-YYYY') == moment(filterDates.end).format('DD-MM-YYYY')){
+            setTitle('Pagos del ' + moment(filterDates.start).format('DD-MM-YYYY'))
+        } else {
+            setTitle('Pagos del ' + moment(filterDates.start).format('DD-MM-YYYY') + ' al ' + moment(filterDates.end).format('DD-MM-YYYY'))
+        }
+
+    }, [filterDates])
 
 
 
@@ -87,15 +97,15 @@ export default function PaysGrid(props) {
         { field: 'id', headerName: 'Id', flex: .3, type: 'number' },
         { field: 'sale_id', headerName: 'Venta', flex: .3 },
         { field: 'customer_name', headerName: 'Cliente', flex: 1 },
-        { field: 'amount', headerName: 'Monto', flex: .6, type: 'number', valueFormatter: (params) => utils.renderMoneystr(params.value) },
-        { field: 'payment_method', headerName: 'Medio de pago', flex: 1 },
+        { field: 'amount', headerName: 'Monto', flex: .5, type: 'number', valueFormatter: (params) => utils.renderMoneystr(params.value) },
+        { field: 'payment_method', headerName: 'Medio de pago', flex: .7 },
         {
-            field: 'state', headerName: 'Estado', flex: .3,
+            field: 'state', headerName: 'Estado', flex: .4,
             renderCell: (params) => {
                 return params.row.state === 'Pagado' ? <PaidIcon sx={{ color: 'green' }} /> : <PaidIcon sx={{ color: 'red' }} />
             }
         },
-        { field: 'date', headerName: 'Fecha', flex: 1, type: 'date', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY HH:mm') },
+        { field: 'date', headerName: 'Fecha', flex: .8, type: 'date', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY HH:mm') },
         {
             field: 'actions',
             headerName: '',
@@ -124,7 +134,7 @@ export default function PaysGrid(props) {
     return (
         <>
             <AppInfoDataGrid
-                title='Pagos'
+                title={title}
                 rows={paysList}
                 columns={columns}
                 height='80vh'

@@ -264,7 +264,7 @@ export default function MovementsGrid() {
             headerClassName: 'data-grid-last-column-header',
             type: 'actions', flex: .6, getActions: (params) => [
                 <GridActionsCellItem
-                    sx={{ display: displayDestroy(params.row.type) ? 'block' : 'none' }}
+                    sx={{ display: displayDestroy(params.row.type) ? 'inline-flex' : 'none' }}
                     label='delete'
                     icon={<DeleteIcon />}
                     onClick={() => {
@@ -279,7 +279,7 @@ export default function MovementsGrid() {
                     }}
                 />,
                 <GridActionsCellItem
-                    sx={{ display: displayInfo(params.row.type) ? 'block' : 'none' }}
+                    sx={{ display: displayInfo(params.row.type) ? 'inline-flex' : 'none' }}
                     label='info'
                     icon={<InfoIcon />}
                     onClick={() => {
@@ -295,7 +295,7 @@ export default function MovementsGrid() {
                     }}
                 />,
                 <GridActionsCellItem
-                    sx={{ display: displayInfo(params.row.type) ? 'block' : 'none' }}
+                    sx={{ display: displayInfo(params.row.type) ? 'inline-flex' : 'none' }}
                     label='print'
                     icon={<PrintIcon />}
                     onClick={() => {
