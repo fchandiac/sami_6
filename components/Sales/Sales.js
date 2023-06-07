@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Grid, TextField, Button, Box } from '@mui/material'
+import { Grid, TextField, Box } from '@mui/material'
 import AppPaper from '../AppPaper/AppPaper'
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker'
 import moment from 'moment';
@@ -32,20 +32,20 @@ export default function Sales() {
     const formatY = (value) => {
         if (value == null || value == undefined) {
             value = 0
-          }
-          if (value < 0) {
-              value = value.toString()
-              value = value.replace(/[^0-9]/g, '')
-              value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-              value = '$ -' + value
-              return value
-          } else {
-              value = value.toString()
-              value = value.replace(/[^0-9]/g, '')
-              value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-              value = '$' + value
-              return value
-          }
+        }
+        if (value < 0) {
+            value = value.toString()
+            value = value.replace(/[^0-9]/g, '')
+            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+            value = '$ -' + value
+            return value
+        } else {
+            value = value.toString()
+            value = value.replace(/[^0-9]/g, '')
+            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+            value = '$' + value
+            return value
+        }
     }
 
     const fortmatX = (value) => {
@@ -53,10 +53,10 @@ export default function Sales() {
     }
 
     const formatTooltipText = (value, name, entry) => {
-        // Personaliza el contenido de texto del tooltip aquí
         return utils.renderMoneystr(value)
-      }
-      const colors = ['#98FF17', '#25E80C', '#01FF45', '#0CE896', '#42FF17', '#0CE839', '#00FF90', '#0CE8D8' ]
+    }
+
+    const colors = ['#98FF17', '#25E80C', '#01FF45', '#0CE896', '#42FF17', '#0CE839', '#00FF90', '#0CE8D8']
     return (
         <>
             <Grid container spacing={1}>
@@ -92,9 +92,9 @@ export default function Sales() {
                                     <ResponsiveContainer width={'100%'} height={300}>
                                         <BarChart width={'100%'} data={chartData}>
                                             <CartesianGrid strokeDasharray="3 2" />
-                                            <XAxis  dataKey={'name'} fontSize={10}/>
-                                            <YAxis tickFormatter={formatY} fontSize={10}/>
-                                            <Tooltip formatter={formatTooltipText}/>
+                                            <XAxis dataKey={'name'} fontSize={10} />
+                                            <YAxis tickFormatter={formatY} fontSize={10} />
+                                            <Tooltip formatter={formatTooltipText} />
                                             <Bar dataKey="monto" fill='#1a9358' />
                                         </BarChart>
                                     </ResponsiveContainer>

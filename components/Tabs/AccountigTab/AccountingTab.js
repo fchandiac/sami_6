@@ -7,6 +7,7 @@ import Box from '@mui/material/Box';
 import Pays from '../../Pays/Pays';
 import Sales from '../../Sales/Sales';
 import SalesProducts from '../../SalesProducts/SalesProducts';
+import SalesReport from '../../SalesReport/SalesReport';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -55,6 +56,7 @@ export default function BasicTabs() {
           <Tab label="Pagos" {...a11yProps(0)} />
           <Tab label="Ventas" {...a11yProps(1)} />
           <Tab label="Ventas por producto" {...a11yProps(2)} />
+          <Tab label="Reporte de Ventas" {...a11yProps(3)} />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
@@ -65,6 +67,9 @@ export default function BasicTabs() {
       </TabPanel>
       <TabPanel value={value} index={2}>
        <SalesProducts />
+      </TabPanel>
+      <TabPanel value={value} index={3}>
+       <SalesReport />
       </TabPanel>
     </Box>
   );
