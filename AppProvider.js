@@ -27,7 +27,7 @@ const initialState = {
     orders: true,
     ordersInCart: [],
     movements: { balance: 0, movements: [] },
-    user: { id: 0, name: 'UserVersion', profile: '', permissions: [] },
+    user: { id: 0, user: 'test', pass: '1234',  name: 'UserVersión', profile: 'Perfil', permissions: [] },
     webConnection: false,
     lioren: { integration: false, token: '', mail: '' },
     cashRegisterTab: 0,

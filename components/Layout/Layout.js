@@ -26,7 +26,7 @@ const lioren = require('../../promises/lioren')
 
 export default function Layout(props) {
   const { children } = props
-  const { dispatch, pageTitle, stockAlertList, lock, ordersMode } = useAppContext()
+  const { dispatch, pageTitle, stockAlertList, lock, ordersMode, user } = useAppContext()
   const theme = useTheme()
   const [drawerState, setDrawerState] = useState(false)
   const router = useRouter()
@@ -48,7 +48,6 @@ export default function Layout(props) {
       .then(res => { dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res }) })
       .catch(err => { console.log(err) })
   }, [router.pathname])
-
 
   useEffect(() => {
     health.test()
@@ -102,11 +101,8 @@ export default function Layout(props) {
     setpopperAnchorEl(popperAnchorEl ? null : e.currentTarget)
 
   }
-
   const open = Boolean(popperAnchorEl);
   const id = open ? 'simple-popper' : undefined;
-
-
 
   return (
     <>
@@ -127,7 +123,7 @@ export default function Layout(props) {
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography variant="h8" component="div" sx={{ flexGrow: 1, marginRight: '1rem' }}>
-              {''}
+              {user.name}
             </Typography>
             <IconButton
               size="large"
@@ -144,9 +140,39 @@ export default function Layout(props) {
               open={open}
               id={id}
               anchorEl={popperAnchorEl}
-              placement="bottom-start"
+            // placement="bottom-start"
             >
-              <Button onClick={() => router.push('/')}>logOut</Button>
+              <Box sx={{ pt: 2, width: 180 }}>
+                <Box sx={{ background: '#E9F7EF', border: '1px solid #B3B6B7', borderRadius: '4px', p: 1 }}>
+                  <Grid container spacing={1} direction={'column'}>
+                    <Grid item>
+                      <Typography fontSize={12} color={'#909497'}>Funcionario</Typography>
+                      <Typography fontSize={14} sx={{ pl: 2 }}>{user.name}</Typography>
+                    </Grid>
+                    <Grid item>
+                      <Typography fontSize={12} color={'#909497'}>Usuario</Typography>
+                      <Typography fontSize={14} sx={{ pl: 2 }}>{user.user}</Typography>
+                    </Grid>
+                    <Grid item>
+                      <Typography fontSize={12} color={'#909497'}>Pérfil</Typography>
+                      <Typography fontSize={14} sx={{ pl: 2 }}>{user.profile}</Typography>
+                    </Grid>
+                    <Grid item textAlign={'right'}>
+                      <Button 
+                      size={'small'} 
+                      onClick={() => { 
+                        profileHandleClick() 
+                        dispatch({ type: 'SET_PAGE_TITLE', value: 'Mi cuenta' })
+                        router.push('/myAccount') 
+                      }}
+                      >Mi cuenta</Button>
+                    </Grid>
+                    <Grid item textAlign={'right'}>
+                      <Button size={'small'} onClick={() => { profileHandleClick(); router.push('/') }}>Cerrar sesión</Button>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Box>
             </Popper>
             <IconButton onClick={() => { lock ? setOpenAuthDialog(true) : updateLock() }} color={'inherit'} size="large" sx={{ mr: 1 }}>
               <LockOpenIcon sx={{ display: lock ? 'none' : 'block' }} />
@@ -155,7 +181,7 @@ export default function Layout(props) {
             <Badge badgeContent={stockAlertList.length} color='secondary'>
               <Chip
                 label="Alertas de stock"
-                onClick={() => { setOpenStockAlertDialog(true)}}
+                onClick={() => { setOpenStockAlertDialog(true) }}
                 icon={<NotificationsIcon />}
                 variant='outlined'
                 color='info'
@@ -414,7 +440,7 @@ const esESGrid = {
   columnHeaderSortIconLabel: 'Ordenar',
   // Rows selected footer text
   //footerRowSelected: count => count > 1 ? `${count.toLocaleString()} filas seleccionadas` : `${count.toLocaleString()} fila seleccionada`,
-  footerRowSelected: count => count > 1 ? '': '',
+  footerRowSelected: count => count > 1 ? '' : '',
   footerTotalRows: 'Filas Totales:',
   // Total visible row amount footer text
   footerTotalVisibleRows: (visibleCount, totalCount) => `${visibleCount.toLocaleString()} de ${totalCount.toLocaleString()}`,

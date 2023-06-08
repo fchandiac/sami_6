@@ -256,6 +256,8 @@ export default function Invoice(props) {
                 if (await ipcRenderer.invoke('find-printer', printer) == false) {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
                 } else {
+                    // console.log('PPPDDDFFF')
+                    // console.log(pdf)
                     const pdfData = Buffer.from(pdf, 'base64')
                     const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
                     window.open(pdfUrl)

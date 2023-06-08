@@ -44,6 +44,7 @@ exp.listen(port, () => {
 const createWindow = () => {
 	var win = new BrowserWindow({
 		width: 1920,
+		show: false,
 		height: 1080,
 		minWidth: 800,
 		minHeight: 600,
