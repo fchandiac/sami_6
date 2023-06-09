@@ -27,7 +27,7 @@ const initialState = {
     orders: true,
     ordersInCart: [],
     movements: { balance: 0, movements: [] },
-    user: { id: 0, user: 'test', pass: '1234',  name: 'UserVersión', profile: 'Perfil', permissions: [] },
+    user: { id: 0, user: 'test', pass: '1234',  name: 'UserVersión', profileId:0, profile: 'Perfil', permissions: [] },
     webConnection: false,
     lioren: { integration: false, token: '', mail: '' },
     cashRegisterTab: 0,
@@ -266,6 +266,8 @@ const reducer = (state, action) => {
             return { ...state, ordersInCart: action.value }
         case 'SET_CASH_REGISTER_TAB':
             return { ...state, cashRegisterTab: action.value }
+        case 'SET_USER':
+            return { ...state, user: action.value }
         default:
             console.log('No action type')
             break

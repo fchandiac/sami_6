@@ -25,11 +25,12 @@ const lioren = require('../../../promises/lioren')
 const salesDetails = require('../../../promises/salesDetails')
 const pays = require('../../../promises/pays')
 const customers = require('../../../promises/customers')
+const orders = require('../../../promises/orders')
 
 
 export default function PayDialog(props) {
     const { open, setOpen, total, stockControl } = props
-    const { dispatch, cart, movements, user, webConnection } = useAppContext()
+    const { dispatch, cart, movements, user, webConnection,  ordersInCart } = useAppContext()
     const [payAmount, setPayAmount] = useState(0)
     const [change, setChange] = useState(0)
     const [disablePay, setDisablePay] = useState(true)
@@ -246,6 +247,13 @@ export default function PayDialog(props) {
         return pr
     }
 
+    const closeOrders = async() => {
+        for (const order of ordersInCart) {
+          await orders.updateState(order.order_id, true)
+        }
+        dispatch({ type: 'SET_ORDERS_IN_CART', value: [] })
+    } 
+
     const saleBoleta = (dte_number) => {
         const pr = new Promise((resolve, reject) => {
             sales.create(total, paymentMethod, 39, dte_number, stockControl)
@@ -369,6 +377,11 @@ export default function PayDialog(props) {
                 await saleDetailAll(sale_.id, cart)
                 console.log(paymentMethodsList)
                 await savePay(paymentMethodsList, paymentMethod, sale_.id, total)
+
+                console.log('orders in cart', ordersInCart)
+                if (ordersInCart.length > 0) {
+                    await closeOrders()
+                }
                 setOpen(false)
                 setOpenChangeDialog(true)
             } else if (documentType === 'Boleta') {
@@ -386,6 +399,9 @@ export default function PayDialog(props) {
                     await saleDetailAll(sale.id, cart)
                     await savePay(paymentMethodsList, paymentMethod, sale.id, total)
                     ipcRenderer.sendSync('boleta', boletaPrintInfo(boleta[0], boleta[1], boleta[2]))
+                    if (ordersInCart.length > 0) {
+                        await closeOrders()
+                    }
                     setOpenChangeDialog(true)
                     setOpen(false)
                     
@@ -414,6 +430,9 @@ export default function PayDialog(props) {
                         sale_id: sale_.id
                     }
                     ipcRenderer.sendSync('print-ticket', printInfo)
+                    if (ordersInCart.length > 0) {
+                        await closeOrders()
+                    }
                     setOpenChangeDialog(true)
                     setOpen(false)
                     

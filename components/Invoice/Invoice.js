@@ -19,13 +19,14 @@ const utils = require('../../utils')
 const https = require('https');
 const PDF417 = require("pdf417-generator")
 const custumers = require('../../promises/customers')
+const orders = require('../../promises/orders')
 import SaveIcon from '@mui/icons-material/Save'
 
 
 
 export default function Invoice(props) {
     const { open, setOpen, setOpenChangeDialog, setOpenPayDialog, paymentMethod, stockControl } = props
-    const { dispatch, cart, movements, user } = useAppContext()
+    const { dispatch, cart, movements, user, ordersInCart } = useAppContext()
     const [openFindCustomerDialog, setOpenFindCustomerDialog] = useState(false)
     const [customerData, setCustomerData] = useState(customerDataDefault())
     const [requestData, setRequestData] = useState({ rut: '', razon_social: '', actividades: [{ giro: '' }] })
@@ -249,6 +250,13 @@ export default function Invoice(props) {
         return printInfo
     }
 
+    const closeOrders = async() => {
+        for (const order of ordersInCart) {
+          await orders.updateState(order.order_id, true)
+        }
+        dispatch({ type: 'SET_ORDERS_IN_CART', value: [] })
+    } 
+
     const printDocument = async (pdf, printInfo) => {
         switch (printMode()) {
             case 0:
@@ -261,7 +269,12 @@ export default function Invoice(props) {
                     const pdfData = Buffer.from(pdf, 'base64')
                     const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
                     window.open(pdfUrl)
+                    if (ordersInCart.length > 0) {
+                        await closeOrders()
+                    }
                     ipcRenderer.send('factura', printInfo)
+
+                    
                 }
                 break
             case 1:
@@ -269,6 +282,9 @@ export default function Invoice(props) {
                 if (await ipcRenderer.invoke('find-printer', printer) == false) {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
                 } else {
+                    if (ordersInCart.length > 0) {
+                        await closeOrders()
+                    }
                     ipcRenderer.send('factura', printInfo)
                 }
                 break
@@ -277,11 +293,17 @@ export default function Invoice(props) {
                 const pdfData = Buffer.from(pdf, 'base64')
                 const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
                 window.open(pdfUrl)
+                if (ordersInCart.length > 0) {
+                    await closeOrders()
+                }
                 break
             case 3:
                 //!thermalPrinting && !pdfView
                 console.log('factura no PDF no Thermal', factura)
                 dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Factura enviada al Sii' } })
+                if (ordersInCart.length > 0) {
+                    await closeOrders()
+                }
                 break
             default:
                 break
