@@ -34,10 +34,23 @@ export default function SalesProductsGrid(props) {
                     amount: parseInt(item.total_amount),
                     quanty: item.total_quanty
                 }))
+                let noProductData = res.filter(item => item.Product == null)
+                const noProductSum = noProductData .reduce((sum, item) => sum + parseInt(item.total_amount), 0)
+                const noProductQuantity = noProductData .reduce((sum, item) => sum + item.total_quanty, 0)
+                let noProduct = {
+                    id: 0,
+                    name: 'Productos sin registro',
+                    code: 'N/A',
+                    category: 'N/A',
+                    amount: noProductSum,
+                    quanty: noProductQuantity
+
+                }
+                data.push(noProduct)
                 setProductsList(data)
             })
             .catch(err => console.log(err))
-    }, [])
+    }, [filterDates])
 
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number' },

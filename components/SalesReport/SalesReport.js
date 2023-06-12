@@ -17,7 +17,7 @@ import moment from 'moment'
 const sales = require('../../promises/sales')
 const salesDetails = require('../../promises/salesDetails')
 const utils = require('../../utils')
-import html2pdf from 'html2pdf.js'
+// import html2pdf from 'html2pdf.js'
 
 export default function SalesReport() {
     const [filterDates, setFilterDates] = useState({ start: moment(new Date).format('YYYY-MM-DD 00:00'), end: moment(new Date).format('YYYY-MM-DD 23:59') })
@@ -177,38 +177,14 @@ export default function SalesReport() {
 
     const pdf = () => {
 
-        const componenteHTML = document.getElementById('pdf-component');
+        // const componenteHTML = document.getElementById('pdf-component');
 
-        // html2pdf().from(componenteHTML).outputPdf('datauristring').then(base64String => {
-        //     const pdfData = Buffer.from(base64String, 'base64')
-        //     console.log('PDF en base64:', pdfData);
-        //     const pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
-        //     window.open(pdfUrl)
-        //     console.log('PDF en base64:', base64String);
-        // });
-        html2pdf().from(componenteHTML).outputPdf('blob')
-            .then(blob => {
-                console.log('PDF en blob:', blob);
-                const url = URL.createObjectURL(blob, { type: 'application/pdf' })
-                window.open(url)
-            })
-
-        // html2pdf()
-        //     .from(componenteHTML)
-        //     .outputBlob()
+        // html2pdf().from(componenteHTML).outputPdf('blob')
         //     .then(blob => {
-        //         // Aquí puedes hacer lo que quieras con el objeto Blob
-        //         // Por ejemplo, puedes crear un enlace de descarga para el PDF
-        //         const url = URL.createObjectURL(blob);
-        //         const link = document.createElement('a');
-        //         link.href = url;
-        //         link.download = 'documento.pdf';
-        //         link.click();
-        //         URL.revokeObjectURL(url);
+        //         console.log('PDF en blob:', blob);
+        //         const url = URL.createObjectURL(blob, { type: 'application/pdf' })
+        //         window.open(url)
         //     })
-        //     .catch(error => {
-        //         console.error('Error al generar el PDF:', error);
-        //     });
     }
 
 

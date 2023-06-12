@@ -632,6 +632,7 @@ export default function PayDialog(props) {
                 setOpenPayDialog={setOpen}
                 paymentMethod={paymentMethod}
                 stockControl={stockControl}
+                customerForInvoice={customer}
             />
 
             <NewCustomerDialog

@@ -1,7 +1,14 @@
 PENDIENTE: 
     - Verificar destroy Sale cuando se elimina movimiento de venta
 
-test git
+
+
+PENDIENTE: 
+    -AGREGAR NOTA A LA CREACIÓN DEL PEDIDO
+    -AGREGAR NOTA AL PAGO POR TARJETA DE CREDITO
+    -CREAR LA TABLA ABONOS
+
+    
 
 
 npm i --save electron next react react-dom

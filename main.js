@@ -621,6 +621,12 @@ ipcMain.on('factura', (e, printInfo) => {
 	e.returnValue = true
 })
 
+const codeOptions = {
+	encoding: 'GB18030', // Opcional, depende de la codificación necesaria
+	width: 2, // Ajusta el ancho de barras aquí
+	height: 100, // Ajusta la altura del código de barras aquí
+  };
+
 ipcMain.on('simple-order', (e, printInfo) => {
 	console.log(printInfo)
 	const idVendor = parseInt(printInfo.printer.idVendor)
@@ -645,7 +651,7 @@ ipcMain.on('simple-order', (e, printInfo) => {
 		printer.text('TOTAL: ' + renderMoneystr(total))
 		printer.text('')
 		printer.size(0, 0)
-		printer.barcode(order_id, "CODE39")
+		printer.barcode(order_id, 'CODE39', codeOptions)
 		printer.text('')
 		printer.text('_________________________________________')
 		printer.text('')

@@ -26,7 +26,6 @@ function create(name, code, sale, purchase, category_id, tax_id) {
     return product
 }
 
-
 function findAll() {
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
@@ -45,8 +44,6 @@ function findAll() {
     })
     return product
 }
-
-
 
 function findOneByName(name) {
     let data = { name }
@@ -69,8 +66,6 @@ function findOneByName(name) {
     return product
 }
 
-
-
 function updateFavorite(id, favorite) {
     let data = { id, favorite }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
@@ -91,7 +86,6 @@ function updateFavorite(id, favorite) {
     })
     return product
 }
-
 
 function updateFull(id, name, code, category_id, tax_id, sale, purchase) {
     let data = {id, name, code, category_id, tax_id, sale, purchase }
@@ -177,8 +171,6 @@ function destroy(id) {
     return product
 }
 
-
-
 function updateStockControl(id, stock_control) {
     let data = { id, stock_control }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
@@ -199,7 +191,6 @@ function updateStockControl(id, stock_control) {
     })
     return product
 }
-
 
 export {
     findAll,

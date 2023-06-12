@@ -18,14 +18,14 @@ const stocks = require('../../promises/stocks')
 const utils = require('../../utils')
 const https = require('https');
 const PDF417 = require("pdf417-generator")
-const custumers = require('../../promises/customers')
+const customers = require('../../promises/customers')
 const orders = require('../../promises/orders')
 import SaveIcon from '@mui/icons-material/Save'
 
 
 
 export default function Invoice(props) {
-    const { open, setOpen, setOpenChangeDialog, setOpenPayDialog, paymentMethod, stockControl } = props
+    const { open, setOpen, setOpenChangeDialog, setOpenPayDialog, paymentMethod, stockControl, customerForInvoice } = props
     const { dispatch, cart, movements, user, ordersInCart } = useAppContext()
     const [openFindCustomerDialog, setOpenFindCustomerDialog] = useState(false)
     const [customerData, setCustomerData] = useState(customerDataDefault())
@@ -52,6 +52,25 @@ export default function Invoice(props) {
     const [findCustomerData, setFindCustomerData] = useState(findCustomerDataDefault())
     const [token, setToken] = useState('')
 
+
+    useEffect(() => {
+        if (customerForInvoice.id !== 0) {
+            customers.findOneById(customerForInvoice.id)
+                .then(res => {
+                    console.log(res)
+                    setCustomerData({
+                        rut: utils.formatRut(res.rut),
+                        razon_social: res.name,
+                        direccion: res.address,
+                        ciudad: ciudadesOptions.find(item => item.id === res.city),
+                        comuna: comunasOptions.find(item => item.id === res.district),
+                        giro: res.activity
+                    })
+                })
+                .catch(err => console.log(err))
+        }
+    }, [open])
+
     useEffect(() => {
         let printer = ipcRenderer.sendSync('get-printer', 'sync')
         let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
@@ -74,7 +93,7 @@ export default function Invoice(props) {
                 setComunasOptions(data)
             })
             .catch(err => { console.log(err) })
-        custumers.findAll()
+        customers.findAll()
             .then(res => {
                 let data = res.map((item) => ({
                     label: item.name,
@@ -244,18 +263,18 @@ export default function Invoice(props) {
             cart: cart,
             customer: customerData,
             paymentMethod: paymentMethod,
-	        sale_id: sale_id
+            sale_id: sale_id
         }
 
         return printInfo
     }
 
-    const closeOrders = async() => {
+    const closeOrders = async () => {
         for (const order of ordersInCart) {
-          await orders.updateState(order.order_id, true)
+            await orders.updateState(order.order_id, true)
         }
         dispatch({ type: 'SET_ORDERS_IN_CART', value: [] })
-    } 
+    }
 
     const printDocument = async (pdf, printInfo) => {
         switch (printMode()) {
@@ -274,7 +293,7 @@ export default function Invoice(props) {
                     }
                     ipcRenderer.send('factura', printInfo)
 
-                    
+
                 }
                 break
             case 1:
@@ -489,12 +508,12 @@ export default function Invoice(props) {
     }
 
     const saveCustomer = async () => {
-        const findCustomer = await custumers.findOneByRut(customerData.rut)
+        const findCustomer = await customers.findOneByRut(customerData.rut)
         console.log('findCustomer', findCustomer)
         if (findCustomer == undefined) {
-            custumers.create(customerData.rut, customerData.razon_social, customerData.giro, customerData.comuna.id, customerData.ciudad.id, customerData.direccion)
+            customers.create(customerData.rut, customerData.razon_social, customerData.giro, customerData.comuna.id, customerData.ciudad.id, customerData.direccion)
                 .then(() => {
-                    custumers.findAll()
+                    customers.findAll()
                         .then(res => {
                             let data = res.map((item) => ({
                                 label: item.name,
@@ -568,7 +587,7 @@ export default function Invoice(props) {
         return Promise.all(newStocks)
     }
 
-    const savePay = async ( paymentMethod, sale_id, amount, client_id) => {
+    const savePay = async (paymentMethod, sale_id, amount, client_id) => {
         const pay = new Promise((resolve, reject) => {
             let paymentMethods = ipcRenderer.sendSync('get-payment-methods', 'sync')
             paymentMethods.unshift({ name: 'Efectivo', pay: true })
@@ -594,12 +613,12 @@ export default function Invoice(props) {
             const sale = await saleFactura(factura.folio, factura.montototal)
             await saleDetailAll(sale.id, cart)
             let print_info = printInfo(factura, sale.id)
-            if (stockControl){
+            if (stockControl) {
                 await updateStocks(cart)
                 const alerts = await stocks.findAllStockAlert()
                 console.log('alerts', alerts)
                 dispatch({ type: 'SET_STOCK_ALERT_LIST', value: alerts })
-               
+
             }
             savePay(paymentMethod, sale.id, factura.montototal, customer.id)
             printDocument(factura.pdf, print_info)
