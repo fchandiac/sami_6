@@ -58,6 +58,16 @@ export default function Invoice(props) {
             customers.findOneById(customerForInvoice.id)
                 .then(res => {
                     console.log(res)
+                    setCustomer({
+                        key: res.id,
+                        id: res.id,
+                        rut: res.rut,
+                        label: res.name,
+                        activity: res.activity,
+                        district: res.district,
+                        city: res.city,
+                        address: res.address
+                    })
                     setCustomerData({
                         rut: utils.formatRut(res.rut),
                         razon_social: res.name,
@@ -590,6 +600,8 @@ export default function Invoice(props) {
     const savePay = async (paymentMethod, sale_id, amount, client_id) => {
         const pay = new Promise((resolve, reject) => {
             let paymentMethods = ipcRenderer.sendSync('get-payment-methods', 'sync')
+            let customerCredit = ipcRenderer.sendSync('get-customer-credit', 'sync')
+            paymentMethods.unshift({ name: customerCredit.name, pay: false })
             paymentMethods.unshift({ name: 'Efectivo', pay: true })
             let state = paymentMethods.find(method => method.name == paymentMethod).pay
             let date = showPay ? payData.date : new Date()

@@ -51,6 +51,7 @@ export default function PayDialog(props) {
     const [numeric_pad, setNumeric_pad] = useState(false)
     const [openInvoiceDialog, setOpenInvoiceDialog] = useState(false)
     const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
+    const [customerCredit, setCustomerCredit] = useState({ state: false, name: '', pay: false })
    
 
 
@@ -96,7 +97,9 @@ export default function PayDialog(props) {
         paymentMethods = paymentMethods.map((method) => {
             return { name: method.name, label: method.name, pay: method.pay }
         })
-        customerCredit.state === true ? paymentMethods.unshift({ name: 'customerCredit', label: customerCredit.name }) : null
+        console.log('customerCredit', customerCredit)
+        customerCredit.state === true ? paymentMethods.unshift({ name: customerCredit.name, label: customerCredit.name, pay: false }) : null
+        customerCredit.state === true ? setCustomerCredit({ state: true, name: customerCredit.name, pay:false }) : null
         paymentMethods.unshift({ name: 'Efectivo', label: 'Efectivo', pay: true })
         setConfigDocs(docs)
         setPaymentMethodsList(paymentMethods)
@@ -165,7 +168,7 @@ export default function PayDialog(props) {
         if (paymentMethod == 'Efectivo') {
             setPayAmount(0)
             setShowCustomerFinder(false)
-        } else if (paymentMethod == 'customerCredit') {
+        } else if (paymentMethod == customerCredit.name) {
             setPayAmount(total)
             setShowCustomerFinder(true)
         } else {

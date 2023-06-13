@@ -89,7 +89,7 @@ export default function MovementsGrid() {
             user: user.name,
             type: 1005,
             amount: mov.amount * -1,
-            payment_method: '-',
+            payment_method: mov.payment_method,
             balance: movements.balance - mov.amount,
             dte_code: 0,
             dte_number: 0,
