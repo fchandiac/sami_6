@@ -45,7 +45,8 @@ export default function PaysGrid(props) {
                     amount: item.amount,
                     payment_method: item.payment_method,
                     state: item.state == true ? 'Pagado' : 'Pendiente',
-                    date: item.date
+                    date: item.date,
+                    createdAt: item.createdAt,
                 }))
                 data.map((item) => {
                     if (item.customer_id !== 0) {
@@ -105,7 +106,8 @@ export default function PaysGrid(props) {
                 return params.row.state === 'Pagado' ? <PaidIcon sx={{ color: 'green' }} /> : <PaidIcon sx={{ color: 'red' }} />
             }
         },
-        { field: 'date', headerName: 'Fecha', flex: .8, type: 'date', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY HH:mm') },
+        { field: 'createdAt', headerName: 'Fecha creación', flex: .8, type: 'date', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY HH:mm') },
+        { field: 'date', headerName: 'Fecha de pago', flex: .8, type: 'date', valueFormatter: (params) => moment(params.value).format('DD-MM-YYYY') },
         {
             field: 'actions',
             headerName: '',

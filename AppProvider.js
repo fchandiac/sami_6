@@ -27,7 +27,7 @@ const initialState = {
     orders: true,
     ordersInCart: [],
     movements: { balance: 0, movements: [] },
-    user: { id: 0, user: 'test', pass: '1234',  name: 'UserVersión', profileId:0, profile: 'Perfil', permissions: [] },
+    user: { id: 0, user: 'test', pass: '1234', name: 'UserVersión', profileId: 0, profile: 'Perfil', permissions: [] },
     webConnection: false,
     lioren: { integration: false, token: '', mail: '' },
     cashRegisterTab: 0,
@@ -41,6 +41,7 @@ const reducer = (state, action) => {
                 state.cart[productIndex].quanty += 1
                 state.cart[productIndex].stockControl ? state.cart[productIndex].virtualStock -= 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
                 state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
+                state.cart[productIndex].discountAmount = Math.round((state.cart[productIndex].quanty * state.cart[productIndex].sale) * (state.cart[productIndex].discount / 100))
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
                 return {
@@ -57,6 +58,7 @@ const reducer = (state, action) => {
                 }
             } else {
                 action.value.subTotal = roundToNearestTenth(action.value.sale)
+                action.value.discountAmount = Math.round(action.value.sale * (action.value.discount / 100))
                 action.value.stockControl ? action.value.virtualStock -= 1 : action.value.virtualStock = action.value.virtualStock
                 state.cart = [...state.cart, action.value]
                 state.total = 0
@@ -107,7 +109,7 @@ const reducer = (state, action) => {
                     id: action.value.id,
                     salesRoomStock: action.value.salesRoomStock
                 },
-                actionType: specialProduct ? 'NONE_TYPE': 'REMOVE_FROM_CART'
+                actionType: specialProduct ? 'NONE_TYPE' : 'REMOVE_FROM_CART'
             }
             break
         case 'CLEAR_CART':
@@ -136,6 +138,7 @@ const reducer = (state, action) => {
                 state.cart[productIndex].stockControl ? state.cart[productIndex].virtualStock += 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
                 state.cart[productIndex].subTotal = (state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
                 state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].subTotal)
+                state.cart[productIndex].discountAmount = Math.round((state.cart[productIndex].quanty * state.cart[productIndex].sale) * (state.cart[productIndex].discount / 100))
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
                 return {
@@ -156,11 +159,12 @@ const reducer = (state, action) => {
         case 'ADD_QUANTY':
             const stockControl = ipcRenderer.sendSync('get-cash-register-UI', 'sync').stock_control
             let productIndex = state.cart.findIndex((item) => item.id === action.value.id)
-            if (stockControl == false){state.cart[productIndex].virtualStock += 1}
+            if (stockControl == false) { state.cart[productIndex].virtualStock += 1 }
             state.cart[productIndex].quanty += 1
             state.cart[productIndex].stockControl ? state.cart[productIndex].virtualStock -= 1 : state.cart[productIndex].virtualStock = state.cart[productIndex].virtualStock
             state.cart[productIndex].subTotal = (state.cart[productIndex].quanty * state.cart[productIndex].sale) * (1 - state.cart[productIndex].discount / 100)
             state.cart[productIndex].subTotal = roundToNearestTenth(state.cart[productIndex].subTotal)
+            state.cart[productIndex].discountAmount = Math.round((state.cart[productIndex].quanty * state.cart[productIndex].sale) * (state.cart[productIndex].discount / 100))
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
             return {
@@ -185,6 +189,7 @@ const reducer = (state, action) => {
             state.cart[productIndx].virtualStock = vrStock
             state.cart[productIndx].subTotal = (state.cart[productIndx].quanty * state.cart[productIndx].sale) * (1 - (desc / 100))
             state.cart[productIndx].subTotal = roundToNearestTenth(state.cart[productIndx].subTotal)
+            state.cart[productIndx].discountAmount = Math.round((state.cart[productIndx].quanty * state.cart[productIndx].sale) * (state.cart[productIndx].discount / 100))
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
             return {
@@ -209,26 +214,45 @@ const reducer = (state, action) => {
             break
         case 'ADD_DISCOUNT':
             let productInd = state.cart.findIndex((item) => item.id === action.value)
+            
             let disc = parseInt(state.cart[productInd].discount)
             state.cart[productInd].discount = disc += 1
             state.cart[productInd].subTotal = Math.round((state.cart[productInd].quanty * state.cart[productInd].sale) * (1 - (state.cart[productInd].discount / 100)))
             state.cart[productInd].subTotal = roundToNearestTenth(state.cart[productInd].subTotal)
+            state.cart[productInd].discountAmount = Math.round((state.cart[productInd].quanty * state.cart[productInd].sale) * (state.cart[productInd].discount / 100))
             state.total = 0
             state.cart.map((item) => state.total += item.subTotal)
             return { ...state, cart: state.cart, total: state.total }
             break
+        case 'SET_DISCOUNT':
+            console.log('SET_DISCOUNT', action.value)
+            let productIndexx = state.cart.findIndex((item) => item.id === action.value.id)
+            let sale = state.cart[productIndexx].sale
+            let amount = parseInt(action.value.amount)
+            let discx = (amount / sale) * 100
+            state.cart[productIndexx].discount = discx
+            state.cart[productIndexx].subTotal = Math.round((state.cart[productIndexx].quanty * state.cart[productIndexx].sale) * (1 - (state.cart[productIndexx].discount / 100)))
+            state.cart[productIndexx].subTotal = roundToNearestTenth(state.cart[productIndexx].subTotal)
+            state.cart[productIndexx].discountAmount = amount
+            state.total = 0
+            state.cart.map((item) => state.total += item.subTotal)
+            console.log('SET_DISCOUNT', state.cart[productIndexx].discount)
+            return { ...state, cart: state.cart, total: state.total }
         case 'SUBSTRACT_DISCOUNT':
             let productI = state.cart.findIndex((item) => item.id === action.value)
             if (state.cart[productI].discount <= 1) {
                 state.cart[productI].discount = 0
                 state.cart[productI].subTotal = Math.round((state.cart[productI].quanty * state.cart[productI].sale) * (1 - state.cart[productI].discount / 100))
                 state.cart[productI].subTotal = roundToNearestTenth(state.cart[productI].subTotal)
+                state.cart[productI].discountAmount = Math.round((state.cart[productI].quanty * state.cart[productI].sale) * (state.cart[productI].discount / 100))
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
             } else {
                 state.cart[productI].discount += -1
                 state.cart[productI].subTotal = Math.round((state.cart[productI].quanty * state.cart[productI].sale) * (1 - state.cart[productI].discount / 100))
                 state.cart[productI].subTotal = roundToNearestTenth(state.cart[productI].subTotal)
+                state.cart[productI].discountAmount = Math.round((state.cart[productI].quanty * state.cart[productI].sale) * (state.cart[productI].discount / 100))
+                
                 state.total = 0
                 state.cart.map((item) => state.total += item.subTotal)
             }

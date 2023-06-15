@@ -12,6 +12,7 @@ import {
     gridPageCountSelector,
 } from '@mui/x-data-grid'
 import { ThemeProvider } from '@mui/material/styles'
+import { styled } from '@mui/system'
 import React, { useState, useEffect, useRef, forwardRef } from 'react'
 
 import AddCircleIcon from '@mui/icons-material/AddCircle'
@@ -46,7 +47,7 @@ const products = require('../../promises/products')
 export default function ShoppingCart(props) {
     const { stockControl, quote } = props
     const { cart, total, lock, dispatch, ordersMode, ordersInCart } = useAppContext()
-    const [rowData, setRowData] = useState([])
+    const [rowData, setRowData] = useState(rowDataDefault())
     const [openPayDialog, setOpenPayDialog] = useState(false)
     const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
     const [openEditQuantyDialog, setOpenEditQuantyDialog] = useState(false)
@@ -57,6 +58,10 @@ export default function ShoppingCart(props) {
     const [openSpecialProductDialog, setOpenSpecialProductDialog] = useState(false)
     const [specialProduct, setSpecialProduct] = useState(specialProductDefault())
     const [orders, setOrders] = useState(false)
+    const [rowDiscountAmount, setRowDiscountAmount] = useState(0)
+    const rowDiscountAmountRef = useRef(null)
+    const [openDiscountAmountDialog, setOpenDiscountAmountDialog] = useState(false)
+
 
 
 
@@ -151,6 +156,12 @@ export default function ShoppingCart(props) {
 
     const addDiscount = (id) => {
         dispatch({ type: 'ADD_DISCOUNT', value: id })
+    }
+
+    const setRowDiscount = () => {
+        dispatch({ type: 'SET_DISCOUNT', value: { id: rowData.id, amount: rowDiscountAmount } })
+        setRowDiscountAmount(0)
+        setOpenDiscountAmountDialog(false)
     }
 
     const substractDiscount = (id) => {
@@ -282,6 +293,7 @@ export default function ShoppingCart(props) {
     }
 
     const removeOrder = async (id) => {
+        try {
         const orderToRemove = await ordersPr.findOneById(id)
         let details = orderToRemove.ordersdetails
         console.log('Details')
@@ -308,9 +320,16 @@ export default function ShoppingCart(props) {
         let newOrders = ordersInCart.filter(item => item.order_id != orderToRemove.id)
         console.log('ORDERS_IN_CART', newOrders)
         dispatch({ type: 'SET_ORDERS_IN_CART', value: newOrders })
-
+    } catch (err) {
+        
+        let newOrders = ordersInCart.filter(item => item.order_id != id)
+        console.log('ORDERS_IN_CART', newOrders)
+        dispatch({ type: 'SET_ORDERS_IN_CART', value: newOrders })
+        console.log(err)
+    }
 
     }
+
 
     const columns = [
         { field: 'quanty', headerName: '#', flex: .3 },
@@ -322,13 +341,34 @@ export default function ShoppingCart(props) {
             flex: 1.1,
             renderCell: (params) => (
                 <>
-                    <IconButton onClick={() => { substractDiscount(params.row.id) }}>
-                        <RemoveCircleOutlineOutlinedIcon />
-                    </IconButton>
-                    {params.row.discount + '%'}
-                    <IconButton onClick={() => { addDiscount(params.row.id) }}>
-                        <AddCircleOutlineOutlinedIcon />
-                    </IconButton>
+                    <Box sx={{ alignItems: 'center' }}>
+                        <IconButton
+                            sx={{ mt: .5, mb: .5, ml: 0, mr: .5, p: 0 }}
+                            onClick={() => { substractDiscount(params.row.id) }}>
+                            <RemoveCircleOutlineOutlinedIcon fontSize='small' />
+                        </IconButton>
+                        {(params.row.discount).toString().slice(0, 4) + '%'}
+                        <IconButton
+                            sx={{ mt: .5, mb: .5, ml: .5, mr: 1, p: 0 }}
+                            onClick={() => { addDiscount(params.row.id) }}>
+                            <AddCircleOutlineOutlinedIcon fontSize='small' />
+                        </IconButton>
+                        <br />
+                        {utils.renderMoneystr(params.row.discountAmount)}
+                        <IconButton
+                            sx={{ mt: .5, mb: .5, ml: .5, mr: 0, p: 0 }}
+                            onClick={() => {
+                                setRowData({
+                                    ...rowData,
+                                    id: params.row.id,
+                                })
+                                setOpenDiscountAmountDialog(true)
+                            }}>
+                            <EditIcon fontSize='small' />
+                        </IconButton>
+                    </Box>
+
+
                 </>
             ),
             hide: lock ? true : false
@@ -386,6 +426,8 @@ export default function ShoppingCart(props) {
     ]
 
 
+
+
     return (
         <>
             <Paper elevation={0} variant="outlined" sx={{ height: '100%' }}>
@@ -416,31 +458,25 @@ export default function ShoppingCart(props) {
                             openSpecialProductUI: openSpecialProductUI,
                             showNewOrderButton: showNewOrderButton,
                             newOrder: newOrder
-
-
                         }
-
                     }}
-
                 />
 
             </Paper>
+
             <PayDialog open={openPayDialog} setOpen={setOpenPayDialog} total={total} stockControl={stockControl} />
 
-            <Dialog open={openNewCustomerDialog} fullWidth maxWidth={'md'}>
-                <DialogTitle>Nuevo cliente</DialogTitle>
-                <DialogContent></DialogContent>
-                <DialogActions>
-                    <Button variant="contained" onClick={() => setOpenNewCustomerDialog(false)}>Cerrar</Button>
-                </DialogActions>
-            </Dialog>
-
             <Dialog open={openEditQuantyDialog} fullWidth maxWidth={'xs'}>
-                <DialogTitle sx={{ p: 2 }}>Editar cantidad: {rowData.name}</DialogTitle>
+                <DialogTitle sx={{ p: 2 }}>
+                    Editar cantidad:
+                    <Typography variant='subtitle2' sx={{ ml: 1 }}>
+                        Producto: {rowData.name}
+                    </Typography>
+                </DialogTitle>
                 <form onSubmit={(e) => { e.preventDefault(); editQuanty(rowData.id, rowData.quanty) }}>
                     <DialogContent sx={{ p: 2 }}>
                         <Grid container spacing={1} direction={'column'}>
-                            <Grid item marginTop={1}>
+                            <Grid item>
                                 <TextField
                                     label="Cantidad"
                                     value={rowData.quanty}
@@ -455,7 +491,6 @@ export default function ShoppingCart(props) {
                                 />
                             </Grid>
                         </Grid>
-
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
                         <Button variant="contained" type='submit'>Editar</Button>
@@ -541,9 +576,50 @@ export default function ShoppingCart(props) {
                 </form>
             </Dialog>
 
+            <Dialog open={openDiscountAmountDialog} fullWidth maxWidth={'xs'}>
+                <DialogTitle sx={{ p: 2 }}>Descuento por monto</DialogTitle>
+                <form onSubmit={(e) => { e.preventDefault(); setRowDiscount() }}>
+                    <DialogContent sx={{ p: 2 }}>
+                        <Grid container spacing={1} direction={'column'}>
+                            <Grid item marginTop={1}>
+                                <TextField
+                                    label="Monto descuento"
+                                    value={utils.renderMoneystr(rowDiscountAmount)}
+                                    onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowDiscountAmount(0) : setRowDiscountAmount(utils.moneyToInt(e.target.value)) }}
+                                    name='discountAmount'
+                                    variant="outlined"
+                                    size={'small'}
+                                    fullWidth
+                                    autoFocus
+                                    required
+                                />
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button variant="contained" type='submit'>aplicar</Button>
+                        <Button variant={'outlined'} onClick={() => { setOpenDiscountAmountDialog(false) }}>cerrar</Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
 
         </>
     )
+}
+
+function rowDataDefault() {
+    return ({
+        id: 0,
+        name: '',
+        quanty: 1,
+        sale: 0,
+        subTotal: 0,
+        salesRoomStock: 0,
+        virtualStock: 0,
+        discount: 0,
+        controlStock: false,
+        code: '0001' + Math.floor(Math.random() * 1000).toString()
+    })
 }
 
 function specialProductDefault() {

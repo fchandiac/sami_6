@@ -100,6 +100,42 @@ export default function CategoriesGrid(props) {
                     </DialogActions>
                 </form>
             </Dialog> */}
+        <Dialog open={openDestroyDialog} maxWidth={'xs'} fullWidth>
+                <DialogTitle sx={{ p: 2 }}>
+                    Eliminar cliente
+                </DialogTitle>
+                <form onSubmit={(e) => { e.preventDefault(); destroy() }}>
+                    <DialogContent sx={{ p: 2 }}>
+                        <Grid container spacing={1} direction={'column'}>
+                            <Grid item>
+                                <TextField
+                                    label="Id"
+                                    // value={rowData.id}
+                                    // inputProps={{ readOnly: true }}
+                                    variant="outlined"
+                                    size={'small'}
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid item>
+                                <TextField
+                                    label="Nombre"
+                                    // value={rowData.name}
+                                    // inputProps={{ readOnly: true }}
+                                    variant="outlined"
+                                    size={'small'}
+                                    fullWidth
+                                />
+                            </Grid>
+
+                        </Grid>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button variant={'contained'} type={'submit'}>Eliminar</Button>
+                        <Button variant={'outlined'} onClick={() => setOpenDestroyDialog(false)}>Cerrar</Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
     </>
   )
 }

@@ -150,11 +150,13 @@ export default function ProductFinder(props) {
                             sale: params.row.sale,
                             subTotal: params.row.sale,
                             discount: 0,
+                            discountAmount: 0,
                             salesRoomStock: params.row.salesRoomStock,
                             virtualStock: params.row.salesRoomStock,
                             stockControl: params.row.stockControl,
                             code: params.row.code,
                             specialProduct: false
+
                         })
                     }}
                 />
