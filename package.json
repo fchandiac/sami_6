@@ -8,10 +8,11 @@
     "build": "next build",
     "start": "NODE_ENV=production electron .",
     "out": "next export",
-    "test": "NODE_ENV=build electron .",
+    "test-app": "NODE_ENV=build electron .",
     "pack-mac": "electron-builder --mac",
     "pack-win": "electron-builder --win",
-    "pack-win32": "electron-builder --win --ia32"
+    "pack-win32": "electron-builder --win --ia32",
+    "test": "jest"
   },
   "author": "felipe Chandía Castillo",
   "license": "ISC",
@@ -44,8 +45,16 @@
     "xml2js": "^0.5.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.22.5",
+    "@babel/preset-react": "^7.22.5",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
+    "babel-jest": "^29.5.0",
     "electron": "^19.1.9",
-    "electron-builder": "^24.3.0"
+    "electron-builder": "^24.3.0",
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0",
+    "react-test-renderer": "^18.2.0"
   },
   "build": {
     "buildDependenciesFromSource": true,

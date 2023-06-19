@@ -1,8 +1,11 @@
 const { app, BrowserWindow, ipcMain, net } = require('electron')
+const throttle = require('throttle')
 const path = require('path')
 const fs = require('fs')
 const url = require('url')
 const port = 3001
+
+
 
 
 
@@ -11,6 +14,8 @@ const hddSerial = require('hddserial');
 hddSerial.one(1, function (err, serial) {
 	console.log("hdd serial for first hdd : %s", serial);
 });
+
+
 
 ///// --------> NODE ENV <-------/////////
 const env = process.env.NODE_ENV
