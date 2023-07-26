@@ -294,39 +294,39 @@ export default function ShoppingCart(props) {
 
     const removeOrder = async (id) => {
         try {
-        const orderToRemove = await ordersPr.findOneById(id)
-        let details = orderToRemove.ordersdetails
-        console.log('Details')
-        console.log(details)
-        // console.log('Cart')
-        for (const item of details) {
-            const product = await products.findOneById(item.product_id);
-            if (product == null) {
-                let findProduct = cart.find(product => product.name === item.name)
-                let id = findProduct.id
-                let st = 0
-                dispatch({ type: 'REMOVE_FROM_CART', value: { id, st } })
-            } else {
-                let cartProduct = cart.find(product => product.id === item.product_id)
-                let quanty = cartProduct.quanty - item.quanty
-                if (quanty == 0) {
-                    dispatch({ type: 'REMOVE_FROM_CART', value: { id: cartProduct.id, salesRoomStock: cartProduct.salesRoomStock } })
+            const orderToRemove = await ordersPr.findOneById(id)
+            let details = orderToRemove.ordersdetails
+            console.log('Details')
+            console.log(details)
+            // console.log('Cart')
+            for (const item of details) {
+                const product = await products.findOneById(item.product_id);
+                if (product == null) {
+                    let findProduct = cart.find(product => product.name === item.name)
+                    let id = findProduct.id
+                    let st = 0
+                    dispatch({ type: 'REMOVE_FROM_CART', value: { id, st } })
                 } else {
-                    dispatch({ type: 'EDIT_QUANTY', value: { id: cartProduct.id, quanty: quanty } })
+                    let cartProduct = cart.find(product => product.id === item.product_id)
+                    let quanty = cartProduct.quanty - item.quanty
+                    if (quanty == 0) {
+                        dispatch({ type: 'REMOVE_FROM_CART', value: { id: cartProduct.id, salesRoomStock: cartProduct.salesRoomStock } })
+                    } else {
+                        dispatch({ type: 'EDIT_QUANTY', value: { id: cartProduct.id, quanty: quanty } })
+                    }
                 }
             }
-        }
 
-        let newOrders = ordersInCart.filter(item => item.order_id != orderToRemove.id)
-        console.log('ORDERS_IN_CART', newOrders)
-        dispatch({ type: 'SET_ORDERS_IN_CART', value: newOrders })
-    } catch (err) {
-        
-        let newOrders = ordersInCart.filter(item => item.order_id != id)
-        console.log('ORDERS_IN_CART', newOrders)
-        dispatch({ type: 'SET_ORDERS_IN_CART', value: newOrders })
-        console.log(err)
-    }
+            let newOrders = ordersInCart.filter(item => item.order_id != orderToRemove.id)
+            console.log('ORDERS_IN_CART', newOrders)
+            dispatch({ type: 'SET_ORDERS_IN_CART', value: newOrders })
+        } catch (err) {
+
+            let newOrders = ordersInCart.filter(item => item.order_id != id)
+            console.log('ORDERS_IN_CART', newOrders)
+            dispatch({ type: 'SET_ORDERS_IN_CART', value: newOrders })
+            console.log(err)
+        }
 
     }
 
@@ -425,6 +425,19 @@ export default function ShoppingCart(props) {
         }
     ]
 
+    // const reverseRows = (rows) => {
+    //     if(cart.length != rows.length){
+    //         let reverse = rows.reverse()
+    //         return reverse
+    //     } else {
+    //         return rows
+    //     }
+        
+        
+    // }
+
+    // const invertedData = [...cart].reverse()
+
 
 
 
@@ -435,7 +448,7 @@ export default function ShoppingCart(props) {
                     localeText={esESGrid}
                     sx={{ border: 'none' }}
                     disableColumnMenu
-                    rows={cart}
+                    rows={[...cart].reverse()}
                     density='compact'
                     getRowHeight={() => 'auto'}
                     columns={columns}

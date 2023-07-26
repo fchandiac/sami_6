@@ -57,7 +57,7 @@ export default function BasicTabs() {
           <Tab label="Productos" {...a11yProps(0)} />
           <Tab label="Stocks" {...a11yProps(1)} />
           <Tab label="Categorías" {...a11yProps(2)} />
-          <Tab label="Impuestos" {...a11yProps(3)} />
+          {/* <Tab label="Impuestos" {...a11yProps(3)} /> */}
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
@@ -69,9 +69,9 @@ export default function BasicTabs() {
       <TabPanel value={value} index={2}>
         <Categories />
       </TabPanel>
-      <TabPanel value={value} index={3}>
+      {/* <TabPanel value={value} index={3}>
         <Taxes />
-      </TabPanel>
+      </TabPanel> */}
     </Box>
   )
 }

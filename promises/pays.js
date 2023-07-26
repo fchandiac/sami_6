@@ -1,8 +1,8 @@
 import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 
-function create(sale_id, customer_id, amount, payment_method, state, date) {
-    let data = {sale_id, customer_id, amount, payment_method, state , date}
+function create(sale_id, customer_id, amount, payment_method, state, date, paid, balance) {
+    let data = {sale_id, customer_id, amount, payment_method, state , date, paid, balance}
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const pay = new Promise((resolve, reject) => {
         fetch(url + 'pays/create', {
@@ -87,4 +87,47 @@ function findAllBetweenDates(start, end) {
 }
 
 
-export { create, findAll, updateState, findAllBetweenDates }
+function findAllByCustomerId(customer_id) {
+    let data = {customer_id}
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
+    const pay = new Promise((resolve, reject) => {
+        fetch(url + 'pays/findAllByCustomerId', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return pay
+}
+
+
+function addPaid(id, paid) {
+    let data = {id, paid}
+    const url = ipcRenderer.sendSync('get-api-url', 'sync')
+    const pay = new Promise((resolve, reject) => {
+        fetch(url + 'pays/addPaid', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            res.json().then(res => {
+                if (res.code === 0) {
+                    reject(res.data)
+                } else {
+                    resolve(res.data)
+                }
+            })
+        }).catch(err => { reject(err) })
+    })
+    return pay
+}
+
+export { create, findAll, updateState, findAllBetweenDates, addPaid, findAllByCustomerId }

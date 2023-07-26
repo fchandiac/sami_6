@@ -37,7 +37,6 @@ export default function NewCategoryForm(props) {
         let token = ipcRenderer.sendSync('get-lioren', 'sync').token
         lioren.ciudades(token)
             .then(res => {
-                console.log(res)
                 let data = res.map((item) => ({
                     label: item.nombre,
                     id: item.id,

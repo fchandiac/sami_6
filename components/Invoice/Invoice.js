@@ -4,6 +4,7 @@ import {
     Typography, FormGroup, FormControlLabel, Checkbox, Autocomplete, IconButton, Stack, Switch
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
+import AddCircleIcon from '@mui/icons-material/AddCircle'
 import AppPaper from '../AppPaper/AppPaper'
 import { useAppContext } from '../../AppProvider'
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker'
@@ -16,11 +17,12 @@ const salesDetails = require('../../promises/salesDetails')
 const pays = require('../../promises/pays')
 const stocks = require('../../promises/stocks')
 const utils = require('../../utils')
-const https = require('https');
+const https = require('https')
 const PDF417 = require("pdf417-generator")
 const customers = require('../../promises/customers')
 const orders = require('../../promises/orders')
 import SaveIcon from '@mui/icons-material/Save'
+import NewCustomerDialog from '../Forms/NewCustomerDialog/NewCustomerDialog'
 
 
 
@@ -51,6 +53,9 @@ export default function Invoice(props) {
     const [customer, setCustomer] = useState({ key: 0, id: 0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' })
     const [findCustomerData, setFindCustomerData] = useState(findCustomerDataDefault())
     const [token, setToken] = useState('')
+    const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
+    const [disableFacturaButton, setDisableFacturaButton] = useState(false)
+
 
     useEffect(() => {
         let printer = ipcRenderer.sendSync('get-printer', 'sync')
@@ -61,36 +66,37 @@ export default function Invoice(props) {
         setToken(token)
     }, [])
 
-
     useEffect(() => {
-        if (customerForInvoice.id !== 0) {
-            customers.findOneById(customerForInvoice.id)
-                .then(res => {
-                    console.log(res)
-                    setCustomer({
-                        key: res.id,
-                        id: res.id,
-                        rut: res.rut,
-                        label: res.name,
-                        activity: res.activity,
-                        district: res.district,
-                        city: res.city,
-                        address: res.address
+        if (open === true) {
+            if (customerForInvoice.id !== 0) {
+                customers.findOneById(customerForInvoice.id)
+                    .then(res => {
+                        console.log(res)
+                        setCustomer({
+                            key: res.id,
+                            id: res.id,
+                            rut: res.rut,
+                            label: res.name,
+                            activity: res.activity,
+                            district: res.district,
+                            city: res.city,
+                            address: res.address
+                        })
+                        setCustomerData({
+                            rut: utils.formatRut(res.rut),
+                            razon_social: res.name,
+                            direccion: res.address,
+                            ciudad: ciudadesOptions.find(item => item.id === res.city),
+                            comuna: comunasOptions.find(item => item.id === res.district),
+                            giro: res.activity
+                        })
                     })
-                    setCustomerData({
-                        rut: utils.formatRut(res.rut),
-                        razon_social: res.name,
-                        direccion: res.address,
-                        ciudad: ciudadesOptions.find(item => item.id === res.city),
-                        comuna: comunasOptions.find(item => item.id === res.district),
-                        giro: res.activity
-                    })
-                })
-                .catch(err => console.log(err))
+                    .catch(err => console.log(err))
+            }
+        } else {
+            setCiudadesOptions(ciudades)
         }
     }, [open])
-
-
 
     useEffect(() => {
         customers.findAll()
@@ -110,8 +116,27 @@ export default function Invoice(props) {
             .catch(err => console.log(err))
     }, [])
 
+    const updateCustomers = () => {
+        customers.findAll()
+            .then(res => {
+                let data = res.map((item) => ({
+                    label: item.name,
+                    key: item.id,
+                    rut: item.rut,
+                    id: item.id,
+                    activity: item.activity,
+                    district: item.district,
+                    city: item.city,
+                    address: item.address
+                }))
+                console.log(data)
+                setCustomerOptions(data)
+            })
+            .catch(err => console.log(err))
+    }
+
     useEffect(() => {
-        lioren.mediosDePago(token)
+        lioren.mediosDePago(ipcRenderer.sendSync('get-lioren', 'sync').token)
             .then(res => {
                 let data = res.mediopagos.map((item) => ({
                     label: item.nombre,
@@ -124,13 +149,13 @@ export default function Invoice(props) {
 
     }, [])
 
-
-
     useEffect(() => {
-        if (customerData.rut !== ''){
-            let data = ciudadesOptions.filter((item) => item.region_id === customerData.comuna.region_id)
+        if (customerData.rut !== '') {
+            if(customerData.comuna != null){
+                let data = ciudades.filter((item) => item.region_id === customerData.comuna.region_id)
             setCiudadesOptions(data)
-        } 
+            }
+        }
     }, [customerData.comuna])
 
 
@@ -187,6 +212,7 @@ export default function Invoice(props) {
             nombre: item.name,
             cantidad: item.quanty,
             precio: (item.sale / 1.19),
+            descuento: item.discount,
             exento: false
         }))
         return data
@@ -564,8 +590,10 @@ export default function Invoice(props) {
             paymentMethods.unshift({ name: customerCredit.name, pay: false })
             paymentMethods.unshift({ name: 'Efectivo', pay: true })
             let state = paymentMethods.find(method => method.name == paymentMethod).pay
+            let paid = state ? amount : 0
+            let balance = state ? 0 : amount
             let date = showPay ? payData.date : new Date()
-            pays.create(sale_id, client_id, amount, paymentMethod, state, date)
+            pays.create(sale_id, client_id, amount, paymentMethod, state, date, paid, balance)
                 .then(res => {
                     resolve(res)
                 })
@@ -591,7 +619,7 @@ export default function Invoice(props) {
                 dispatch({ type: 'SET_STOCK_ALERT_LIST', value: alerts })
 
             }
-            savePay(paymentMethod, sale.id, factura.montototal, customer.id)
+            await savePay(paymentMethod, sale.id, factura.montototal, customer.id)
             printDocument(factura.pdf, print_info)
             setOpenPayDialog(false)
             setOpen(false)
@@ -600,6 +628,7 @@ export default function Invoice(props) {
             setReferenceData(referenceDataDefault())
             setPayData(payDataDefault())
             setOpenChangeDialog(true)
+            setDisableFacturaButton(false)
             console.log('factura', factura)
         } catch (err) {
             console.log(err)
@@ -609,6 +638,7 @@ export default function Invoice(props) {
     }
 
     const factura = async () => {
+        setDisableFacturaButton(true)
         try {
             if (printMode() == 0 || printMode() == 1) {
                 const findPrinter = await ipcRenderer.invoke('find-printer', printer)
@@ -634,11 +664,11 @@ export default function Invoice(props) {
                 <form onSubmit={(e) => { e.preventDefault(); factura() }}>
                     <DialogTitle sx={{ p: 2 }}>Factura</DialogTitle>
                     <DialogContent sx={{ p: 2 }}>
-                        <Grid container spacing={1} direction={'column'}>
+                        <Grid container spacing={1} >
                             <Grid item marginTop={1}>
                                 <AppPaper title={'Receptor'}>
                                     <Grid container spacing={1} p={1}>
-                                        <Grid item xs={12} sm={12} md={12} lg={12}>
+                                        <Grid item xs={10} sm={10} md={10} lg={10}>
                                             <Autocomplete
                                                 inputValue={customerInput}
                                                 onInputChange={(e, newInputValue) => {
@@ -664,24 +694,21 @@ export default function Invoice(props) {
                                                 renderInput={(params) => <TextField {...params} label='Cliente' size={'small'} fullWidth required />}
                                             />
                                         </Grid>
+                                        <Grid item xs={2} textAlign={'right'}>
+                                            <IconButton onClick={() => { setOpenNewCustomerDialog(true) }}>
+                                                <AddCircleIcon />
+                                            </IconButton>
+                                        </Grid>
                                         <Grid item xs={12} sm={12} md={12} lg={12}>
-                                            <Stack direction={'row'} spacing={1}>
-                                                <TextField
-                                                    label='Rut'
-                                                    value={customerData.rut}
-                                                    onChange={(e) => { setCustomerData({ ...customerData, rut: utils.formatRut(e.target.value) }) }}
-                                                    variant="outlined"
-                                                    size={'small'}
-                                                    fullWidth
-                                                    required
-                                                />
-                                                <IconButton onClick={() => { findCustomer() }}>
-                                                    <SearchIcon />
-                                                </IconButton>
-                                                <IconButton onClick={() => { saveCustomer() }}>
-                                                    <SaveIcon />
-                                                </IconButton>
-                                            </Stack>
+                                            <TextField
+                                                label='Rut'
+                                                value={customerData.rut}
+                                                onChange={(e) => { setCustomerData({ ...customerData, rut: utils.formatRut(e.target.value) }) }}
+                                                variant="outlined"
+                                                size={'small'}
+                                                fullWidth
+                                                required
+                                            />
                                         </Grid>
                                         <Grid item xs={12} sm={12} md={12} lg={12}>
                                             <TextField
@@ -762,7 +789,7 @@ export default function Invoice(props) {
                             </Grid>
 
 
-                            <Grid item textAlign={'right'}>
+                            <Grid item textAlign={'right'} xs={12} sm={12} md={12} lg={12}>
                                 <FormControlLabel sx={{ flexDirection: 'row-reverse' }}
                                     control={
                                         <Switch
@@ -774,11 +801,11 @@ export default function Invoice(props) {
                                 />
                             </Grid>
 
-                            <Grid item marginTop={1} sx={{ display: showReference ? 'block' : 'none' }}>
+                            <Grid item marginTop={1} sx={{ display: showReference ? 'block' : 'none' }} xs={12} sm={12} md={12} lg={12}>
                                 {renderReference()}
                             </Grid>
 
-                            <Grid item textAlign={'right'}>
+                            <Grid item textAlign={'right'} xs={12} sm={12} md={12} lg={12}>
                                 <FormControlLabel sx={{ flexDirection: 'row-reverse' }}
                                     control={
                                         <Switch
@@ -790,13 +817,13 @@ export default function Invoice(props) {
                                 />
                             </Grid>
 
-                            <Grid item marginTop={1} sx={{ display: showPay ? 'block' : 'none' }}>
+                            <Grid item marginTop={1} sx={{ display: showPay ? 'block' : 'none' }} xs={12} sm={12} md={12} lg={12}>
                                 {renderPay()}
                             </Grid>
 
 
 
-                            <Grid item textAlign={'right'}>
+                            <Grid item textAlign={'right'} xs={12} sm={12} md={12} lg={12}>
                                 <FormControlLabel sx={{ flexDirection: 'row-reverse' }}
                                     control={
                                         <Switch
@@ -811,7 +838,7 @@ export default function Invoice(props) {
 
 
 
-                            <Grid item textAlign={'right'}>
+                            <Grid item textAlign={'right'} xs={12} sm={12} md={12} lg={12}>
                                 <FormControlLabel sx={{ flexDirection: 'row-reverse' }}
                                     control={
                                         <Switch
@@ -826,8 +853,8 @@ export default function Invoice(props) {
                         </Grid>
                     </DialogContent>
                     <DialogActions sx={{ p: 2 }}>
-                        <Button variant={'contained'} type='submit'>enviar</Button>
-                        <Button variant={'outlined'} onClick={() => { setOpen(false); setCustomerData(customerDataDefault()); setCustomer({ key: 0, id: 0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' }) }}>Cerrar</Button>
+                        <Button variant={'contained'} type='submit' disabled={disableFacturaButton}>enviar</Button>
+                        <Button variant={'outlined'} onClick={() => { setOpen(false); setDisableFacturaButton(false); setCustomerData(customerDataDefault()); setCustomer({ key: 0, id: 0, rut: '', label: '', activity: '', district: 0, city: 0, address: '' }) }}>Cerrar</Button>
                     </DialogActions>
                 </form>
             </Dialog>
@@ -917,6 +944,12 @@ export default function Invoice(props) {
                     <Button variant={'outlined'} onClick={() => { setOpenFindCustomerDialog(false) }}>Cerrar</Button>
                 </DialogActions>
             </Dialog>
+
+            <NewCustomerDialog
+                open={openNewCustomerDialog}
+                setOpen={setOpenNewCustomerDialog}
+                finallyCallback={updateCustomers}
+            />
         </>
     )
 }

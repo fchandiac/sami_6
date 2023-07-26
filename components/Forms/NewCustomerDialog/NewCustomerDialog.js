@@ -1,18 +1,64 @@
 import React, { useState } from 'react'
-import { Button, Grid, TextField, Autocomplete, Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material'
-
+import { Button, Grid, TextField, Autocomplete, Dialog, DialogContent, DialogTitle, DialogActions, IconButton } from '@mui/material'
+import { useAppContext } from '../../../AppProvider'
 const customers = require('../../../promises/customers')
+import SearchIcon from '@mui/icons-material/Search'
 const utils = require('../../../utils')
+const https = require('https')
 
 
 
 export default function NewCustomerDialog(props) {
     const { finallyCallback, open, setOpen } = props
+    const { dispatch } = useAppContext()
     const [comunasOptions, setComunasOptions] = useState(comunas)
     const [comunasInput, setComunasInput] = useState('')
     const [ciudadesOptions, setCiudadesOptions] = useState(ciudades)
     const [ciudadesInput, setCiudadesInput] = useState('')
     const [newCustomerData, setNewCustomerData] = useState(newCustomerDataDefault())
+
+
+    const searchCustomer = () => {
+        let path = '/consulta?rut=' + newCustomerData.rut
+
+        const options = {
+            hostname: 'siichile.herokuapp.com',
+            path: path,
+            method: 'GET'
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+            res.on('end', () => {
+                console.log(data);
+                const jsonObject = JSON.parse(data)
+                if (jsonObject.hasOwnProperty('error')) {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Rut no encontrado' } })
+                } else {
+                    //setRequestData(jsonObject)
+                    setNewCustomerData({
+                        ...newCustomerData,
+                        name: jsonObject.razon_social,
+                        activity: jsonObject.actividades[0].giro,
+                        district: { label: '', id: 0, key: 0, region_id: 0 },
+                        city: { label: '', id: 0, key: 0, region_id: 0 },
+                        address: '',
+                    })
+
+                    console.log(jsonObject)
+                }
+            })
+        })
+        req.on('error', (error) => {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error en busqueda de Rut' } })
+            //setRequestData({ rut: '', razon_social: '', actividades: [{ giro: '' }] })
+            console.error(error)
+        });
+        req.end()
+    }
 
     const saveCustomer = () => {
         customers.create(
@@ -25,14 +71,20 @@ export default function NewCustomerDialog(props) {
             .then((res) => {
                 finallyCallback()
                 setCiudadesOptions(ciudades)
+                setNewCustomerData(newCustomerDataDefault())
                 setOpen(false)
             })
             .catch((err) => {
                 console.log(err)
-            }
-            )
+                if (err.errors[0].message === 'name must be unique') {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'El nombre ya existe' } })
+                } else  if (err.errors[0].message === 'rut must be unique') {
+                    dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'El rut ya existe' } })
+                }
 
+            })
     }
+
 
 
     return (
@@ -42,8 +94,8 @@ export default function NewCustomerDialog(props) {
                     Nuevo cliente
                 </DialogTitle>
                 <DialogContent>
-                    <Grid container spacing={1} direction={'column'} pt={1}>
-                        <Grid item>
+                    <Grid container spacing={1}  pt={1}>
+                        <Grid item xs={10}>
                             <TextField label="Rut"
                                 value={newCustomerData.rut}
                                 onChange={(e) => { setNewCustomerData({ ...newCustomerData, rut: utils.formatRut(e.target.value) }) }} s
@@ -53,7 +105,12 @@ export default function NewCustomerDialog(props) {
                                 required
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item xs={2} textAlign={'right'}>
+                            <IconButton onClick={() => {searchCustomer()}} >
+                                <SearchIcon />
+                            </IconButton>
+                        </Grid>
+                        <Grid item xs={12}>
                             <TextField label="Nombre / Razón Social"
                                 value={newCustomerData.name}
                                 onChange={(e) => { setNewCustomerData({ ...newCustomerData, name: e.target.value }) }}
@@ -63,17 +120,17 @@ export default function NewCustomerDialog(props) {
                                 required
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item xs={12}>
                             <TextField label="Giro"
                                 value={newCustomerData.activity}
-                                onChange={(e) => { setNewCustomerData({...newCustomerData, activity: e.target.value}) }}
+                                onChange={(e) => { setNewCustomerData({ ...newCustomerData, activity: e.target.value }) }}
                                 variant="outlined"
                                 size={'small'}
                                 fullWidth
                                 required
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item xs={12}>
                             <Autocomplete
                                 inputValue={comunasInput}
                                 onInputChange={(e, newInputValue) => {
@@ -89,7 +146,7 @@ export default function NewCustomerDialog(props) {
                                 renderInput={(params) => <TextField {...params} label='Comuna' size={'small'} fullWidth required />}
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item xs={12}>
                             <Autocomplete
                                 inputValue={ciudadesInput}
                                 onInputChange={(e, newInputValue) => {
@@ -105,12 +162,13 @@ export default function NewCustomerDialog(props) {
                                 renderInput={(params) => <TextField {...params} label='Ciudad' size={'small'} fullWidth required />}
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item xs={12}>
                             <TextField label="Dirección"
                                 value={newCustomerData.address}
                                 onChange={(e) => { setNewCustomerData({ ...newCustomerData, address: e.target.value }) }}
                                 variant="outlined"
                                 size={'small'}
+                                inputProps={{ minLength: 6 }}
                                 fullWidth
                                 required
                             />

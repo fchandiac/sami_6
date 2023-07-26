@@ -16,10 +16,10 @@ export default function customers() {
   return (
     <>
     <Grid container spacing={1}>
-      <Grid item xs={5}>
+      <Grid item xs={3}>
         <NewCustomerForm updateCustomersGridState={updateCustomersGridState}/>
       </Grid>
-      <Grid item xs={7}>
+      <Grid item xs={9}>
         <CustomersGrid update={customersGridState}/>
       </Grid>
     </Grid>

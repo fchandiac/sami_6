@@ -53,10 +53,6 @@ export default function PayDialog(props) {
     const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
     const [customerCredit, setCustomerCredit] = useState({ state: false, name: '', pay: false })
    
-
-
-
-
     const setDocumentsTypes = (webConnection, liorenConfig, configDocs) => {
         let docs = [
             { name: 'Ticket', label: 'Ticket' }
@@ -93,7 +89,8 @@ export default function PayDialog(props) {
         let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
         let docs = ipcRenderer.sendSync('get-docs', 'sync')
         let lioren = ipcRenderer.sendSync('get-lioren', 'sync')
-        let config = ipcRenderer.sendSync('read-config', 'sync')
+        let cash_register_UI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
+        console.log('UIIIIII', cash_register_UI.number_pad)
         paymentMethods = paymentMethods.map((method) => {
             return { name: method.name, label: method.name, pay: method.pay }
         })
@@ -107,7 +104,7 @@ export default function PayDialog(props) {
         setTicketInfo(ticket_info)
         setLiorenConfig(lioren)
         setDocumentsTypes(webConnection, lioren, docs)
-        setNumeric_pad(config.numeric_pad)
+        setNumeric_pad(cash_register_UI.number_pad)
     }, [])
 
     useEffect(() => {
@@ -219,7 +216,7 @@ export default function PayDialog(props) {
 
     const sale = () => {
         const pr = new Promise((resolve, reject) => {
-            sales.create(total, paymentMethod, 0, 0, stockControl)
+            sales.create(total, paymentMethod, 0, 0, stockControl, (user.id == 0? 1001: user.id))
                 .then(res => {
                     let movs = movements.movements
                     movs.push({
@@ -259,7 +256,7 @@ export default function PayDialog(props) {
 
     const saleBoleta = (dte_number) => {
         const pr = new Promise((resolve, reject) => {
-            sales.create(total, paymentMethod, 39, dte_number, stockControl)
+            sales.create(total, paymentMethod, 39, dte_number, stockControl, (user.id == 0? 1001: user.id))
                 .then(res => {
                     let movs = movements.movements
                     movs.push({
@@ -294,11 +291,15 @@ export default function PayDialog(props) {
         const pay = new Promise((resolve, reject) => {
             let state = methodsList.find(method => method.name == paymentMethod).pay
             let customer_id = null
+            let paid = amount
+            let balance = 0
 
             if (customer.id != 0) {
                 customer_id = customer.id
+                paid = 0
+                balance = amount
             }
-            pays.create(sale_id, customer_id, amount, paymentMethod, state, new Date())
+            pays.create(sale_id, customer_id, amount, paymentMethod, state, new Date(), paid, balance)
                 .then(res => {
                     resolve(res)
                     setCustomer({ id: 0, label: '', key: 0 })
@@ -369,6 +370,7 @@ export default function PayDialog(props) {
 
     const proccessPayment = async () => {
         if (documentType === 'Factura') {
+            // console.log(customer)
             setOpenInvoiceDialog(true)
         } else {
             if (documentType === 'Sin impresora') {
@@ -635,7 +637,7 @@ export default function PayDialog(props) {
                 setOpenPayDialog={setOpen}
                 paymentMethod={paymentMethod}
                 stockControl={stockControl}
-                customerForInvoice={customer}
+                customerForInvoice={customer == null? {id: 0, label:'', key:0}: customer}
             />
 
             <NewCustomerDialog

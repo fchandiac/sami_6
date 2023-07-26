@@ -86,6 +86,7 @@ export default function ProductsGrid(props) {
     }
 
     const updateProduct = (e) => {
+        console.log(rowData)
         products.updateFull(
             rowData.id,
             rowData.name,
@@ -151,7 +152,7 @@ export default function ProductsGrid(props) {
                             price_id: params.row.price_id,
                             tax: params.row.tax,
                             tax_id: params.row.tax_id,
-                            category: params.row.category,
+                            category: { label: params.row.category, id: params.row.category_id, key: params.row.category_id },
                             category_id: params.row.category_id
                         })
                         setOpenDestroyDialog(true)
@@ -162,11 +163,24 @@ export default function ProductsGrid(props) {
                     label='view'
                     icon={<InfoIcon />}
                     onClick={() => {
+                        let profitMoney =( (params.row.sale ) - (params.row.purchase )) / 1.19
+                        let saleNet = params.row.sale / 1.19
+                        let purchaseNet = params.row.purchase / 1.19
+                        
+                        let profit = ((saleNet - purchaseNet) / saleNet) * 100
+                        profit = parseInt(profit)
+                        purchaseNet = parseInt(purchaseNet)
+                    
+                        
+
+                        
                         setRowData({
                             rowId: params.id,
                             id: params.row.id,
                             name: params.row.name,
                             code: params.row.code,
+                            purchaseNet: purchaseNet,
+                            profit: profit,
                             sale: params.row.sale,
                             oldSale: params.row.sale,
                             purchase: params.row.purchase,
@@ -174,7 +188,7 @@ export default function ProductsGrid(props) {
                             price_id: params.row.price_id,
                             tax: params.row.tax,
                             tax_id: params.row.tax_id,
-                            category: params.row.category,
+                            category: { label: params.row.category, id: params.row.category_id, key: params.row.category_id },
                             category_id: params.row.category_id,
                             salesRoomStock: params.row.salesRoomStock,
                             stock: params.row.stock
@@ -234,9 +248,56 @@ export default function ProductsGrid(props) {
                                         </Grid>
                                         <Grid item>
                                             <TextField
-                                                label="Precio de venta"
-                                                value={(rowData.sale == undefined) ? '' : utils.renderMoneystr(rowData.sale)}
-                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({ ...rowData, sale: 0 }) : setRowData({ ...rowData, sale: utils.moneyToInt(e.target.value) }) }}
+                                                label="Utilidad"
+                                                value={rowData.profit}
+                                                type='number'
+                                                onChange={(e) => {
+                                                    if (rowData.profit != 0 || rowData.purchaseNet != 0) {
+                                                        let profit = e.target.value
+                                                        let purchase = parseInt(rowData.purchaseNet * 1.19)
+                                                        let sale = parseInt((rowData.purchaseNet / (1 - (profit / 100))) * 1.19)
+                                                        setRowData({
+                                                            ...rowData,
+                                                            profit: e.target.value,
+                                                            purchase: purchase,
+                                                            sale: sale
+                                                        })
+                                                    }
+                                                }}
+                                                variant="outlined"
+                                                InputProps={{
+                                                    endAdornment: '%',
+                                                }}
+                                                size={'small'}
+                                                fullWidth
+                                                required
+                                            />
+                                        </Grid>
+                                        <Grid item>
+                                            <TextField
+                                                label="$ Compra neto"
+                                                value={utils.renderMoneystr(rowData.purchaseNet)}
+                                                onChange={(e) => {
+                                                    let value = e.target.value === '' ? 0 : utils.moneyToInt(e.target.value)
+                                                    let purchase = parseInt(value * 1.19)
+                                                    let sale = parseInt((value / (1 - (rowData.profit / 100))) * 1.19)
+                                                    setRowData({
+                                                        ...rowData,
+                                                        purchaseNet: value,
+                                                        purchase: purchase,
+                                                        sale: sale
+                                                    })
+                                                }}
+                                                variant="outlined"
+                                                size={'small'}
+                                                fullWidth
+                                            />
+                                        </Grid>
+                                        <Grid item>
+                                            <TextField
+                                                label="Precio de compra"
+                                                value={(rowData.purchase == undefined) ? '' : utils.renderMoneystr(rowData.purchase)}
+                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({ ...rowData, purchase: 0 }) : setRowData({ ...rowData, purchase: utils.moneyToInt(e.target.value) }) }}
                                                 variant="outlined"
                                                 size={'small'}
                                                 fullWidth
@@ -245,9 +306,9 @@ export default function ProductsGrid(props) {
                                         </Grid>
                                         <Grid item>
                                             <TextField
-                                                label="Precio de compra"
-                                                value={(rowData.purchase == undefined) ? '' : utils.renderMoneystr(rowData.purchase)}
-                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({ ...rowData, purchase: 0 }) : setRowData({ ...rowData, purchase: utils.moneyToInt(e.target.value) }) }}
+                                                label="Precio de venta"
+                                                value={(rowData.sale == undefined) ? '' : utils.renderMoneystr(rowData.sale)}
+                                                onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setRowData({ ...rowData, sale: 0 }) : setRowData({ ...rowData, sale: utils.moneyToInt(e.target.value) }) }}
                                                 variant="outlined"
                                                 size={'small'}
                                                 fullWidth
@@ -347,6 +408,8 @@ function rowDataDefault() {
         id: 0,
         name: '',
         code: '',
+        purchaseNet: '',
+        profit: 30,
         sale: '',
         oldSale: '',
         purchase: '',

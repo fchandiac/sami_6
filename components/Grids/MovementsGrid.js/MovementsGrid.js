@@ -222,6 +222,7 @@ export default function MovementsGrid() {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
         } else {
             const sale = await sales.findOneById(sale_id)
+            console.log('sale', sale)
             let cart = reProccessCart(sale.salesdetails)
             if (sale.dte_code == 0) {
                 let print_info = printInfo(sale.dte_code, [], sale, cart)
@@ -448,6 +449,7 @@ function rowDataDefault() {
 }
 
 function reProccessCart(details) {
+    console.log(details)
     let cart = details.map(item => ({
         id: item.id,
         name: item.name,

@@ -1,10 +1,32 @@
 PENDIENTE: 
+------ MODIFICAR PaysGrid PARA LLEVARLO A CUSTOMERS
+- update balance, paid y state en partialPays
+-on gridCustomer, deleteCustomer y verificar en las ventas cuando se Eliminar
+-on grid customer, ver pago
+- ...... ABONOS
+
+-CodeFinder on stockControl True
+- nota en pedido
+-teclado numerico SIDE 
   
 
 
 
+SELECT id, sale_id, customer_id, amount, payment_method, state, date, created_at, updated_at,
+       CASE
+           WHEN state = 0 THEN amount
+           ELSE 0
+       END AS balance,
+       CASE
+           WHEN state = 0 THEN 0
+           ELSE amount
+       END AS paid
+FROM sami619.pays;
+
+
+
 PENDIENTE: 
-    - ACTUALIZAR ADDQUANTY Y SUBQUANTY EVENT: DEBE ACTUALIZAR DISCOUNAMOUNT 
+
     - SETAMOUNT SE REALIZARA CON UN DIALOG
     -AGREGAR NOTA A LA CREACIÓN DEL PEDIDO
     -AGREGAR NOTA AL PAGO POR TARJETA DE CREDITO

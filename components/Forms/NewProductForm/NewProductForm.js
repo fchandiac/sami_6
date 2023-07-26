@@ -65,8 +65,14 @@ export default function NewProducForm(props) {
                 if (res !== null) {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'El nombre del producto ya existe' } })
                 } else {
-                    let purchase = productData.purchase === '' ? 0 : utils.moneyToInt(productData.purchase)
-                    let sale = utils.moneyToInt(productData.sale)
+                    let purchase = 0
+                    let sale = 0
+                    if (typeof productData.purchase === 'string') {
+                        purchase = productData.purchase === '' ? 0 : utils.moneyToInt(productData.purchase)
+                    } else { purchase = productData.purchase }
+                    if (typeof productData.sale === 'string') {
+                        sale = utils.moneyToInt(productData.sale)
+                    } else { sale = productData.sale}
 
                     products.create(productData.name, productData.code, sale, purchase, productData.category.id, productData.tax.id)
                         .then(res => {
@@ -108,10 +114,26 @@ export default function NewProducForm(props) {
                         </Grid>
                         <Grid item>
                             <TextField
-                                label="Precio de venta"
-                                value={utils.renderMoneystr(productData.sale)}
-                                onChange={(e) => { setProductData({ ...productData, sale: e.target.value }) }}
+                                label="Utilidad"
+                                value={productData.profit}
+                                type='number'
+                                onChange={(e) => { 
+                                    if ( productData.profit != 0 || productData.purchaseNet != 0){
+                                    let profit = e.target.value
+                                    let purchase = parseInt(productData.purchaseNet * 1.19)
+                                    let sale = parseInt((productData.purchaseNet / (1 - (profit / 100))) * 1.19)
+                                    setProductData({
+                                        ...productData,
+                                        profit: e.target.value,
+                                        purchase: purchase,
+                                        sale: sale
+                                    })
+                                    }
+                                }}
                                 variant="outlined"
+                                InputProps={{
+                                    endAdornment: '%',
+                                }}
                                 size={'small'}
                                 fullWidth
                                 required
@@ -119,9 +141,42 @@ export default function NewProducForm(props) {
                         </Grid>
                         <Grid item>
                             <TextField
-                                label="Precio de compra"
+                                label="$ Compra neto"
+                                value={utils.renderMoneystr(productData.purchaseNet)}
+                                onChange={(e) => {
+                                    let value = e.target.value === '' ? 0 : utils.moneyToInt(e.target.value)
+                                    let purchase = parseInt(value * 1.19)
+                                    let sale = parseInt((value / (1 - (productData.profit / 100))) * 1.19)
+                                    setProductData({
+                                        ...productData,
+                                        purchaseNet: value,
+                                        purchase: purchase,
+                                        sale: sale
+                                    })
+                                }}
+                                variant="outlined"
+                                size={'small'}
+                                fullWidth
+                            />
+                        </Grid>
+
+                        <Grid item>
+                            <TextField
+                                label="$ Compra"
                                 value={utils.renderMoneystr(productData.purchase)}
                                 onChange={(e) => { setProductData({ ...productData, purchase: e.target.value }) }}
+                                variant="outlined"
+                                size={'small'}
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+
+                        <Grid item>
+                            <TextField
+                                label="$ Venta"
+                                value={utils.renderMoneystr(productData.sale)}
+                                onChange={(e) => { setProductData({ ...productData, sale: e.target.value }) }}
                                 variant="outlined"
                                 size={'small'}
                                 fullWidth
@@ -215,13 +270,15 @@ export default function NewProducForm(props) {
 function productDataDefault() {
     return {
         name: '',
+        purchaseNet: '',
+        profit: 30,
         sale: '',
         code: '',
         purchase: '',
         category: { id: 0, label: '', key: 0 },
         salesRoomStock: 0,
         criticalSalesRoomStock: 0,
-        tax: { id: 0, label: '', key: 0 },
+        tax: { id: 0, label: '', key: 0, value: .19 },
         affected: true,
     }
 }

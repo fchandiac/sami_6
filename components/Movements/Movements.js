@@ -33,7 +33,9 @@ export default function Movements() {
     let paymentMethods = ipcRenderer.sendSync('get-payment-methods')
     
     let paymentMethodsSum = []
+
     paymentMethods.map(item => {
+      console.log(item)
       let sum = movements.movements.filter(mov => mov.payment_method == item.name).reduce((a, b) => a + b.amount, 0)
       let obj = {name: item.name, sum: sum}
       paymentMethodsSum.push(obj)
@@ -49,8 +51,9 @@ export default function Movements() {
 
     let cash = movements.movements.filter(mov => mov.payment_method == 'Efectivo').reduce((a, b) => a + b.amount, 0)
     let efectivo =  movements.movements.filter(mov => mov.payment_method == 'Efectivo').reduce((a, b) => a + b.amount, 0)
+    
     paymentMethodsSum.unshift({name: 'Ventas en efectivo', sum: cash})
-    paymentMethodsSum.unshift({name: 'Efectivo en caja', sum: openAmount + cash + outcomesTotal})
+    paymentMethodsSum.unshift({name: 'Efectivo en caja', sum: openAmount + cash + outcomesTotal + incomesTotal})
 
 
     // let open = movements.movements.filter(item => item.type == 1001)[0]
