@@ -66,7 +66,7 @@ export default function PaysGrid(props) {
             dte_number: sale.dte_number,
             date: sale.createdAt,
             payment_method: sale.payment_method,
-            user: sale.User.name
+            user: 'user'
         })
         setOpenInfoDialog(true)
     }

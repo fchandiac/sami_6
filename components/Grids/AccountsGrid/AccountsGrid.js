@@ -10,7 +10,7 @@ import PaysGrid from '../PaysGrid/PaysGrid'
 const customers = require('../../../promises/customers')
 const pays = require('../../../promises/pays')
 
-export default function CategoriesGrid(props) {
+export default function AccountsGrid(props) {
     const { update } = props
     const [gridApiRef, setGridApiRef] = useState(null)
     const [rowData, setRowData] = useState([])
@@ -26,11 +26,11 @@ export default function CategoriesGrid(props) {
             .then((res) => {
 
                 // console.log(res)
-                // const filteredData = res.filter(item => {
-                //     return item.Pays.some(pay => pay.state === false);
-                //   })
+                const filteredData = res.filter(item => {
+                    return item.Pays.some(pay => pay.state === false);
+                  })
 
-                let data = res.map(item => ({
+                let data = filteredData.map(item => ({
                     id: item.id,
                     name: item.name,
                     activity: item.activity,
@@ -96,19 +96,6 @@ export default function CategoriesGrid(props) {
                         setOpenDestroyDialog(true)
                     }}
                 />,
-                // <GridActionsCellItem
-                //     label='info'
-                //     icon={<InfoIcon />}
-                //     onClick={() => {
-                //         setRowData({
-                //             rowId: params.id,
-                //             id: params.row.id,
-                //             name: params.row.name,
-                //         })
-                //         setOpenInfoDialog(true)
-                //     }}
-                // />
-                ,
                 <GridActionsCellItem
                     label='pays'
                     icon={<PaidIcon />}
@@ -127,6 +114,7 @@ export default function CategoriesGrid(props) {
 
     return (
         <>
+        
             <AppDataGrid title='' rows={customersList} columns={columns} height='80vh' setGridApiRef={setGridApiRef} />
 
             <Dialog open={openDestroyDialog} maxWidth={'xs'} fullWidth>
@@ -215,7 +203,7 @@ export default function CategoriesGrid(props) {
                     </Grid>
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
-                    <Button variant={'outlined'} onClick={() => { setOpenPaysDialog(false) }}>Cerrar</Button>
+                    <Button variant={'outlined'} onClick={() => {  setOpenPaysDialog(false) }}>Cerrar</Button>
                 </DialogActions>
             </Dialog>
         </>
