@@ -6,10 +6,6 @@ import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 
 
-
-
-
-
 const initialState = {
     cart: [],
     cartChanged: false,

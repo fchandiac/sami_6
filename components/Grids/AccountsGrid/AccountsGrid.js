@@ -13,7 +13,7 @@ const pays = require('../../../promises/pays')
 export default function AccountsGrid(props) {
     const { update } = props
     const [gridApiRef, setGridApiRef] = useState(null)
-    const [rowData, setRowData] = useState([])
+    const [rowData, setRowData] = useState(rowDataDefault())
     const [customersList, setCustomersList] = useState([])
     const [openDestroyDialog, setOpenDestroyDialog] = useState(false)
     const [openInfoDialog, setOpenInfoDialog] = useState(false)
@@ -195,10 +195,7 @@ export default function AccountsGrid(props) {
                 <DialogContent sx={{ p: 2 }}>
                     <Grid container spacing={1} direction={'column'}>
                         <Grid item>
-
-                        </Grid>
-                        <Grid item>
-                            <PaysGrid title={''} paysList={customerPaysList} hideCustomer={true} heightGrid={'60vh'} />
+                            <PaysGrid title={''} paysList={customerPaysList} hideCustomer={true} heightGrid={'60vh'} customerId={rowData.id} />
                         </Grid>
                     </Grid>
                 </DialogContent>
@@ -208,4 +205,15 @@ export default function AccountsGrid(props) {
             </Dialog>
         </>
     )
+}
+
+function rowDataDefault(){
+    return({
+        rowId: 0,
+        id: 0,
+        name: '',
+        rut: '',
+        activity: '',
+        
+    })
 }

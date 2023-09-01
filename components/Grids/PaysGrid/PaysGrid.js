@@ -12,6 +12,7 @@ import AppInfoDataGrid from '../../AppInfoDataGrid'
 import DetailsGrid from '../DetailsGrid/DetailsGrid'
 import AppPaper from '../../AppPaper/AppPaper'
 import { useAppContext } from '../../../AppProvider'
+import InfoGrid from './InfoGrid'
 
 const pays = require('../../../promises/pays')
 const utils = require('../../../utils')
@@ -21,7 +22,7 @@ const partialPayments = require('../../../promises/partialPatyments')
 
 
 export default function PaysGrid(props) {
-    const { title, paysList, hideCustomer, heightGrid} = props
+    const { title, paysList, hideCustomer, heightGrid, customerId } = props
     const { user, dispatch } = useAppContext()
     const [gridApiRef, setGridApiRef] = useState(null)
     const [rowData, setRowData] = useState(rowDataDefault())
@@ -31,7 +32,26 @@ export default function PaysGrid(props) {
     const [saleData, setSaleData] = useState(saleDataDefault())
     const [partialPayment, setPartialPayment] = useState(partialPaymentDefault())
     const [partialPaymentsList, setPartialPaymentsList] = useState([])
-    
+    const [updateGrid, setUpdateGrid] = useState(false)
+    const [payData, setPayData] = useState([])
+
+    useEffect(() => {
+        customers.findOneById(customerId)
+            .then((res) => {
+                console.log(res)
+                setPayData(res.Pays)
+            })
+            .catch((err) => { console.error(err) })
+    }, [updateGrid, customerId])
+
+    const updatePaysGrid = () => {
+        setUpdateGrid(!updateGrid)
+    }
+
+    useEffect(() => {
+        updatePaysGrid()
+    }, [openPartialPaymentsDialog])
+
 
     const destroy = () => {
         categories.destroy(rowData.id)
@@ -115,7 +135,7 @@ export default function PaysGrid(props) {
         {
             field: 'state', headerName: 'Estado', flex: .35,
             renderCell: (params) => {
-                return params.row.state === 'Pagado' ? <PaidIcon sx={{ color: 'green' }} /> : <PaidIcon sx={{ color: 'red' }} />
+                return params.row.state === true ? <PaidIcon sx={{ color: 'green' }} /> : <PaidIcon sx={{ color: 'red' }} />
             }
         },
         { field: 'paid', headerName: 'Pagado', flex: .4, type: 'number', valueFormatter: (params) => utils.renderMoneystr(params.value) },
@@ -184,7 +204,7 @@ export default function PaysGrid(props) {
 
     return (
         <>
-            <AppInfoDataGrid
+            {/* <AppInfoDataGrid
                 title={title}
                 rows={paysList}
                 columns={columns}
@@ -193,7 +213,22 @@ export default function PaysGrid(props) {
                 infoField={'amount'}
                 infoTitle={'Total pagos: '}
                 money={true}
+            /> */}
+
+            <InfoGrid
+                title={title}
+                rows={payData}
+                columns={columns}
+                height={heightGrid}
+                setGridApiRef={setGridApiRef}
+                infoField={'amount'}
+                infoTitle={'Total pagos: '}
+                money={true}
+                updatePaysGrid={updatePaysGrid}
+
             />
+
+
 
             <Dialog open={openInfoDialog} maxWidth={'md'} fullWidth>
                 <DialogTitle sx={{ p: 2 }}>
@@ -289,7 +324,7 @@ export default function PaysGrid(props) {
                 <DialogContent sx={{ p: 2 }}>
                     <Grid container spacing={1}>
                         <Grid item xs={4} md={4} sm={4} lg={4} >
-                            <Grid container spacing={1}  direction={'column'}>
+                            <Grid container spacing={1} direction={'column'}>
                                 <Grid item>
                                     <form onSubmit={(e) => { e.preventDefault(); newPartialPayment() }}>
                                         <AppPaper title={'Nuevo abono'}>
@@ -326,8 +361,8 @@ export default function PaysGrid(props) {
                                                     label='Estado'
                                                     value={rowData.state}
                                                     size='small'
-                                                    inputProps={{ 
-                                                        readOnly: true, 
+                                                    inputProps={{
+                                                        readOnly: true,
                                                         style: { color: rowData.state === 'Pagado' ? 'green' : 'red' }
                                                     }}
                                                     fullWidth
@@ -378,35 +413,35 @@ export default function PaysGrid(props) {
                                     </AppPaper>
                                 </Grid>
                             </Grid>
-                           
+
                         </Grid>
                         <Grid item xs={8} md={8} sm={8} lg={8}>
-                                <AppPaper title={'Abonos'}>
-                                    <Table sx={{ minWidth: 300 }} aria-label="simple table">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Id</TableCell>
-                                                <TableCell>Monto</TableCell>
-                                                <TableCell>Fecha</TableCell>
+                            <AppPaper title={'Abonos'}>
+                                <Table sx={{ minWidth: 300 }} aria-label="simple table">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Id</TableCell>
+                                            <TableCell>Monto</TableCell>
+                                            <TableCell>Fecha</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {partialPaymentsList.map((row) => (
+                                            <TableRow
+                                                key={row.id}
+                                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                            >
+                                                <TableCell >
+                                                    {row.id}
+                                                </TableCell>
+                                                <TableCell >{utils.renderMoneystr(row.amount_detail)}</TableCell>
+                                                <TableCell>{moment(row.created_at).format('DD-MM-YYYY HH:mm')}</TableCell>
                                             </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {partialPaymentsList.map((row) => (
-                                                <TableRow
-                                                    key={row.id}
-                                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                                                >
-                                                    <TableCell >
-                                                        {row.id}
-                                                    </TableCell>
-                                                    <TableCell >{utils.renderMoneystr(row.amount_detail)}</TableCell>
-                                                    <TableCell>{moment(row.created_at).format('DD-MM-YYYY HH:mm')}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </AppPaper>
-                            </Grid>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </AppPaper>
+                        </Grid>
                     </Grid>
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>

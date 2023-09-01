@@ -104,8 +104,6 @@ export default function ProductFinder(props) {
 
 
 
-    
-
     const addToCart = (product) => {
         if (product.stockControl == false) {
             dispatch({ type: 'ADD_TO_CART', value: product })

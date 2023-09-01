@@ -14,8 +14,8 @@ hddSerial.one(1, function (err, serial) {
 
 
 ///// --------> NODE ENV <-------/////////
-//const env = process.env.NODE_ENV
-const env = 'build'
+const env = process.env.NODE_ENV
+//const env = 'build'
 ///// --------------------------/////////
 
 

@@ -109,18 +109,18 @@ export default function CategoriesGrid(props) {
                 //     }}
                 // />
                 ,
-                <GridActionsCellItem
-                    label='pays'
-                    icon={<PaidIcon />}
-                    onClick={() => {
-                        setRowData({
-                            rowId: params.id,
-                            id: params.row.id,
-                            name: params.row.name,
-                        })
-                        setOpenPaysDialog(true)
-                    }}
-                />
+                // <GridActionsCellItem
+                //     label='pays'
+                //     icon={<PaidIcon />}
+                //     onClick={() => {
+                //         setRowData({
+                //             rowId: params.id,
+                //             id: params.row.id,
+                //             name: params.row.name,
+                //         })
+                //         setOpenPaysDialog(true)
+                //     }}
+                // />
             ]
         }
     ]
@@ -206,9 +206,6 @@ export default function CategoriesGrid(props) {
                 </DialogTitle>
                 <DialogContent sx={{ p: 2 }}>
                     <Grid container spacing={1} direction={'column'}>
-                        <Grid item>
-
-                        </Grid>
                         <Grid item>
                             <PaysGrid title={''} paysList={customerPaysList} hideCustomer={true} heightGrid={'60vh'} />
                         </Grid>
