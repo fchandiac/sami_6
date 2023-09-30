@@ -22,6 +22,7 @@ export default function OrdersLoader(props) {
         if (findOrderDB != null) {
 
             let cart = findOrderDB.ordersdetails
+            console.log('cartOrder', cart)
 
             let findOrder = ordersInCart.find(item => item.order_id == order_id)
             if (!findOrder) {
@@ -42,7 +43,8 @@ export default function OrdersLoader(props) {
                             salesRoomStock: 0,
                             // virtualStock: -1,
                             specialProduct: true,
-                            controlStock: false
+                            controlStock: false,
+                            affected: item.affected
                         }
                         newCart.push(pro)
                     } else {
@@ -58,7 +60,8 @@ export default function OrdersLoader(props) {
                             salesRoomStock: salesRoomStock,
                             virtualStock: salesRoomStock,
                             specialProduct: false,
-                            stockControl: product.stock_control
+                            stockControl: product.stock_control,
+                            affected: item.affected
                         }
                         for (let i = 0; i < item.quanty; i++) {
                             newCart.push(pro)

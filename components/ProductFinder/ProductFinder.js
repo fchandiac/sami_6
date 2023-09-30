@@ -36,7 +36,8 @@ export default function ProductFinder(props) {
                     code: item.code,
                     sale: item.sale == undefined ? 0 : item.sale,
                     salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)) == undefined ? 0 : item.Stocks.find(item => (item.storage_id == 1001)).stock,
-                    stockControl: item.stock_control
+                    stockControl: item.stock_control,
+                    affected: item.affected
                 }))
                 setProductsList(data)
             })
@@ -90,7 +91,8 @@ export default function ProductFinder(props) {
                             code: item.code,
                             sale: item.sale,
                             salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)) == undefined ? 0 : item.Stocks.find(item => (item.storage_id == 1001)).stock,
-                            stockControl: item.stock_control
+                            stockControl: item.stock_control,
+                            affected: item.affected
                         }))
                         setProductsList(data)
                     })
@@ -153,7 +155,8 @@ export default function ProductFinder(props) {
                             virtualStock: params.row.salesRoomStock,
                             stockControl: params.row.stockControl,
                             code: params.row.code,
-                            specialProduct: false
+                            specialProduct: false,
+                            affected: params.row.affected
 
                         })
                     }}

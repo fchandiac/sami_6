@@ -74,7 +74,7 @@ export default function NewProducForm(props) {
                         sale = utils.moneyToInt(productData.sale)
                     } else { sale = productData.sale}
 
-                    products.create(productData.name, productData.code, sale, purchase, productData.category.id, productData.tax.id)
+                    products.create(productData.name, productData.code, sale, purchase, productData.category.id, productData.tax.id, productData.affected)
                         .then(res => {
                             stocks.create(res.id, 1001, productData.salesRoomStock, productData.criticalSalesRoomStock)
                                 .then(() => {

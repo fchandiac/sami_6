@@ -30,7 +30,7 @@ const orders = require('../../../promises/orders')
 
 export default function PayDialog(props) {
     const { open, setOpen, total, stockControl } = props
-    const { dispatch, cart, movements, user, webConnection,  ordersInCart } = useAppContext()
+    const { dispatch, cart, movements, user, webConnection, ordersInCart } = useAppContext()
     const [payAmount, setPayAmount] = useState(0)
     const [change, setChange] = useState(0)
     const [disablePay, setDisablePay] = useState(true)
@@ -52,7 +52,7 @@ export default function PayDialog(props) {
     const [openInvoiceDialog, setOpenInvoiceDialog] = useState(false)
     const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
     const [customerCredit, setCustomerCredit] = useState({ state: false, name: '', pay: false })
-   
+
     const setDocumentsTypes = (webConnection, liorenConfig, configDocs) => {
         let docs = [
             { name: 'Ticket', label: 'Ticket' }
@@ -96,7 +96,7 @@ export default function PayDialog(props) {
         })
         console.log('customerCredit', customerCredit)
         customerCredit.state === true ? paymentMethods.unshift({ name: customerCredit.name, label: customerCredit.name, pay: false }) : null
-        customerCredit.state === true ? setCustomerCredit({ state: true, name: customerCredit.name, pay:false }) : null
+        customerCredit.state === true ? setCustomerCredit({ state: true, name: customerCredit.name, pay: false }) : null
         paymentMethods.unshift({ name: 'Efectivo', label: 'Efectivo', pay: true })
         setConfigDocs(docs)
         setPaymentMethodsList(paymentMethods)
@@ -216,7 +216,7 @@ export default function PayDialog(props) {
 
     const sale = () => {
         const pr = new Promise((resolve, reject) => {
-            sales.create(total, paymentMethod, 0, 0, stockControl, (user.id == 0? 1001: user.id))
+            sales.create(total, paymentMethod, 0, 0, stockControl, (user.id == 0 ? 1001 : user.id))
                 .then(res => {
                     let movs = movements.movements
                     movs.push({
@@ -247,16 +247,16 @@ export default function PayDialog(props) {
         return pr
     }
 
-    const closeOrders = async() => {
+    const closeOrders = async () => {
         for (const order of ordersInCart) {
-          await orders.updateState(order.order_id, true)
+            await orders.updateState(order.order_id, true)
         }
         dispatch({ type: 'SET_ORDERS_IN_CART', value: [] })
-    } 
+    }
 
     const saleBoleta = (dte_number) => {
         const pr = new Promise((resolve, reject) => {
-            sales.create(total, paymentMethod, 39, dte_number, stockControl, (user.id == 0? 1001: user.id))
+            sales.create(total, paymentMethod, 39, dte_number, stockControl, (user.id == 0 ? 1001 : user.id))
                 .then(res => {
                     let movs = movements.movements
                     movs.push({
@@ -312,12 +312,13 @@ export default function PayDialog(props) {
         return pay
     }
 
-    const boletaPrintInfo = (timbre, iva, invoiceNumber) => {
+    const boletaPrintInfo = (timbre, iva, invoiceNumber, cart_) => {
         let canvas = document.createElement('canvas')
         PDF417.draw(timbre, canvas, 2, 2, 1.5)
         let stamp_img = canvas.toDataURL('image/jpg')
         let date = moment(new Date()).format('DD-MM-yyyy')
         let time = moment(new Date()).format('HH:mm')
+        let totalCart = cart_.reduce((acc, item) => acc + item.subTotal, 0)
         let printInfo = {
             printer: printer,
             stamp: stamp_img,
@@ -326,10 +327,10 @@ export default function PayDialog(props) {
             rut: ticketInfo.rut,
             address: ticketInfo.address,
             phone: ticketInfo.phone,
-            total: total,
+            total: totalCart,
             iva: iva,
             invoiceNumber: invoiceNumber,
-            cart: cart,
+            cart: cart_,
             paymentMethod: paymentMethod,
             sale_id: 0
         }
@@ -399,17 +400,78 @@ export default function PayDialog(props) {
                         await updateStocks(cart)
                         await stocks.findAllStockAlert()
                     }
-                    const boleta = await lioren.boleta(liorenConfig.token, total)
-                    const sale = await saleBoleta(boleta[2])
-                    await saleDetailAll(sale.id, cart)
-                    await savePay(paymentMethodsList, paymentMethod, sale.id, total)
-                    ipcRenderer.sendSync('boleta', boletaPrintInfo(boleta[0], boleta[1], boleta[2]))
-                    if (ordersInCart.length > 0) {
-                        await closeOrders()
+                    console.log('cart', cart)
+                    let affectedCart = cart.filter(item => item.affected == true)
+                    let nonAffectedCart = cart.filter(item => item.affected == false)
+                    let totalAffectedCart = affectedCart.reduce((acc, item) => acc + item.subTotal, 0)
+                    let totalNonAffectedCart = nonAffectedCart.reduce((acc, item) => acc + item.subTotal, 0)
+
+                    if (affectedCart.length > 0) {
+                        const boleta = await lioren.boleta(liorenConfig.token, totalAffectedCart, cart)
+                        const sale = await saleBoleta(boleta[2])
+                        await savePay(paymentMethodsList, paymentMethod, sale.id, total)
+                        await saleDetailAll(sale.id, cart)
+                   
+                        if (ordersInCart.length > 0) {
+                            await closeOrders()
+                        }
+                        
+                        const prtBoleta = await ipcRenderer.invoke('boleta2', boletaPrintInfo(boleta[0], boleta[1], boleta[2], affectedCart), totalNonAffectedCart, cart)
+                 
+
+                      
+
+                        // if (nonAffectedCart.length > 0) {
+                        //     let date = moment(new Date()).format('DD-MM-yyyy')
+                        //     let time = moment(new Date()).format('HH:mm')
+                        //     let printInfo = {
+                        //         total: totalNonAffectedCart,
+                        //         cart: nonAffectedCart,
+                        //         printer: printer,
+                        //         ticketInfo: ticketInfo,
+                        //         date: date, time: time,
+                        //         paymentMethod: paymentMethod,
+                        //         sale_id: sale.id
+                        //     }
+                        //     await ipcRenderer.sendSync('print-ticket', printInfo)
+                        // } 
+
+                        setOpenChangeDialog(true)
+                        setOpen(false)
+                    } else {
+                        const sale_ = await sale()
+                        await saleDetailAll(sale_.id, cart)
+                        await savePay(paymentMethodsList, paymentMethod, sale_.id, total)
+                        let date = moment(new Date()).format('DD-MM-yyyy')
+                        let time = moment(new Date()).format('HH:mm')
+                        let printInfo = {
+                            total: total,
+                            cart: cart,
+                            printer: printer,
+                            ticketInfo: ticketInfo,
+                            date: date, time: time,
+                            paymentMethod: paymentMethod,
+                            sale_id: sale_.id
+                        }
+                        ipcRenderer.sendSync('print-ticket', printInfo)
+                        if (ordersInCart.length > 0) {
+                            await closeOrders()
+                        }
+                        setOpenChangeDialog(true)
+                        setOpen(false)
+
                     }
-                    setOpenChangeDialog(true)
-                    setOpen(false)
-                    
+
+
+                    // divides el carro
+
+
+
+
+
+
+
+
                 }
             } else if (documentType === 'Ticket') {
                 const findPrinter_2 = await ipcRenderer.invoke('find-printer', printer)
@@ -440,7 +502,7 @@ export default function PayDialog(props) {
                     }
                     setOpenChangeDialog(true)
                     setOpen(false)
-                    
+
                 }
             }
 
@@ -637,7 +699,7 @@ export default function PayDialog(props) {
                 setOpenPayDialog={setOpen}
                 paymentMethod={paymentMethod}
                 stockControl={stockControl}
-                customerForInvoice={customer == null? {id: 0, label:'', key:0}: customer}
+                customerForInvoice={customer == null ? { id: 0, label: '', key: 0 } : customer}
             />
 
             <NewCustomerDialog

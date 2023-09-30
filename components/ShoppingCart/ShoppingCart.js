@@ -240,7 +240,7 @@ export default function ShoppingCart(props) {
 
     const orderDetailsPrAll = (order_id) => {
         let details = []
-        console.log(cart)
+        console.log('PROCESS ORDER CART', cart)
         cart.map((product) => {
             details.push(
                 ordersDetails.create(
@@ -250,7 +250,8 @@ export default function ShoppingCart(props) {
                     product.sale,
                     product.discount,
                     product.subTotal,
-                    product.name
+                    product.name,
+                    product.affected
                 ))
         })
 

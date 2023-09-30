@@ -5,8 +5,8 @@
 import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 
-function create(order_id, product_id, quanty, sale,  discount, subtotal, name) {
-    let data = { order_id, product_id, quanty, sale,  discount, subtotal, name }
+function create(order_id, product_id, quanty, sale,  discount, subtotal, name, affected) {
+    let data = { order_id, product_id, quanty, sale,  discount, subtotal, name, affected }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const detail = new Promise((resolve, reject) => {
         fetch(url + 'ordersDetails/create', {

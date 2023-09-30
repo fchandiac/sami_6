@@ -5,14 +5,6 @@ const url = require('url')
 const port = 3001
 
 
-const hddSerial = require('hddserial');
-
-hddSerial.one(1, function (err, serial) {
-	console.log("hdd serial for first hdd : %s", serial);
-});
-
-
-
 ///// --------> NODE ENV <-------/////////
 const env = process.env.NODE_ENV
 //const env = 'build'
@@ -424,6 +416,113 @@ ipcMain.on('print-ticket', (e, printInfo) => {
 
 })
 
+
+
+ipcMain.handle('boleta2', (e, printInfo, nonAffectedTotal, cart) => {
+	try {
+		const idVendor = parseInt(printInfo.printer.idVendor)
+		const idProduct = parseInt(printInfo.printer.idProduct)
+		const device = new escpos.USB(idVendor, idProduct)
+		const options = { encoding: "GB18030" /* delt */ }
+		const printer = new escpos.Printer(device)
+		let stamp = printInfo.stamp
+		let total = printInfo.total
+		let invoiceNumber = printInfo.invoiceNumber
+		let iva = printInfo.iva
+		let name = printInfo.name
+		let rut = printInfo.rut
+		let address = printInfo.address
+		let phone = printInfo.phone
+		let paymentMethod = printInfo.paymentMethod
+		let sale_id = printInfo.sale_id
+
+		escpos.Image.load(stamp, function (image) {
+			device.open(function () {
+				printer.font('b').align('ct').style('NORMAL')
+				printer.size(0, 0)
+				printer.text('_________________________________________')
+				printer.size(1, 0)
+				printer.text('BOLETA ELECTRONICA')
+				printer.size(0, 0)
+				printer.text('Nro: ' + invoiceNumber)
+				printer.text('_________________________________________')
+				printer.text(name)
+				printer.text(rut)
+				printer.text(address)
+				printer.text(phone)
+				printer.text('_________________________________________')
+				printer.size(0, 0)
+				printer.tableCustom([
+					{ text: '#', align: "LEFT", width: 0.1 },
+					{ text: 'Producto', align: "LEFT", width: 0.8 },
+					{ text: 'Subtotal', align: "LEFT", width: 0.2 }
+				])
+				cart.map(product => {
+					printer.tableCustom([
+						{ text: product.quanty, align: "LEFT", width: 0.1 },
+						{ text: product.name, align: "LEFT", width: 0.8 },
+						{ text: renderMoneystr(product.subTotal), align: "LEFT", width: 0.2 }
+					])
+				})
+				
+				printer.text('')
+				printer.text('Monto afecto: ' + renderMoneystr(total))
+				printer.text('Monto no afecto: ' + renderMoneystr(nonAffectedTotal))
+				printer.size(1, 0)
+				printer.text('TOTAL: ' + renderMoneystr(total + nonAffectedTotal))
+				printer.size(0, 0)
+				printer.text('El iva de esta boleta es: ' + renderMoneystr(parseInt(iva)))
+				printer.text('')
+				
+				printer.text('')
+				printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
+				printer.align('ct')
+				printer.image(image, 'd24')
+					.then(() => {
+						printer.text('Timbre Electronico SII')
+						printer.text('Res. Nro 80 de 2014-08-22')
+						printer.text('Verifique Documento en www.lioren.cl/consultabe')
+						printer.text('')
+						printer.cut()
+						if (paymentMethod != 'Efectivo') {
+							printer.font('b').align('ct').style('NORMAL')
+							printer.size(0, 0)
+							printer.text('_________________________________________________')
+							printer.size(1, 0)
+							printer.text('MEDIO DE PAGO ELECTRONICO')
+							printer.size(0, 0)
+							printer.text('_________________________________________________')
+							printer.size(1, 0)
+							printer.text('VENTA: ' + sale_id)
+							printer.text('Medio de pago: ' + paymentMethod)
+							printer.text('TOTAL: ' + renderMoneystr(total))
+							printer.size(0, 0)
+							printer.text('_________________________________________________')
+							printer.text('')
+							printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
+							printer.align('ct')
+							printer.text('')
+							printer.cut()
+							printer.close()
+						} else {
+							printer.close()
+						}
+					})
+
+			})
+			// device.close()
+		})
+		//e.returnValue = true
+		return true
+
+	} catch (err) {
+		console.log(err)
+		return false
+	}
+
+	
+})
+
 ipcMain.on('boleta', (e, printInfo) => {
 	const idVendor = parseInt(printInfo.printer.idVendor)
 	const idProduct = parseInt(printInfo.printer.idProduct)
@@ -538,7 +637,7 @@ ipcMain.on('factura', (e, printInfo) => {
 	let direccion = printInfo.customer.direccion
 	let paymentMethod = printInfo.paymentMethod
 	let sale_id = printInfo.sale_id
-	
+
 
 	escpos.Image.load(stamp, function (image) {
 		device.open(function () {
@@ -626,7 +725,7 @@ const codeOptions = {
 	encoding: 'GB18030', // Opcional, depende de la codificación necesaria
 	width: 2, // Ajusta el ancho de barras aquí
 	height: 100, // Ajusta la altura del código de barras aquí
-  };
+};
 
 ipcMain.on('simple-order', (e, printInfo) => {
 	console.log(printInfo)

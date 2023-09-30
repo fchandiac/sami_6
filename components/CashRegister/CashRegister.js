@@ -70,7 +70,7 @@ export default function CashRegister() {
             </Grid>
           </Grid>
         </Grid>
-        <Grid item xs={7}>
+        <Grid item xs={7} maxHeight={'80vh'}>
           <ShoppingCart stockControl={cashRegisterUI.stock_control} quote={cashRegisterUI.quote} />
         </Grid>
       </Grid>

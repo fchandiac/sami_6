@@ -45,7 +45,8 @@ export default function Favorites(props) {
             virtualStock: product.salesRoomStock,
             stockControl: product.stockControl,
             code: product.code,
-            specialProduct: false
+            specialProduct: false,
+            affected: product.affected,
         })
     }
 

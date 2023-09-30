@@ -7,7 +7,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
 import WidgetsIcon from '@mui/icons-material/Widgets'
 import FavoriteIcon from '@mui/icons-material/Favorite'
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField, Autocomplete } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField, Autocomplete, FormControl, FormControlLabel, Switch } from '@mui/material'
 import AppPaper from '../../AppPaper/AppPaper'
 import StockController from '../../StockController/StockController'
 
@@ -49,7 +49,8 @@ export default function ProductsGrid(props) {
                 favorite: item.favorite,
                 stock: item.Stocks.reduce((accumulator, currentValue) => { return accumulator + currentValue.stock; }, 0),
                 salesRoomStock: item.Stocks.find(item => (item.storage_id == 1001)) == undefined ? 0 : item.Stocks.find(item => (item.storage_id == 1001)).stock,
-                stock_control: item.stock_control
+                stock_control: item.stock_control,
+                affected: item.affected,
             }))
             setProductsList(data)
         })
@@ -95,6 +96,7 @@ export default function ProductsGrid(props) {
             1001,
             rowData.sale,
             rowData.purchase,
+            rowData.affected,
         )
             .then(() => {
                 gridApiRef.current.updateRows([{
@@ -103,7 +105,8 @@ export default function ProductsGrid(props) {
                     code: rowData.code,
                     category: rowData.category.label,
                     sale: rowData.sale,
-                    purchase: rowData.purchase
+                    purchase: rowData.purchase,
+                    affected: rowData.affected,
                 }])
                 setOpenInfoDialog(false)
 
@@ -126,6 +129,7 @@ export default function ProductsGrid(props) {
         { field: 'name', headerName: 'Nombre', flex: 1 },
         { field: 'code', headerName: 'Código', flex: .5 },
         { field: 'category', headerName: 'Categoría', flex: .6 },
+        { field: 'affected', headerName: 'Afecto', flex: .4, type: 'boolean', hide: false },
         { field: 'salesRoomStock', headerName: 'Stock sala', flex: .4 },
         { field: 'stock', headerName: 'Stock total', flex: .4 },
         { field: 'sale', headerName: '$ Venta', type: 'number', flex: .45, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
@@ -163,17 +167,14 @@ export default function ProductsGrid(props) {
                     label='view'
                     icon={<InfoIcon />}
                     onClick={() => {
-                        let profitMoney =( (params.row.sale ) - (params.row.purchase )) / 1.19
+                        let profitMoney = ((params.row.sale) - (params.row.purchase)) / 1.19
                         let saleNet = params.row.sale / 1.19
                         let purchaseNet = params.row.purchase / 1.19
-                        
+
                         let profit = ((saleNet - purchaseNet) / saleNet) * 100
                         profit = parseInt(profit)
                         purchaseNet = parseInt(purchaseNet)
-                    
-                        
 
-                        
                         setRowData({
                             rowId: params.id,
                             id: params.row.id,
@@ -191,7 +192,8 @@ export default function ProductsGrid(props) {
                             category: { label: params.row.category, id: params.row.category_id, key: params.row.category_id },
                             category_id: params.row.category_id,
                             salesRoomStock: params.row.salesRoomStock,
-                            stock: params.row.stock
+                            stock: params.row.stock,
+                            affected: params.row.affected,
                         })
                         setOpenInfoDialog(true)
                     }}
@@ -330,6 +332,21 @@ export default function ProductsGrid(props) {
                                                 options={categoriesOptions}
                                                 renderInput={(params) => <TextField {...params} label='Categoría' size={'small'} fullWidth required />}
                                             />
+                                        </Grid>
+                                        <Grid item>
+                                            <FormControl>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Switch
+                                                            checked={rowData.affected}
+                                                            onChange={() => { setRowData({ ...rowData, affected: !rowData.affected }) }}
+                                                            name="affected"
+                                                            color="primary"
+                                                        />
+                                                    }
+                                                    label="Venta afecta"
+                                                />
+                                            </FormControl>
                                         </Grid>
                                         <Grid item>
                                             <TextField

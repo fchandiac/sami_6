@@ -45,7 +45,8 @@ export default function ProductCodeFinder(props) {
                                 virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 discount: 0,
                                 controlStock: res[0].stock_control,
-                                code: res[0].code
+                                code: res[0].code,
+                                affected: res[0].affected
                             }
                             setCode('')
                             inputCodeRef.current.focus()
@@ -65,7 +66,8 @@ export default function ProductCodeFinder(props) {
                                 virtualStock: res[0].Stocks.find(item => (item.storage_id == 1001)).stock,
                                 discount: 0,
                                 controlStock: res[0].control_stock,
-                                code: res[0].code
+                                code: res[0].code,
+                                affected: res[0].affected
                             }
                             setCode('')
                             inputCodeRef.current.focus()

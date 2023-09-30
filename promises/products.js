@@ -5,8 +5,8 @@ import electron from 'electron'
 const ipcRenderer = electron.ipcRenderer || false
 
 
-function create(name, code, sale, purchase, category_id, tax_id) {
-    let data = { name, code, sale, purchase, category_id, tax_id }
+function create(name, code, sale, purchase, category_id, tax_id, affected) {
+    let data = { name, code, sale, purchase, category_id, tax_id, affected }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/create', {
@@ -87,8 +87,8 @@ function updateFavorite(id, favorite) {
     return product
 }
 
-function updateFull(id, name, code, category_id, tax_id, sale, purchase) {
-    let data = {id, name, code, category_id, tax_id, sale, purchase }
+function updateFull(id, name, code, category_id, tax_id, sale, purchase, affected) {
+    let data = {id, name, code, category_id, tax_id, sale, purchase, affected }
     const url = ipcRenderer.sendSync('get-api-url', 'sync')
     const product = new Promise((resolve, reject) => {
         fetch(url + 'products/updateFull', {
