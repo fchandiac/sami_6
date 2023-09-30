@@ -6,9 +6,10 @@ const port = 3001
 
 
 ///// --------> NODE ENV <-------/////////
-const env = process.env.NODE_ENV
-//const env = 'build'
+//const env = process.env.NODE_ENV
+const env = 'build'
 ///// --------------------------/////////
+////
 
 
 ///// --------> EXPRESS CONFIG <-------/////////
