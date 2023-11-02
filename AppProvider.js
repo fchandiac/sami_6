@@ -26,6 +26,7 @@ const initialState = {
     webConnection: false,
     lioren: { integration: false, token: '', mail: '' },
     cashRegisterTab: 0,
+    currentDocument: 0
 }
 
 const reducer = (state, action) => {
@@ -287,6 +288,18 @@ const reducer = (state, action) => {
             return { ...state, cashRegisterTab: action.value }
         case 'SET_USER':
             return { ...state, user: action.value }
+        case 'SET_CURRENT_DOCUMENT':
+            return { ...state, currentDocument: action.value }
+        case 'SET_CART':
+            return { ...state, cart: action.value }
+        case 'SET_TOTAL':
+            return { ...state, total: action.value }
+        case 'SET_CART_CHANGED':
+            return { ...state, cartChanged: action.value }
+        case 'SET_ACTION_TYPE':
+            return { ...state, actionType: action.value }
+        case 'SET_PRODUCT':
+            return { ...state, product: action.value }
         default:
             console.log('No action type')
             break
@@ -295,6 +308,41 @@ const reducer = (state, action) => {
 
 const AppProvider = ({ children }) => {
     const [state, dispatch] = useReducer(reducer, initialState)
+
+    
+    const setCurrentDocument = (value) => {
+        dispatch({ type: 'SET_CURRENT_DOCUMENT', value: value })
+    }
+
+    const openSnack = (type, message) => {
+        dispatch({ type: 'OPEN_SNACK', value: { type: type, message: message } })
+    }
+
+    const getCart = () => {
+        return state.cart
+    }
+
+    const setCart = (cart) => {
+        dispatch({ type: 'SET_CART', value: cart })
+    }
+
+    const setTotal = (total) => {
+        dispatch({ type: 'SET_TOTAL', value: total })
+    }
+
+    const cartChanged = () => {
+        dispatch({ type: 'SET_CART_CHANGED', value: !state.cartChanged })
+    }
+
+    const setActionType = (actionType) => {
+        dispatch({ type: 'SET_ACTION_TYPE', value: actionType })
+    }
+
+    const setProduct = (id, virtualStock, salesRoomStock) => {
+        dispatch({ type: 'SET_PRODUCT', value: { id: id, virtualStock: virtualStock, salesRoomStock: salesRoomStock } })
+    }
+
+
     return (
         <AppContext.Provider value={{
             cart: state.cart,
@@ -316,7 +364,16 @@ const AppProvider = ({ children }) => {
             lioren: state.lioren,
             ordersInCart: state.ordersInCart,
             cashRegisterTab: state.cashRegisterTab,
-            dispatch
+            currentDocument: state.currentDocument,
+            setCurrentDocument,
+            dispatch,
+            openSnack,
+            getCart,
+            setCart,
+            setTotal,
+            cartChanged,
+            setActionType,
+            setProduct
         }}>
             {children}
         </AppContext.Provider>

@@ -45,8 +45,14 @@ export default function Layout(props) {
     setCashRegisterUI(cashRegisterUI)
 
     stocks.findAllStockAlert()
-      .then(res => { dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res }) })
+      .then(res => { 
+        dispatch({ type: 'SET_STOCK_ALERT_LIST', value: res }) 
+
+        console.log(res.filter(item => item.Product == null ))
+      })
       .catch(err => { console.log(err) })
+
+
   }, [router.pathname])
 
   useEffect(() => {
@@ -73,15 +79,10 @@ export default function Layout(props) {
     dispatch({ type: 'SET_ORDERS', value: cashRegisterUI.orders })
   }, [])
 
-  // useEffect(() => {
-  //   lioren.miEmpresa()
-  //     .then(res => { console.log(res) })
-
-  // }, [])
 
   const updateLock = () => {
     if (lock === false) {
-
+      console.log('adminPass', adminPass)
       dispatch({ type: 'LOCK' })
       console.log('Open')
     } else {
@@ -300,8 +301,8 @@ export default function Layout(props) {
             rows={
               stockAlertList.map(item => ({
                 id: item.id,
-                productName: item.Product.name,
-                code: item.Product.code,
+                productName: item.Product == null ? '': item.Product.name,
+                code: item.Product == null ? '':  item.Product.code,
                 storageName: item.Storage.name,
                 stock: item.stock,
                 critical_stock: item.critical_stock

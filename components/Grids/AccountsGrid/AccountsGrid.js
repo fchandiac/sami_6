@@ -24,7 +24,6 @@ export default function AccountsGrid(props) {
     useEffect(() => {
         customers.findAll()
             .then((res) => {
-
                 // console.log(res)
                 const filteredData = res.filter(item => {
                     return item.Pays.some(pay => pay.state === false);
@@ -195,7 +194,7 @@ export default function AccountsGrid(props) {
                 <DialogContent sx={{ p: 2 }}>
                     <Grid container spacing={1} direction={'column'}>
                         <Grid item>
-                            <PaysGrid title={''} paysList={customerPaysList} hideCustomer={true} heightGrid={'60vh'} customerId={rowData.id} />
+                            <PaysGrid title={''} paysList={customerPaysList} customerPays={true} hideCustomer={true} heightGrid={'60vh'} customerId={rowData.id} />
                         </Grid>
                     </Grid>
                 </DialogContent>

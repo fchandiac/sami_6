@@ -22,7 +22,7 @@ const partialPayments = require('../../../promises/partialPatyments')
 
 
 export default function PaysGrid(props) {
-    const { title, paysList, hideCustomer, heightGrid, customerId } = props
+    const { title, paysList, hideCustomer, heightGrid, customerId, customerPays } = props
     const { user, dispatch } = useAppContext()
     const [gridApiRef, setGridApiRef] = useState(null)
     const [rowData, setRowData] = useState(rowDataDefault())
@@ -38,7 +38,7 @@ export default function PaysGrid(props) {
     useEffect(() => {
         customers.findOneById(customerId)
             .then((res) => {
-                console.log(res)
+                console.log('customerId', res)
                 setPayData(res.Pays)
             })
             .catch((err) => { console.error(err) })
@@ -204,20 +204,9 @@ export default function PaysGrid(props) {
 
     return (
         <>
-            {/* <AppInfoDataGrid
-                title={title}
-                rows={paysList}
-                columns={columns}
-                height= {heightGrid} 
-                setGridApiRef={setGridApiRef}
-                infoField={'amount'}
-                infoTitle={'Total pagos: '}
-                money={true}
-            /> */}
-
             <InfoGrid
                 title={title}
-                rows={payData}
+                rows={customerPays? payData: paysList}
                 columns={columns}
                 height={heightGrid}
                 setGridApiRef={setGridApiRef}
@@ -227,9 +216,6 @@ export default function PaysGrid(props) {
                 updatePaysGrid={updatePaysGrid}
 
             />
-
-
-
             <Dialog open={openInfoDialog} maxWidth={'md'} fullWidth>
                 <DialogTitle sx={{ p: 2 }}>
                     Información venta asociada
@@ -359,11 +345,11 @@ export default function PaysGrid(props) {
                                             <Grid item>
                                                 <TextField
                                                     label='Estado'
-                                                    value={rowData.state}
+                                                    value={rowData.state === true ? 'Pagado' : 'Pendiente'}
                                                     size='small'
                                                     inputProps={{
                                                         readOnly: true,
-                                                        style: { color: rowData.state === 'Pagado' ? 'green' : 'red' }
+                                                        style: { color: rowData.state === true ? 'green' : 'red' }
                                                     }}
                                                     fullWidth
                                                     variant='outlined'

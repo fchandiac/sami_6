@@ -27,7 +27,6 @@ export default function ProductFinder(props) {
     const [productsList, setProductsList] = useState([])
 
     useEffect(() => {
-        console.log('ProductFinder')
         products.findAll()
             .then(res => {
                 let data = res.map((item) => ({
@@ -52,34 +51,34 @@ export default function ProductFinder(props) {
                 console.log('NONE_TYPE')
                 break
             case 'NEW_ADD_TO_CART':
-                console.log('NEW_ADD_TO_CART', product)
-                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                //console.log('NEW_ADD_TO_CART', product)
+                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
                 //gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: 2}])
                 break
             case 'ADD_TO_CART':
-                console.log('ADD_TO_CART', product)
-                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                // console.log('ADD_TO_CART', product)
+                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
                 //gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: 2}])
                 break
             case 'REMOVE_FROM_CART':
                 gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: product.salesRoomStock }])
                 break
             case 'SUBSTRACT_QUANTY':
-                console.log('SUBSTRACT_QUANTY', product)
+                //console.log('SUBSTRACT_QUANTY', product)
                 if (product.specialProduct == false) {
                     gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
                 }
                 break
             case 'ADD_QUANTY':
-                console.log('ADD_QUANTY', product)
+                //console.log('ADD_QUANTY', product)
                 if (product.specialProduct == false) {
-                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                    gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
                 }
                 break
             case 'EDIT_QUANTY':
-                console.log('EDIT_QUANTY', product)
+               // console.log('EDIT_QUANTY', product)
                 if (product.specialProduct == false) {
-                gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
+                    gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
                 }
                 break
             case 'CLEAR_CART':
@@ -133,7 +132,7 @@ export default function ProductFinder(props) {
                 //params.value
             )
         }, //valueFormatter: (params) => (utils.renderMoneystr(params.value))
-        { field: 'sale', headerName: 'Precio Venta', flex: .7,  valueFormatter: (params) => (utils.renderMoneystr(params.value))},
+        { field: 'sale', headerName: 'Precio Venta', flex: .7, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
             headerName: '',

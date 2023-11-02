@@ -31,7 +31,7 @@ export default function Pays() {
                     customer_name: item.customer_id == null ? 'Sin cliente' : '',
                     amount: item.amount,
                     payment_method: item.payment_method,
-                    state: item.state == true ? 'Pagado' : 'Pendiente',
+                    state: item.state,
                     paid: item.paid,
                     balance: item.balance,
                     date: item.date,

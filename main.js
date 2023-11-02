@@ -303,6 +303,15 @@ ipcMain.handle('connection', (e, arg) => {
 	return conn
 })
 
+ipcMain.on('update-api', (e, arg) => {
+	let rawDataConfig = fs.readFileSync(filePathConfig)
+	let config = JSON.parse(rawDataConfig)
+	config.api.url = arg.url
+	config.api.sqlite = arg.sqlite
+	data = JSON.stringify(config)
+	fs.writeFileSync(filePathConfig, data)
+})
+
 
 /////// --------> IPC PRINTER <-------/////////
 const escpos = require('escpos')
@@ -405,9 +414,11 @@ ipcMain.on('print-ticket', (e, printInfo) => {
 			printer.align('ct')
 			printer.text('')
 			printer.cut()
+			printer.cashdraw(2)
 			printer.close()
 
 		} else {
+			printer.cashdraw(2)
 			printer.close()
 		}
 
@@ -504,8 +515,10 @@ ipcMain.handle('boleta2', (e, printInfo, nonAffectedTotal, cart) => {
 							printer.align('ct')
 							printer.text('')
 							printer.cut()
+							printer.cashdraw(2)
 							printer.close()
 						} else {
+							printer.cashdraw(2)
 							printer.close()
 						}
 					})
@@ -604,8 +617,10 @@ ipcMain.on('boleta', (e, printInfo) => {
 						printer.align('ct')
 						printer.text('')
 						printer.cut()
+						printer.cashdraw(2)
 						printer.close()
 					} else {
+						printer.cashdraw(2)
 						printer.close()
 					}
 				})
@@ -710,8 +725,10 @@ ipcMain.on('factura', (e, printInfo) => {
 						printer.align('ct')
 						printer.text('')
 						printer.cut()
+						printer.cashdraw(2)
 						printer.close()
 					} else {
+						printer.cashdraw(2)
 						printer.close()
 					}
 				})
@@ -760,6 +777,7 @@ ipcMain.on('simple-order', (e, printInfo) => {
 		printer.align('ct')
 		printer.text('')
 		printer.cut()
+		printer.cashdraw(2)
 		printer.close()
 
 	})
@@ -811,6 +829,7 @@ ipcMain.on('complete-order', (e, printInfo) => {
 		printer.align('ct')
 		printer.text('')
 		printer.cut()
+		printer.cashdraw(2)
 		printer.close()
 
 	})

@@ -30,7 +30,7 @@ const orders = require('../../../promises/orders')
 
 export default function PayDialog(props) {
     const { open, setOpen, total, stockControl } = props
-    const { dispatch, cart, movements, user, webConnection, ordersInCart } = useAppContext()
+    const { dispatch, cart, movements, user, webConnection, ordersInCart, currentDocument, setCurrentDocument } = useAppContext()
     const [payAmount, setPayAmount] = useState(0)
     const [change, setChange] = useState(0)
     const [disablePay, setDisablePay] = useState(true)
@@ -55,14 +55,14 @@ export default function PayDialog(props) {
 
     const setDocumentsTypes = (webConnection, liorenConfig, configDocs) => {
         let docs = [
-            { name: 'Ticket', label: 'Ticket' }
+            { name: 'Ticket', label: 'Ticket', value: 1 }
         ]
         let ticket = ticketDoc(webConnection, configDocs, liorenConfig.integration)
-        if (ticket) docs.push({ name: 'Boleta', label: 'Boleta' })
+        if (ticket) docs.push({ name: 'Boleta', label: 'Boleta', value: 2 })
         let invoice = invoiceDoc(webConnection, configDocs, liorenConfig.integration)
-        if (invoice) docs.push({ name: 'Factura', label: 'Factura' })
+        if (invoice) docs.push({ name: 'Factura', label: 'Factura', value: 3 })
         //-----//
-        docs.push({ name: 'Sin impresora', label: 'Sin impresora' })
+        docs.push({ name: 'Sin impresora', label: 'Sin impresora', value: 0 })
         setDocumentTypesList(docs)
     }
 
@@ -90,7 +90,7 @@ export default function PayDialog(props) {
         let docs = ipcRenderer.sendSync('get-docs', 'sync')
         let lioren = ipcRenderer.sendSync('get-lioren', 'sync')
         let cash_register_UI = ipcRenderer.sendSync('get-cash-register-UI', 'sync')
-        console.log('UIIIIII', cash_register_UI.number_pad)
+
         paymentMethods = paymentMethods.map((method) => {
             return { name: method.name, label: method.name, pay: method.pay }
         })
@@ -288,33 +288,28 @@ export default function PayDialog(props) {
     }
 
     const savePay = async (methodsList, paymentMethod, sale_id, amount) => {
-        const pay = new Promise((resolve, reject) => {
-            let state = methodsList.find(method => method.name == paymentMethod).pay
-            let customer_id = null
-            let paid = amount
-            let balance = 0
 
-            if (customer.id != 0) {
-                customer_id = customer.id
-                paid = 0
-                balance = amount
-            }
-            pays.create(sale_id, customer_id, amount, paymentMethod, state, new Date(), paid, balance)
-                .then(res => {
-                    resolve(res)
-                    setCustomer({ id: 0, label: '', key: 0 })
-                })
-                .catch(err => {
-                    console.log(err)
-                    reject(err)
-                })
-        })
-        return pay
+        let state = methodsList.find(method => method.name == paymentMethod).pay
+        let customer_id = null
+        let paid = amount
+        let balance = 0
+
+        if (customer.id != 0) {
+            customer_id = customer.id
+            paid = 0
+            balance = amount
+        }
+
+        await pays.create(sale_id, customer_id, amount, paymentMethod, state, new Date(), paid, balance)
+        setCustomer({ id: 0, label: '', key: 0 })
+
+
     }
 
-    const boletaPrintInfo = (timbre, iva, invoiceNumber, cart_) => {
+    const boletaPrintInfo = (timbre, iva, invoiceNumber, cart_, sale_id) => {
         let canvas = document.createElement('canvas')
         PDF417.draw(timbre, canvas, 2, 2, 1.5)
+
         let stamp_img = canvas.toDataURL('image/jpg')
         let date = moment(new Date()).format('DD-MM-yyyy')
         let time = moment(new Date()).format('HH:mm')
@@ -332,7 +327,7 @@ export default function PayDialog(props) {
             invoiceNumber: invoiceNumber,
             cart: cart_,
             paymentMethod: paymentMethod,
-            sale_id: 0
+            sale_id: sale_id
         }
         return printInfo
     }
@@ -370,11 +365,11 @@ export default function PayDialog(props) {
     }
 
     const proccessPayment = async () => {
-        if (documentType === 'Factura') {
+        if (currentDocument === 3) {
             // console.log(customer)
             setOpenInvoiceDialog(true)
         } else {
-            if (documentType === 'Sin impresora') {
+            if (currentDocument === 0) {
                 if (stockControl == true) {
                     await updateStocks(cart)
                     await stocks.findAllStockAlert()
@@ -390,7 +385,7 @@ export default function PayDialog(props) {
                 }
                 setOpen(false)
                 setOpenChangeDialog(true)
-            } else if (documentType === 'Boleta') {
+            } else if (currentDocument === 2) {
                 setDisablePay(true)
                 const findPrinter_1 = await ipcRenderer.invoke('find-printer', printer)
                 if (!findPrinter_1) {
@@ -406,39 +401,9 @@ export default function PayDialog(props) {
                     let totalAffectedCart = affectedCart.reduce((acc, item) => acc + item.subTotal, 0)
                     let totalNonAffectedCart = nonAffectedCart.reduce((acc, item) => acc + item.subTotal, 0)
 
-                    if (affectedCart.length > 0) {
-                        const boleta = await lioren.boleta(liorenConfig.token, totalAffectedCart, cart)
-                        const sale = await saleBoleta(boleta[2])
-                        await savePay(paymentMethodsList, paymentMethod, sale.id, total)
-                        await saleDetailAll(sale.id, cart)
-                   
-                        if (ordersInCart.length > 0) {
-                            await closeOrders()
-                        }
-                        
-                        const prtBoleta = await ipcRenderer.invoke('boleta2', boletaPrintInfo(boleta[0], boleta[1], boleta[2], affectedCart), totalNonAffectedCart, cart)
-                 
 
-                      
+                    if (totalAffectedCart <= 0) {
 
-                        // if (nonAffectedCart.length > 0) {
-                        //     let date = moment(new Date()).format('DD-MM-yyyy')
-                        //     let time = moment(new Date()).format('HH:mm')
-                        //     let printInfo = {
-                        //         total: totalNonAffectedCart,
-                        //         cart: nonAffectedCart,
-                        //         printer: printer,
-                        //         ticketInfo: ticketInfo,
-                        //         date: date, time: time,
-                        //         paymentMethod: paymentMethod,
-                        //         sale_id: sale.id
-                        //     }
-                        //     await ipcRenderer.sendSync('print-ticket', printInfo)
-                        // } 
-
-                        setOpenChangeDialog(true)
-                        setOpen(false)
-                    } else {
                         const sale_ = await sale()
                         await saleDetailAll(sale_.id, cart)
                         await savePay(paymentMethodsList, paymentMethod, sale_.id, total)
@@ -459,21 +424,27 @@ export default function PayDialog(props) {
                         }
                         setOpenChangeDialog(true)
                         setOpen(false)
+                    } else {
+                        const boleta = await lioren.boleta(liorenConfig.token, totalAffectedCart, cart)
+                        const sale = await saleBoleta(boleta[2])
+                        await savePay(paymentMethodsList, paymentMethod, sale.id, total)
+                        await saleDetailAll(sale.id, cart)
+                        if (ordersInCart.length > 0) {
+                            await closeOrders()
+                        }
 
+                        console.log('boleta', boleta)
+
+                        let prntBoletaInfo = boletaPrintInfo(boleta[0], boleta[1], boleta[2], affectedCart, sale.id)
+
+                        await ipcRenderer.invoke('boleta2', prntBoletaInfo, totalNonAffectedCart, cart)
+
+                        setOpenChangeDialog(true)
+                        setOpen(false)
                     }
 
-
-                    // divides el carro
-
-
-
-
-
-
-
-
                 }
-            } else if (documentType === 'Ticket') {
+            } else if (currentDocument === 1) {
                 const findPrinter_2 = await ipcRenderer.invoke('find-printer', printer)
                 if (!findPrinter_2) {
                     dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
@@ -505,10 +476,6 @@ export default function PayDialog(props) {
 
                 }
             }
-
-
-
-
 
         }
 
@@ -621,11 +588,13 @@ export default function PayDialog(props) {
                                             <FormGroup sx={{ p: 1 }}>
                                                 {documentTypesList.map(item => (
                                                     <FormControlLabel
-                                                        key={item.name}
+                                                        key={item.value}
                                                         control={
                                                             <Checkbox
-                                                                checked={documentType === item.name}
-                                                                onChange={(e) => { setDocumentType(e.target.name) }}
+                                                                checked={currentDocument === item.value ? true : false}
+                                                                onChange={(e) => {
+                                                                    setCurrentDocument(item.value)
+                                                                }}
                                                                 name={item.name}
                                                                 color="primary"
                                                                 size="small"

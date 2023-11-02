@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Dialog, DialogActions, DialogTitle, DialogContent, Grid, TextField, Button } from '@mui/material'
+import { Box, Dialog, DialogActions, DialogTitle, DialogContent, Grid, TextField, Button, FormControlLabel, Switch } from '@mui/material'
 import { useRouter } from 'next/router'
 import { useAppContext } from '../AppProvider'
 
@@ -10,32 +10,34 @@ export default function index() {
   const router = useRouter()
   const { user, dispatch } = useAppContext()
   const [userData, setUserData] = useState(userDataDefault())
+  const [openApiConfigDialog, setOpenApiConfigDialog] = useState(false)
+  const [configData, setConfigData] = useState({ urlApi: '', sqlite: false })
 
   const login = () => {
     users.login(userData.user, userData.name)
-    .then(res => {
-      console.log(res)
-      if (res == 'Usuario no existe'){
-        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: res } })
-      } else if (res == 'Contraseña incorrecta'){
-        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: res } })
-      } else {
-        let user = { 
-          id: res.id, 
-          user: res.user, 
-          pass: res.pass,
-          name: res.name, 
-          profileId: res.profileId, 
-          profile: res.Profile.name, 
-          permissions: [] 
+      .then(res => {
+        console.log(res)
+        if (res == 'Usuario no existe') {
+          dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: res } })
+        } else if (res == 'Contraseña incorrecta') {
+          dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: res } })
+        } else {
+          let user = {
+            id: res.id,
+            user: res.user,
+            pass: res.pass,
+            name: res.name,
+            profileId: res.profileId,
+            profile: res.Profile.name,
+            permissions: []
+          }
+          dispatch({ type: 'SET_USER', value: user })
+          router.push('/cashRegister')
         }
-        dispatch({ type: 'SET_USER', value: user })
-        router.push('/cashRegister')
-      }
-    })
-    .catch(err => {
-      console.log(err)
-    })
+      })
+      .catch(err => {
+        console.log(err)
+      })
     //router.push('/cashRegister')
   }
 
@@ -80,13 +82,50 @@ export default function index() {
                   required
                 />
               </Grid>
-
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 2 }}>
+            <Button variant={'text'} onClick={() => setOpenApiConfigDialog(true)}>Configuración API</Button>
             <Button variant={'contained'} type={'submit'}>ingresar</Button>
           </DialogActions>
         </form>
+      </Dialog>
+
+      <Dialog open={openApiConfigDialog} maxWidth={'xs'} fullWidth>
+        <DialogTitle sx={{ p: 2 }}>
+          Configuración API
+        </DialogTitle>
+        <DialogContent sx={{ p: 2 }}>
+          <Grid container spacing={1} direction={'column'}>
+            <Grid item marginTop={1}>
+              <TextField
+                label="url Api"
+                value={configData.urlApi}
+                onChange={(e) => setConfigData({ ...configData, urlApi: e.target.value })}
+                variant="outlined"
+                size={'small'}
+                fullWidth
+                required
+              />
+            </Grid>
+            <Grid item>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={configData.sqlite}
+                    onChange={(e) => { setConfigData({ ...configData, sqlite: e.target.checked }) }}
+                  />
+                }
+                label="Sqlite"
+              />
+
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button variant={'text'} onClick={() => setOpenApiConfigDialog(false)}>cerrar</Button>
+          <Button variant={'contained'}>Guardar</Button>
+        </DialogActions>
       </Dialog>
     </>
   )

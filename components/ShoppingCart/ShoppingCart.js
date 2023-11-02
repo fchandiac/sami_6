@@ -63,8 +63,6 @@ export default function ShoppingCart(props) {
     const [openDiscountAmountDialog, setOpenDiscountAmountDialog] = useState(false)
 
 
-
-
     useEffect(() => {
         let print_info = ipcRenderer.sendSync('get-printer', 'sync')
         let ticket_info = ipcRenderer.sendSync('get-ticket-info', 'sync')
@@ -76,13 +74,19 @@ export default function ShoppingCart(props) {
 
     useEffect(() => {
         const handleKeyDown = (event) => {
-            if (event.key === "ç") {
+            if (event.key === "+") {
                 if (ordersMode === true) {
-                    console.log('ordersMode')
+                    if (cart.length === 0) {
+                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
+                    } else {
+                        newOrder()
+                    }
+                    
                 } else {
                     if (cart.length === 0) {
                         dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
                     } else {
+                        
                         setOpenPayDialog(true)
                     }
                 }
@@ -171,7 +175,9 @@ export default function ShoppingCart(props) {
     const proccessPayment = () => {
         if (cart.length === 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
-        } else {
+            return
+
+        }  else {
             setOpenPayDialog(true)
         }
     }
@@ -258,11 +264,13 @@ export default function ShoppingCart(props) {
         return Promise.all(details)
     }
 
-    const newOrder = () => {
+    const newOrder = async () => {
         console.log(cart)
         if (cart.length === 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
         } else {
+            const findPrinter = await ipcRenderer.invoke('find-printer', printerInfo)
+            if (findPrinter) {
             ordersPr.create()
                 .then((res) => {
                     let order_id = res.id
@@ -290,6 +298,9 @@ export default function ShoppingCart(props) {
                         })
                 })
                 .catch((err) => { console.log(err) })
+            } else {
+                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+            }
         }
     }
 
@@ -433,8 +444,8 @@ export default function ShoppingCart(props) {
     //     } else {
     //         return rows
     //     }
-        
-        
+
+
     // }
 
     // const invertedData = [...cart].reverse()
