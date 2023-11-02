@@ -231,6 +231,7 @@ export default function ShoppingCart(props) {
             quanty: quanty,
             sale: specialProduct.sale,
             subTotal: subTotal,
+            affected: true,
             salesRoomStock: 1,
             virtualStock: 1,
             discount: 0,

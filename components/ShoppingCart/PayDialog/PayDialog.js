@@ -334,33 +334,33 @@ export default function PayDialog(props) {
 
     const renderCustomerFinder = () => {
         if (showCustomerFinder == true) {
-            return (
-                <>
-                    <Grid item xs={10} sm={10} md={10} lg={10}>
-                        <Autocomplete
-                            inputValue={customerInput}
-                            onInputChange={(e, newInputValue) => {
-                                setCustomerInput(newInputValue)
-                            }}
-                            value={customer}
-                            onChange={(e, newValue) => {
-                                setCustomer(newValue)
-                            }}
-                            isOptionEqualToValue={(option, value) => value === null || option.id === value.id}
-                            disablePortal
-                            noOptionsText="Cliente no encontrado"
-                            options={customersOptions}
-                            renderInput={(params) => <TextField {...params} label='Cliente' size={'small'} fullWidth required />}
-                        />
+        return (
+            <>
+                <Grid item xs={10} sm={10} md={10} lg={10}>
+                    <Autocomplete
+                        inputValue={customerInput}
+                        onInputChange={(e, newInputValue) => {
+                            setCustomerInput(newInputValue)
+                        }}
+                        value={customer}
+                        onChange={(e, newValue) => {
+                            setCustomer(newValue)
+                        }}
+                        isOptionEqualToValue={(option, value) => value === null || option.id === value.id}
+                        disablePortal
+                        noOptionsText="Cliente no encontrado"
+                        options={customersOptions}
+                        renderInput={(params) => <TextField {...params} label='Cliente' size={'small'} fullWidth required />}
+                    />
 
 
-                    </Grid>
-                    <Grid item xs={2} sm={2} md={2} lg={2}>
-                        <IconButton onClick={() => { setOpenNewCustomerDialog(true) }}><AddCircleIcon /> </IconButton>
-                    </Grid>
-                </>
+                </Grid>
+                <Grid item xs={2} sm={2} md={2} lg={2}>
+                    <IconButton onClick={() => { setOpenNewCustomerDialog(true) }}><AddCircleIcon /> </IconButton>
+                </Grid>
+            </>
 
-            )
+        )
         }
     }
 
@@ -483,81 +483,87 @@ export default function PayDialog(props) {
 
     return (
         <>
-            <Dialog open={open} maxWidth={'lg'}>
+            <Dialog open={open} fullWidth>
                 <form onSubmit={(e) => { e.preventDefault(); proccessPayment() }}>
                     <DialogTitle sx={{ p: 2 }}>
                         Proceso de pago
                     </DialogTitle>
                     <DialogContent sx={{ p: 2 }}>
-                        <Grid container spacing={1} direction={'column'} width={'500px'}>
-                            <Grid item marginTop={1}>
-                                <TextField
-                                    label="Total:"
-                                    value={utils.renderMoneystr(total)}
-                                    InputProps={{
-                                        readOnly: true,
-                                    }}
-                                    variant="outlined"
-                                    size={'small'}
-                                    fullWidth
-                                />
-                            </Grid>
-                            <Grid item marginTop={1}>
-                                <TextField
-                                    label="Paga con:"
-                                    name='inputPayAmount'
-                                    value={utils.renderMoneystr(payAmount)}
-                                    onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setPayAmount(0) : setPayAmount(utils.moneyToInt(e.target.value)) }}
-                                    variant="outlined"
-                                    size={'small'}
-                                    fullWidth
-                                    autoFocus
-                                />
-                            </Grid>
-                            <Grid item textAlign={'right'} sx={{ display: insufficientMoney ? 'block' : 'none' }}>
-                                <Typography color={'error'}>{'Monto de pago insuficiente'}</Typography>
-                            </Grid>
-                            <Grid item textAlign={'right'} sx={{ display: insufficientMoney ? 'none' : 'block' }}>
-                                <Typography color={'pimary'}>{'Vuelto: ' + utils.renderMoneystr(change)}</Typography>
-                            </Grid>
-                            <Grid item sx={{ display: numeric_pad ? 'block' : 'none' }}>
-                                <Grid container spacing={1}>
-                                    <Grid item xs={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(1) }}>1</Button>
+                        <Grid container spacing={1} direction={'row'}>
+                            <Grid item marginTop={1} xs={5} sm={5} md={5}>
+                                <Grid container item spacing={1} direction={'column'} justifyContent={'space-between'}>
+                                    <Grid item marginTop={1}>
+                                        <TextField
+                                            label="Total:"
+                                            value={utils.renderMoneystr(total)}
+                                            InputProps={{
+                                                readOnly: true,
+                                            }}
+                                            variant="outlined"
+                                            size={'small'}
+                                            fullWidth
+                                        />
                                     </Grid>
-                                    <Grid item s={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(2) }}>2</Button>
+                                    <Grid item marginTop={1}>
+                                        <TextField
+                                            label="Paga con:"
+                                            name='inputPayAmount'
+                                            value={utils.renderMoneystr(payAmount)}
+                                            onChange={(e) => { e.target.value === '$ ' || e.target.value === '$' || e.target.value === '0' || e.target.value === '' ? setPayAmount(0) : setPayAmount(utils.moneyToInt(e.target.value)) }}
+                                            variant="outlined"
+                                            size={'small'}
+                                            fullWidth
+                                            autoFocus
+                                        />
                                     </Grid>
-                                    <Grid item s={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(3) }}>3</Button>
+                                    <Grid item textAlign={'right'} sx={{ display: insufficientMoney ? 'block' : 'none' }}>
+                                        <Typography color={'error'}>{'Monto de pago insuficiente'}</Typography>
                                     </Grid>
-                                    <Grid item xs={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(4) }}>4</Button>
+                                    <Grid item textAlign={'right'} sx={{ display: insufficientMoney ? 'none' : 'block' }}>
+                                        <Typography color={'pimary'}>{'Vuelto: ' + utils.renderMoneystr(change)}</Typography>
                                     </Grid>
-                                    <Grid item s={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(5) }}>5</Button>
-                                    </Grid>
-                                    <Grid item s={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(6) }}>6</Button>
-                                    </Grid>
-                                    <Grid item xs={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(7) }}>7</Button>
-                                    </Grid>
-                                    <Grid item s={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(8) }}>8</Button>
-                                    </Grid>
-                                    <Grid item s={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(9) }}>9</Button>
-                                    </Grid>
-                                    <Grid item s={8} sm={8} md={8}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(0) }}>0</Button>
-                                    </Grid>
-                                    <Grid item s={4} sm={4} md={4}>
-                                        <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { removeDigit() }}><BackspaceIcon /></Button>
+                                    <Grid item sx={{ display: numeric_pad ? 'block' : 'none' }}>
+                                        <Grid container spacing={1}>
+                                            <Grid item xs={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(1) }}>1</Button>
+                                            </Grid>
+                                            <Grid item s={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(2) }}>2</Button>
+                                            </Grid>
+                                            <Grid item s={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(3) }}>3</Button>
+                                            </Grid>
+                                            <Grid item xs={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(4) }}>4</Button>
+                                            </Grid>
+                                            <Grid item s={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(5) }}>5</Button>
+                                            </Grid>
+                                            <Grid item s={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(6) }}>6</Button>
+                                            </Grid>
+                                            <Grid item xs={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(7) }}>7</Button>
+                                            </Grid>
+                                            <Grid item s={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(8) }}>8</Button>
+                                            </Grid>
+                                            <Grid item s={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(9) }}>9</Button>
+                                            </Grid>
+                                            <Grid item s={8} sm={8} md={8}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { addDigit(0) }}>0</Button>
+                                            </Grid>
+                                            <Grid item s={4} sm={4} md={4}>
+                                                <Button sx={{ height: '100%', width: '100%' }} variant={'contained'} onClick={() => { removeDigit() }}><BackspaceIcon /></Button>
+                                            </Grid>
+                                        </Grid>
                                     </Grid>
                                 </Grid>
                             </Grid>
-                            <Grid item marginTop={1}>
+
+
+                            <Grid item marginTop={1} xs={7} sm={7} md={7}>
                                 <Grid container spacing={1}>
                                     <Grid item xs={6} sm={6} md={6}>
                                         <Grid item paddingBottom={2}>
@@ -611,7 +617,6 @@ export default function PayDialog(props) {
 
                                     {renderCustomerFinder()}
                                 </Grid>
-
                             </Grid>
                         </Grid>
 
