@@ -333,7 +333,7 @@ export default function PayDialog(props) {
     }
 
     const renderCustomerFinder = () => {
-        if (showCustomerFinder == true) {
+        // if (showCustomerFinder == true) {
         return (
             <>
                 <Grid item xs={10} sm={10} md={10} lg={10}>
@@ -350,7 +350,7 @@ export default function PayDialog(props) {
                         disablePortal
                         noOptionsText="Cliente no encontrado"
                         options={customersOptions}
-                        renderInput={(params) => <TextField {...params} label='Cliente' size={'small'} fullWidth required />}
+                        renderInput={(params) => <TextField {...params} label='Cliente' size={'small'} fullWidth />}
                     />
 
 
@@ -361,7 +361,7 @@ export default function PayDialog(props) {
             </>
 
         )
-        }
+        // }
     }
 
     const proccessPayment = async () => {

@@ -15,18 +15,32 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import { useAppContext } from '../../AppProvider'
 import { ThemeProvider } from '@mui/material/styles'
 import { Box, Paper, Stack, Typography } from '@mui/material'
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange'
 
 const products = require('../../promises/products')
 const utils = require('../../utils')
+import electron from 'electron'
+import moment from 'moment'
+const ipcRenderer = electron.ipcRenderer || false
+const stocks = require('../../promises/stocks')
+
+
+
 
 export default function ProductFinder(props) {
     const { stockControl } = props
-    const { cart, dispatch, cartChanged, product, actionType } = useAppContext()
+    const { cart, dispatch, cartChanged, product, actionType, movements, openSnack } = useAppContext()
     const [gridApiRef, setGridApiRef] = useState(null)
     const [rowData, setRowData] = useState({})
     const [productsList, setProductsList] = useState([])
+    const [printer, setPrinter] = useState({ idProduct: 0, idVendor: 0 })
+    const [gridState, setGridState] = useState(false)
 
     useEffect(() => {
+
+        let printer = ipcRenderer.sendSync('get-printer', 'sync')
+        setPrinter(printer)
+
         products.findAll()
             .then(res => {
                 let data = res.map((item) => ({
@@ -41,7 +55,11 @@ export default function ProductFinder(props) {
                 setProductsList(data)
             })
             .catch(err => { console.log(err) })
-    }, [])
+    }, [gridState])
+
+    const updateGrid = () => {
+        setGridState(!gridState)
+    }
 
 
 
@@ -76,7 +94,7 @@ export default function ProductFinder(props) {
                 }
                 break
             case 'EDIT_QUANTY':
-               // console.log('EDIT_QUANTY', product)
+                // console.log('EDIT_QUANTY', product)
                 if (product.specialProduct == false) {
                     gridApiRef != undefined && gridApiRef.current.updateRows([{ id: product.id, salesRoomStock: stockControl ? product.virtualStock : product.salesRoomStock }])
                 }
@@ -113,31 +131,77 @@ export default function ProductFinder(props) {
         } else {
             console.log('addToCart', product)
             dispatch({ type: 'ADD_TO_CART', value: product })
-
         }
+    }
+
+    const devolution = async (productId, amount, productName, stockControl, virtualStock) => {
+
+        const findPrinter_1 = await ipcRenderer.invoke('find-printer', printer)
+        if (!findPrinter_1) {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+        } else {
+
+            let movs = movements.movements
+            movs.push({
+                sale_id: 0,
+                user: 'SISTEMA',
+                type: 1005,
+                amount: amount,
+                payment_method: 'devolucion',
+                balance: movements.balance - amount,
+                dte_code: 0,
+                dte_number: 0,
+                date: new Date()
+            })
+
+            let newMov = {
+                state: true,
+                balance: movements.balance - amount,
+                movements: movs
+            }
+            ipcRenderer.send('update-movements', newMov)
+            dispatch({ type: 'SET_MOVEMENTS', value: newMov })
+
+            let date = moment().format('DD-MM-YYYY').toString()
+            let time = moment().format('HH:mm:ss').toString()
+
+            console.log('Printer', printer)
+            let printInfo = {
+                printer: printer,
+                date: date, time: time,
+                amount: amount,
+                productName: productName,
+            }
+            ipcRenderer.sendSync('devolution', printInfo)
+            await stocks.updateByProductAndStorage(productId, 1001, virtualStock + 1)
+            await stocks.findAllStockAlert()
+            updateGrid()
+            openSnack('success', 'Devolución realizada')
+        }
+
     }
 
 
     const columns = [
-        { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
+        { field: 'id', headerName: 'Id', flex: .25, type: 'number', hide: true },
         { field: 'code', headerName: 'Código', flex: .6 },
-        { field: 'name', headerName: 'Nombre', flex: 1 },
+        { field: 'name', headerName: 'Nombre', flex: .95 },
         {
             field: 'salesRoomStock',
             headerName: 'Stock sala',
-            flex: .7,
+            flex: .5,
             hide: !stockControl,
             renderCell: (params) => (
                 params.row.stockControl ? params.value : '-'
                 //params.value
             )
         }, //valueFormatter: (params) => (utils.renderMoneystr(params.value))
-        { field: 'sale', headerName: 'Precio Venta', flex: .7, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
+        { field: 'sale', headerName: 'Precio Venta', flex: .6, valueFormatter: (params) => (utils.renderMoneystr(params.value)) },
         {
             field: 'actions',
             headerName: '',
             headerClassName: 'data-grid-last-column-header',
-            type: 'actions', flex: .3, getActions: (params) => [
+            type: 'actions', flex: .5, getActions: (params) => [
                 <GridActionsCellItem
                     label='addToCart'
                     icon={<ShoppingCartIcon />}
@@ -158,6 +222,14 @@ export default function ProductFinder(props) {
                             affected: params.row.affected
 
                         })
+                    }}
+                />,
+                <GridActionsCellItem
+                    label='addToCart'
+                    icon={<CurrencyExchangeIcon />}
+                    onClick={() => {
+                        console.log(params.row)
+                        devolution(params.row.id, params.row.sale, params.row.name, params.row.stockControl, params.row.salesRoomStock)
                     }}
                 />
             ]

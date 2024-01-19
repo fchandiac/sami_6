@@ -46,7 +46,7 @@ const products = require('../../promises/products')
 
 export default function ShoppingCart(props) {
     const { stockControl, quote } = props
-    const { cart, total, lock, dispatch, ordersMode, ordersInCart } = useAppContext()
+    const { cart, total, lock, dispatch, ordersMode, ordersInCart, openSnack } = useAppContext()
     const [rowData, setRowData] = useState(rowDataDefault())
     const [openPayDialog, setOpenPayDialog] = useState(false)
     const [openNewCustomerDialog, setOpenNewCustomerDialog] = useState(false)
@@ -81,12 +81,12 @@ export default function ShoppingCart(props) {
                     } else {
                         newOrder()
                     }
-                    
+
                 } else {
                     if (cart.length === 0) {
                         dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
                     } else {
-                        
+
                         setOpenPayDialog(true)
                     }
                 }
@@ -177,7 +177,7 @@ export default function ShoppingCart(props) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
             return
 
-        }  else {
+        } else {
             setOpenPayDialog(true)
         }
     }
@@ -247,7 +247,6 @@ export default function ShoppingCart(props) {
 
     const orderDetailsPrAll = (order_id) => {
         let details = []
-        console.log('PROCESS ORDER CART', cart)
         cart.map((product) => {
             details.push(
                 ordersDetails.create(
@@ -265,44 +264,74 @@ export default function ShoppingCart(props) {
         return Promise.all(details)
     }
 
-    const newOrder = async () => {
-        console.log(cart)
+    const newOrder2 = async () => {
         if (cart.length === 0) {
             dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'No hay productos en el carrito' } })
         } else {
             const findPrinter = await ipcRenderer.invoke('find-printer', printerInfo)
             if (findPrinter) {
-            ordersPr.create()
-                .then((res) => {
-                    let order_id = res.id
-                    orderDetailsPrAll(res.id)
-                        .then(() => {
-                            dispatch({ type: 'CLEAR_CART' })
-                            dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Pedido creado' } })
-                            ipcRenderer.invoke('find-printer', printerInfo)
-                                .then((findPrinter) => {
-                                    if (!findPrinter) {
-                                        dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
-                                    } else {
-                                        let printinfo = {
-                                            printer: printerInfo,
-                                            total: total,
-                                            order_id: order_id,
+                ordersPr.create()
+                    .then((res) => {
+                        let order_id = res.id
+                        orderDetailsPrAll(res.id)
+                            .then(() => {
+    
+                                dispatch({ type: 'OPEN_SNACK', value: { type: 'success', message: 'Pedido creado' } })
+                                ipcRenderer.invoke('find-printer', printerInfo)
+                                    .then((findPrinter) => {
+                                        if (!findPrinter) {
+                                            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+                                        } else {
+                                            let printinfo = {
+                                                printer: printerInfo,
+                                                total: total,
+                                                order_id: order_id,
+                                            }
+                                            ipcRenderer.send('simple-order', printinfo)
                                         }
-                                        ipcRenderer.send('simple-order', printinfo)
-                                    }
-                                })
-                        })
-                        .catch((err) => {
-                            console.log(err)
-                            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error al crear el pedido' } })
-                        })
-                })
-                .catch((err) => { console.log(err) })
+                                    })
+                                    dispatch({ type: 'CLEAR_CART' })
+                            })
+                            .catch((err) => {
+                                console.log(err)
+                                dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error al crear el pedido' } })
+                            })
+                    })
+                    .catch((err) => { console.log(err) })
             } else {
                 dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
             }
         }
+    }
+
+    const newOrder = async () => {console.log('TOTAL', total)}
+
+    const newOrder3 = async () => {
+        if (cart.length === 0) {
+            openSnack('error', 'No hay productos en el carrito')
+            return
+        }
+        console.log('TOTAL', total)
+        const findPrinter = await ipcRenderer.invoke('find-printer', printerInfo)
+        if (!findPrinter) { // quitar!
+            
+            const newOrder = await ordersPr.create()
+            let printinfo = {
+                printer: printerInfo,
+                total: total,
+                order_id: newOrder.id,
+            }
+            await orderDetailsPrAll(newOrder.id)
+            ipcRenderer.send('simple-order', printinfo)
+            openSnack('success', 'Pedido creado')
+            clearCart()
+        } else {
+            openSnack('error', 'Error de conexión con la impresora')
+            return
+        }
+        console.log('TOTAL', total)
+
+
     }
 
     const removeOrder = async (id) => {
@@ -438,18 +467,6 @@ export default function ShoppingCart(props) {
         }
     ]
 
-    // const reverseRows = (rows) => {
-    //     if(cart.length != rows.length){
-    //         let reverse = rows.reverse()
-    //         return reverse
-    //     } else {
-    //         return rows
-    //     }
-
-
-    // }
-
-    // const invertedData = [...cart].reverse()
 
 
 
@@ -483,7 +500,7 @@ export default function ShoppingCart(props) {
                             ordersMode: ordersMode,
                             openSpecialProductUI: openSpecialProductUI,
                             showNewOrderButton: showNewOrderButton,
-                            newOrder: newOrder
+                            newOrder: newOrder2
                         }
                     }}
                 />

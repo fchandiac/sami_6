@@ -429,7 +429,6 @@ ipcMain.on('print-ticket', (e, printInfo) => {
 })
 
 
-
 ipcMain.handle('boleta2', (e, printInfo, nonAffectedTotal, cart) => {
 	try {
 		const idVendor = parseInt(printInfo.printer.idVendor)
@@ -476,7 +475,7 @@ ipcMain.handle('boleta2', (e, printInfo, nonAffectedTotal, cart) => {
 						{ text: renderMoneystr(product.subTotal), align: "LEFT", width: 0.2 }
 					])
 				})
-				
+
 				printer.text('')
 				printer.text('Monto afecto: ' + renderMoneystr(total))
 				printer.text('Monto no afecto: ' + renderMoneystr(nonAffectedTotal))
@@ -485,7 +484,7 @@ ipcMain.handle('boleta2', (e, printInfo, nonAffectedTotal, cart) => {
 				printer.size(0, 0)
 				printer.text('El iva de esta boleta es: ' + renderMoneystr(parseInt(iva)))
 				printer.text('')
-				
+
 				printer.text('')
 				printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
 				printer.align('ct')
@@ -534,7 +533,7 @@ ipcMain.handle('boleta2', (e, printInfo, nonAffectedTotal, cart) => {
 		return false
 	}
 
-	
+
 })
 
 ipcMain.on('boleta', (e, printInfo) => {
@@ -872,6 +871,49 @@ ipcMain.on('external-pay', (e, printInfo) => {
 
 })
 
+
+ipcMain.on('devolution', (e, printInfo) => {
+	console.log(printInfo)
+	const idVendor = parseInt(printInfo.printer.idVendor)
+	const idProduct = parseInt(printInfo.printer.idProduct)
+	const device = new escpos.USB(idVendor, idProduct)
+	const options = { encoding: "GB18030" /* delt */ }
+	const printer = new escpos.Printer(device, options)
+	let amount = printInfo.amount
+	let productName = printInfo.productName
+
+
+	device.open(function () {
+		printer.font('b').align('ct').style('NORMAL')
+		printer.size(0, 0)
+		printer.text('_________________________________________')
+		printer.size(1, 0)
+		printer.text('TICKET DE DEVOLUCION')
+		printer.size(0, 0)
+		printer.text('_________________________________________')
+		printer.text('')
+		
+		printer.text('Producto: ' + productName)
+		printer.size(1, 0)
+		printer.text('TOTAL: ' + renderMoneystr(amount))
+		printer.text('')
+		printer.size(0, 0)
+		printer.text('_________________________________________')
+		printer.text('')
+		printer.size(0, 0)
+		printer.align('ct')
+		printer.text('')
+		printer.text('fecha: ' + printInfo.date + ' hora: ' + printInfo.time)
+		printer.text('')
+		printer.cut()
+		printer.cashdraw(2)
+		printer.close()
+
+	})
+	// device.close()
+	e.returnValue = true
+
+})
 
 
 function renderMoneystr(value) {

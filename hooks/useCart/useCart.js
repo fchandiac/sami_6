@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAppContext } from '../../AppProvider'
 import electron from 'electron'
-
-
 const ipcRenderer = electron.ipcRenderer || false
 
 
@@ -150,6 +148,8 @@ function useCart() {
     }
 
     const getCart = () => cart
+
+    
 
 
 
