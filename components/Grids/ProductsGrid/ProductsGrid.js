@@ -10,6 +10,13 @@ import FavoriteIcon from '@mui/icons-material/Favorite'
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, TextField, Autocomplete, FormControl, FormControlLabel, Switch } from '@mui/material'
 import AppPaper from '../../AppPaper/AppPaper'
 import StockController from '../../StockController/StockController'
+import ViewWeekIcon from '@mui/icons-material/ViewWeek'
+import electron from 'electron'
+import moment from 'moment'
+import { useAppContext } from '../../../AppProvider'
+const ipcRenderer = electron.ipcRenderer || false
+
+
 
 
 
@@ -24,6 +31,7 @@ const stocks = require('../../../promises/stocks')
 
 export default function ProductsGrid(props) {
     const { update } = props
+    const { cart, dispatch, openSnack } = useAppContext()
     const [gridApiRef, setGridApiRef] = useState(null)
     const [rowData, setRowData] = useState(rowDataDefault())
     const [productsList, setProductsList] = useState([])
@@ -33,7 +41,12 @@ export default function ProductsGrid(props) {
     const [taxesOptions, setTaxesOptions] = useState([])
     const [taxesInput, settaxesInput] = useState('')
     const [openDestroyDialog, setOpenDestroyDialog] = useState(false)
+    const [printer, setPrinter] = useState({ idProduct: 0, idVendor: 0 })
 
+    useEffect(() => {
+        let printer = ipcRenderer.sendSync('get-printer', 'sync')
+        setPrinter(printer)
+    }, [])
 
     useEffect(() => {
         products.findAll().then(res => {
@@ -123,12 +136,29 @@ export default function ProductsGrid(props) {
             .catch(err => { console.error(err) })
     }
 
+    const printCode = async (productName, amount, code) => {
+
+        const findPrinter_1 = await ipcRenderer.invoke('find-printer', printer)
+        if (!findPrinter_1) {
+            dispatch({ type: 'OPEN_SNACK', value: { type: 'error', message: 'Error de conexión con la impresora' } })
+        } else {
+            let printInfo = {
+                printer: printer,
+                amount: amount,
+                productName: productName,
+                code: code
+            }
+
+            ipcRenderer.sendSync('code', printInfo)
+        }
+    }
+
 
     const columns = [
         { field: 'id', headerName: 'Id', flex: .3, type: 'number', hide: true },
-        { field: 'name', headerName: 'Nombre', flex: 1 },
-        { field: 'code', headerName: 'Código', flex: .5 },
-        { field: 'category', headerName: 'Categoría', flex: .6 },
+        { field: 'name', headerName: 'Nombre', flex: .9 },
+        { field: 'code', headerName: 'Código', flex: .4 },
+        { field: 'category', headerName: 'Categoría', flex: .5 },
         { field: 'affected', headerName: 'Afecto', flex: .4, type: 'boolean', hide: false },
         { field: 'salesRoomStock', headerName: 'Stock sala', flex: .4 },
         { field: 'stock', headerName: 'Stock total', flex: .4 },
@@ -138,7 +168,7 @@ export default function ProductsGrid(props) {
             field: 'actions',
             headerName: '',
             headerClassName: 'data-grid-last-column-header',
-            type: 'actions', flex: .6, getActions: (params) => [
+            type: 'actions', flex: .8, getActions: (params) => [
                 <GridActionsCellItem
                     sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
                     label='delete'
@@ -214,9 +244,15 @@ export default function ProductsGrid(props) {
                     onClick={() => {
                         updateStockControl(params.id, !params.row.stock_control)
                     }}
+                />,
+                <GridActionsCellItem
+                    sx={{ mt: .5, mb: .5, ml: 0, mr: 0, p: 0 }}
+                    label='code'
+                    icon={<ViewWeekIcon />}
+                    onClick={() => {
+                        printCode(params.row.name, params.row.sale, params.row.code)
+                    }}
                 />
-
-
             ]
         }
     ]

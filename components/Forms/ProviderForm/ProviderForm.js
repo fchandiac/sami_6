@@ -1,4 +1,4 @@
-import { Grid, TextField, IconButton, Box } from '@mui/material'
+import { Grid, TextField, IconButton, Box, Button } from '@mui/material'
 import React, {useState, useEffect}  from 'react'
 import { Search } from '@mui/icons-material'
 
@@ -51,6 +51,39 @@ export default function ProviderForm(props) {
                         fullWidth
                         required
                     />
+                </Grid>
+                <Grid item>
+                    <TextField label="Comuna"
+                        value={comunasInput}
+                        onChange={(e) => { setComunasInput(e.target.value) }}
+                        variant="outlined"
+                        size={'small'}
+                        fullWidth
+                        required
+                    />
+                </Grid>
+                <Grid item>
+                    <TextField label="Ciudad"
+                        value={ciudadesInput}
+                        onChange={(e) => { setCiudadesInput(e.target.value) }}
+                        variant="outlined"
+                        size={'small'}
+                        fullWidth
+                        required
+                    />
+                </Grid>
+                <Grid item>
+                    <TextField label="Teléfono"
+                        value={providerData.phone}
+                        onChange={(e) => { setProviderData({ ...providerData, phone: e.target.value }) }}
+                        variant="outlined"
+                        size={'small'}
+                        fullWidth
+                        required
+                    />
+                </Grid>
+                <Grid item>
+                    <Button variant="contained" color="primary" >Guardar</Button>
                 </Grid>
             </Grid>
         </>

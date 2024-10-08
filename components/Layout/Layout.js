@@ -233,12 +233,12 @@ export default function Layout(props) {
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton>
-              <ListItemText primary='Contabilidad'
+              <ListItemText primary='Administración'
                 onClick={() => {
                   router.push({
                     pathname: '/accounting',
                   })
-                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Contabilidad' })
+                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Administración' })
                   setDrawerState(false)
                   // dispatch({ type: 'CLEAR_CART' })
                 }}
@@ -253,20 +253,6 @@ export default function Layout(props) {
                     pathname: '/customers',
                   })
                   dispatch({ type: 'SET_PAGE_TITLE', value: 'Clientes' })
-                  setDrawerState(false)
-                  // dispatch({ type: 'CLEAR_CART' })
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton>
-              <ListItemText primary='Proveedores'
-                onClick={() => {
-                  router.push({
-                    pathname: '/providers',
-                  })
-                  dispatch({ type: 'SET_PAGE_TITLE', value: 'Proveedores' })
                   setDrawerState(false)
                   // dispatch({ type: 'CLEAR_CART' })
                 }}

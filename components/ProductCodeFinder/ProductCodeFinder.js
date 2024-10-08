@@ -135,9 +135,6 @@ export default function ProductCodeFinder(props) {
 
     
 
-    
-
-
 
 
     const renderStockControl = (product) => {

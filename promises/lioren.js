@@ -19,7 +19,9 @@ function boleta(token, total) {
             }
         }).then(res => {
             res.json().then(res => {
+                
                 let xml = res.xml
+
                 let buff = Buffer.from(xml, 'base64');
                 xml = buff
                 var parseString = require('xml2js').parseString; // paso de xml a json

@@ -18,7 +18,7 @@ const utils = require('../../utils')
 export default function Movements() {
   const { movements, dispatch, lock, user } = useAppContext()
   const theme = useTheme()
-  const [newMovementData, setNewMovementData] = React.useState(newMovementDataDefault())
+  const [newMovementData, setNewMovementData] = useState(newMovementDataDefault())
   const [movementsInput, setMovementsInput] = useState('')
   const [movementsOptions, setMovementsOptions] = useState([{ id: 1002, key: 1002, label: 'Ingreso' }, { id: 1003, key: 1003, label: 'Egreso' }])
   const [displayOpenForm, setDisplayOpenForm] = useState(false)
@@ -40,6 +40,7 @@ export default function Movements() {
       let obj = {name: item.name, sum: sum}
       paymentMethodsSum.push(obj)
     })
+    
     let open = movements.movements.filter(item => item.type == 1001)[0]
     let openAmount = open ? open.amount : 0
 
@@ -50,7 +51,7 @@ export default function Movements() {
     let incomesTotal = incomes.reduce((a, b) => a + b.amount, 0)
 
     let cash = movements.movements.filter(mov => mov.payment_method == 'Efectivo').reduce((a, b) => a + b.amount, 0)
-    let efectivo =  movements.movements.filter(mov => mov.payment_method == 'Efectivo').reduce((a, b) => a + b.amount, 0)
+   
     
     paymentMethodsSum.unshift({name: 'Ventas en efectivo', sum: cash})
     paymentMethodsSum.unshift({name: 'Efectivo en caja', sum: openAmount + cash + outcomesTotal + incomesTotal})
@@ -103,6 +104,7 @@ export default function Movements() {
     let salesTotal = sales.reduce((a, b) => a + b.amount, 0)
 
     let openAmount = movs.filter(item => item.type == 1001)[0].amount
+    
 
 
     setCloseData({

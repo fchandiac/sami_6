@@ -361,25 +361,25 @@ ipcMain.on('print-ticket', (e, printInfo) => {
 	device.open(function () {
 		printer.font('b').align('ct').style('NORMAL')
 		printer.size(0, 0)
-		printer.text('_________________________________________')
+		printer.text('___________________________')
 		printer.size(1, 0)
 		printer.text('TICKET DE VENTA')
 		printer.size(0, 0)
-		printer.text('_________________________________________')
+		printer.text('___________________________')
 		printer.text(name)
 		printer.text(rut)
 		printer.text(address)
 		printer.text(phone)
-		printer.text('_________________________________________')
+		printer.text('___________________________')
 		printer.tableCustom([
-			{ text: '#', align: "LEFT", width: 0.1 },
-			{ text: 'Producto', align: "LEFT", width: 0.8 },
+			// { text: '#', align: "LEFT", width: 0.04 },
+			{ text: 'Producto', align: "LEFT", width: 0.5 },
 			{ text: 'Subtotal', align: "LEFT", width: 0.2 }
 		])
 		cart.map(product => {
 			printer.tableCustom([
-				{ text: product.quanty, align: "LEFT", width: 0.1 },
-				{ text: product.name, align: "LEFT", width: 0.8 },
+				// { text: product.quanty, align: "LEFT", width: 0.04 },
+				{ text: product.name, align: "LEFT", width: 0.5 },
 				{ text: renderMoneystr(product.subTotal), align: "LEFT", width: 0.2 }
 			])
 		})
@@ -907,6 +907,34 @@ ipcMain.on('devolution', (e, printInfo) => {
 		printer.text('')
 		printer.cut()
 		printer.cashdraw(2)
+		printer.close()
+
+	})
+	// device.close()
+	e.returnValue = true
+
+})
+
+ipcMain.on('code', (e, printInfo) => {
+	console.log(printInfo)
+	const idVendor = parseInt(printInfo.printer.idVendor)
+	const idProduct = parseInt(printInfo.printer.idProduct)
+	const device = new escpos.USB(idVendor, idProduct)
+	const options = { encoding: "GB18030" /* delt */ }
+	const printer = new escpos.Printer(device, options)
+	let amount = printInfo.amount
+	let productName = printInfo.productName
+
+
+	device.open(function () {
+		printer.font('b').align('ct').style('NORMAL')
+		printer.text(productName)
+		printer.size(1, 0)
+		printer.text(renderMoneystr(amount))
+		printer.text('')
+		printer.barcode(printInfo.code, "CODE39")
+		printer.text('')
+		printer.cut()
 		printer.close()
 
 	})
