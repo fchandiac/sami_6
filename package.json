@@ -1,6 +1,6 @@
 {
   "name": "sami6",
-  "version": "6.0.45",
+  "version": "6.0.46",
   "description": "Sami 6",
   "main": "main.js",
   "scripts": {
@@ -17,10 +17,10 @@
   "author": "felipe Chandía Castillo",
   "license": "ISC",
   "dependencies": {
-    "@emotion/react": "^11.9.3",
-    "@emotion/styled": "^11.9.3",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^5.8.4",
-    "@mui/material": "^5.8.4",
+    "@mui/material": "^5.16.7",
     "@mui/x-data-grid": "^5.12.2",
     "@mui/x-date-pickers": "^5.0.0",
     "cors": "^2.8.5",
@@ -38,8 +38,9 @@
     "pdf417-generator": "^1.0.4",
     "pdfjs-dist": "^3.6.172",
     "react": "^18.1.0",
-    "react-barcode": "^1.4.6",
+    "react-barcode": "^1.5.3",
     "react-dom": "^18.1.0",
+    "react-to-print": "^3.0.2",
     "recharts": "^2.6.2",
     "usb": "^2.5.2",
     "xml2js": "^0.5.0"

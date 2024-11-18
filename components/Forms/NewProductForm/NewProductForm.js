@@ -112,7 +112,7 @@ export default function NewProducForm(props) {
                                 required
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item display={'none'}>
                             <TextField
                                 label="Utilidad"
                                 value={productData.profit}
@@ -139,7 +139,7 @@ export default function NewProducForm(props) {
                                 required
                             />
                         </Grid>
-                        <Grid item>
+                        <Grid item display={'none'}>
                             <TextField
                                 label="$ Compra neto"
                                 value={utils.renderMoneystr(productData.purchaseNet)}
@@ -160,7 +160,7 @@ export default function NewProducForm(props) {
                             />
                         </Grid>
 
-                        <Grid item>
+                        <Grid item display={'none'}>
                             <TextField
                                 label="$ Compra"
                                 value={utils.renderMoneystr(productData.purchase)}
